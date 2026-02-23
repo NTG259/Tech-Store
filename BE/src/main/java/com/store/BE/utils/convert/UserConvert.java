@@ -11,6 +11,7 @@ public class UserConvert {
         rs.setAddress(user.getAddress());
         rs.setCreatedDate(user.getCreatedAt());
         rs.setEmail(user.getEmail());
+        rs.setPhoneNumber(user.getPhoneNumber());
         return rs;
     }
 }

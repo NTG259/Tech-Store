@@ -1,6 +1,7 @@
 package com.store.BE.service;
 
 import com.store.BE.domain.User;
+import com.store.BE.domain.dto.CreateUserDTO;
 import com.store.BE.domain.dto.UpdateUserDTO;
 import com.store.BE.domain.response.UserResponseDTO;
 import com.store.BE.repo.UserRepository;
@@ -19,11 +20,20 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public UserResponseDTO createUser(User user) {
+    public UserResponseDTO createUser(CreateUserDTO user) {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new DataIntegrityViolationException("Email đã tồn tại");
         }
-        User newUser = this.userRepository.save(user);
+        User newUser = new User();
+        newUser.setEmail(user.getEmail());
+        newUser.setAddress(user.getAddress());
+        newUser.setFullName(user.getFullName());
+        newUser.setPhoneNumber(user.getPhoneNumber());
+        newUser.setAddress(user.getAddress());
+        newUser.setPassword(user.getPassword());
+
+        newUser = this.userRepository.save(newUser);
+
         return UserConvert.convertToUserResponseDTO(newUser);
     }
 

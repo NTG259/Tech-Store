@@ -1,6 +1,7 @@
 package com.store.BE.controller;
 
 import com.store.BE.domain.User;
+import com.store.BE.domain.dto.CreateUserDTO;
 import com.store.BE.domain.dto.UpdateUserDTO;
 import com.store.BE.domain.response.RestResponse;
 import com.store.BE.domain.response.UserResponseDTO;
@@ -18,13 +19,14 @@ import java.util.List;
 @RequestMapping("/api")
 @AllArgsConstructor
 @Validated
+@CrossOrigin(origins = "*")
 public class UserController {
     private final UserService userService;
 
     @PostMapping("/users")
     public ResponseEntity<RestResponse<UserResponseDTO>> createUser(
-            @RequestBody User user) {
-        UserResponseDTO userResponse = this.userService.createUser(user);
+            @RequestBody CreateUserDTO createUserDTO) {
+        UserResponseDTO userResponse = this.userService.createUser(createUserDTO);
         if (userResponse == null) {
             return ResponseEntity
                     .badRequest()

@@ -1,4 +1,4 @@
-package com.store.BE.utils;
+package com.store.BE.utils.exception;
 
 import com.store.BE.domain.response.RestResponse;
 import org.springframework.dao.DataIntegrityViolationException;

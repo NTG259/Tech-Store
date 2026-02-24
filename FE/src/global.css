@@ -1,0 +1,4 @@
+html {
+  /* Giữ chỗ cho thanh cuộn, chống giật layout khi Modal mở */
+  scrollbar-gutter: stable; 
+}

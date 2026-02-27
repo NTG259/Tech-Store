@@ -8,7 +8,8 @@ const DetailUserModal = (props) => {
     const { isOpenDetailUserModal, setIsOpenDetailUserModal } = props;
     const [form] = Form.useForm();
     const {selectedUserData} = props
-    console.log(selectedUserData)
+    console.log(selectedUserData);
+    const defaultAvatar = "https://www.w3schools.com/howto/img_avatar.png";
     useEffect(() => {
         if (isOpenDetailUserModal && selectedUserData) {
             form.setFieldsValue({
@@ -17,6 +18,7 @@ const DetailUserModal = (props) => {
                 phone: selectedUserData?.phone || '',
                 role: selectedUserData?.role || '',
                 address: selectedUserData?.address || '',
+                avatar: selectedUserData?.avatar || '',
             });
         } else {
             form.resetFields();
@@ -96,7 +98,7 @@ const DetailUserModal = (props) => {
                             marginBottom: '15px'
                         }}>
                             <img
-                                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200&h=200"
+                                src= {selectedUserData?.avatar || defaultAvatar}
                                 alt="Avatar"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />

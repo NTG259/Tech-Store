@@ -12,5 +12,7 @@ public class UpdateUserDTO {
 
     private String phoneNumber;
 
+    private String avatar;
+
     private Boolean active;
 }

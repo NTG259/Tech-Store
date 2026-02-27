@@ -20,4 +20,6 @@ public class CreateUserDTO {
     private String address;
 
     private String phoneNumber;
+
+    private String avatar;
 }

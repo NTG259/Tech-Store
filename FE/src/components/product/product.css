@@ -1,0 +1,25 @@
+/* ProductForm.css */
+
+/* 1. Làm to khung viền nét đứt lúc chưa có ảnh */
+.large-upload-img .ant-upload.ant-upload-select-picture-card {
+    width: 200px !important;
+    height: 200px !important;
+    background-color: #fafafa;
+}
+
+/* 2. Làm to khung chứa ảnh sau khi đã upload xong */
+.large-upload-img .ant-upload-list-picture-card .ant-upload-list-item {
+    width: 200px !important;
+    height: 200px !important;
+    padding: 8px !important; /* Tạo một chút viền trắng bao quanh ảnh cho đẹp */
+}
+
+/* 3. Phóng to icon và chữ bên trong nút upload */
+.large-upload-img .ant-upload.ant-upload-select-picture-card .anticon {
+    font-size: 24px;
+    color: #8c8c8c;
+}
+.large-upload-img .ant-upload.ant-upload-select-picture-card div {
+    font-size: 16px;
+    margin-top: 12px;
+}

@@ -1,115 +1,212 @@
-import React, { useEffect } from 'react';
-import { Button, Modal, Form, Input, Row, Col, Typography } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Modal, Form, Input, Row, Col, Typography, Select, Upload, message, Image } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { uploadToCloudinary } from '../../service/img/api';
+import { updateUserAPI } from '../../service/user/api';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
-const UserEdit = (props) => {
-    const { isOpenEditUserModal, setIsOpenEditUserModal } = props;
+const getBase64 = (file) =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+    });
+
+const UserFormEdit = (props) => {
+    // Thêm selectedUserData để nhận dữ liệu người dùng cần sửa
+    const { isOpenEditUserForm, setIsOpenEditUserForm, loadUsers, selectedUserData, setSelectedUserData } = props;
     const [form] = Form.useForm();
-    const {selectedUserData} = props
-    console.log(selectedUserData)
-    useEffect(() => {
-        if (isOpenEditUserModal && selectedUserData) {
-            form.setFieldsValue({
-                fullName: selectedUserData?.fullName || '',
-                email: selectedUserData?.email || '',
-                phone: selectedUserData?.phone || '',
-                role: selectedUserData?.role || '',
-                address: selectedUserData?.address || '',
-            });
-        } else {
-            form.resetFields();
-        }
-    }, [isOpenEditUserModal, selectedUserData, form]);
 
-    const handleCancel = () => setIsOpenEditUserModal(false);
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [previewImage, setPreviewImage] = useState("");
+    const [fileList, setFileList] = useState([]);
+    const [imageUrl, setImageUrl] = useState("");
+
+    console.log(">>> check data ", selectedUserData);
+    useEffect(() => {
+        if (selectedUserData && isOpenEditUserForm) {
+            form.setFieldsValue({
+                id: selectedUserData.id,
+                fullName: selectedUserData.fullName,
+                email: selectedUserData.email,
+                role: selectedUserData.role,
+                phone: selectedUserData.phone,
+                address: selectedUserData.address,
+            });
+            if (selectedUserData.avatar) {
+                setFileList([
+                    {
+                        uid: '-1', // ID bắt buộc phải có, đặt âm để không trùng với file upload mới
+                        name: 'avatar.png',
+                        status: 'done', // Trạng thái 'done' báo cho Upload biết ảnh đã tải xong
+                        url: selectedUserData.avatar,
+                    }
+                ]);
+                setImageUrl(selectedUserData.avatar);
+            } else {
+                // Nếu user chưa có avatar thì dọn sạch vùng hiển thị
+                setFileList([]);
+                setImageUrl("");
+            }
+        }
+    }, [selectedUserData, isOpenEditUserForm]);
+
+    const handleCancel = () => {
+        setIsOpenEditUserForm(false);
+        setSelectedUserData(null);
+        form.resetFields();
+        setFileList([]);
+        setImageUrl("");
+    };
+
+    const handlePreview = async (file) => {
+        if (!file.url && !file.preview) {
+            file.preview = await getBase64(file.originFileObj);
+        }
+        setPreviewImage(file.url || file.preview);
+        setPreviewOpen(true);
+    };
+
+    const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
+
+    const handleCustomUpload = async (options) => {
+        await uploadToCloudinary({
+            ...options,
+            onSuccess: (data, file) => {
+                setImageUrl(data.secure_url);
+                options.onSuccess(data, file);
+            },
+            onError: (err) => {
+                options.onError(err);
+            }
+        });
+    };
+
+    const onFinish = async (values) => {
+        console.log(values)
+        const payloadToBackend = {
+            fullName: values.fullName,
+            role: values.role,
+            phoneNumber: values.phone,
+            address: values.address,
+            avatar: previewImage || imageUrl
+        };
+
+        const userId = selectedUserData?.id || values.id;
+        if (!userId) {
+            message.error('User id is missing.');
+            return;
+        }
+
+        const res = await updateUserAPI(userId, payloadToBackend);
+
+        if (res.status < 400) {
+            message.success("Cập nhật người dùng thành công!");
+            await loadUsers();
+            handleCancel();
+        } else {
+            message.error(res.data?.message || "Cập nhật thất bại");
+        }
+    };
 
     return (
         <Modal
-            title="User Details"
-            open={isOpenEditUserModal}
+            title="Chỉnh sửa người dùng"
+            open={isOpenEditUserForm}
             onCancel={handleCancel}
-            width={750} // Kích thước gọn gàng cho form User
+            width={750}
             centered
-            maskClosable={true}
+            maskClosable={false}
             footer={[
-                <Button key="close" type="primary" onClick={handleCancel} style={{ borderRadius: '6px' }}>
-                    Close
-                </Button>
+                <Button key="close" onClick={handleCancel}>Hủy</Button>,
+                <Button key="submit" type="primary" onClick={() => form.submit()}>Lưu thay đổi</Button>
             ]}
-            styles={{ body: { padding: '16px 24px' } }}
         >
-            <Form
-                form={form}
-                layout="vertical"
-            >
+            <Form form={form} layout="vertical" onFinish={onFinish}>
                 <Row gutter={24}>
-                    {/* CỘT TRÁI: THÔNG TIN NGƯỜI DÙNG */}
                     <Col span={16}>
-                        <div style={{ paddingRight: '10px' }}>
-                            <Title level={5} style={{ margin: '0 0 15px 0', fontSize: '16px' }}>Personal Information</Title>
+                        <Title level={5}>Thông tin người dùng</Title>
 
-                            <Form.Item label="Full Name" name="fullName" style={{ marginBottom: '12px' }}>
-                                <Input style={{ backgroundColor: '#fafafa', cursor: 'default' }} />
-                            </Form.Item>
+                        <Form.Item name="id" hidden>
+                            <Input />
+                        </Form.Item>
 
-                            <Row gutter={12}>
-                                <Col span={10}>
-                                    <Form.Item label="Role" name="role" style={{ marginBottom: '12px' }}>
-                                        <Input readOnly style={{ backgroundColor: '#fafafa', cursor: 'default' }} />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={14}>
-                                    <Form.Item label="Phone" name="phone" style={{ marginBottom: '12px' }}>
-                                        <Input style={{ backgroundColor: '#fafafa', cursor: 'default' }} />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
+                        <Form.Item label="Full Name" name="fullName" rules={[{ required: true }]}>
+                            <Input />
+                        </Form.Item>
 
-                            <Form.Item label="Email" name="email" style={{ marginBottom: '12px' }}>
-                                {/* Dùng Input thay cho Select vì đây là chế độ xem */}
-                                <Input readOnly style={{ backgroundColor: '#fafafa', cursor: 'default', fontWeight: 500, color: '#1890ff' }} />
-                            </Form.Item>
+                        <Row gutter={12}>
+                            <Col span={10}>
+                                <Form.Item label="Role" name="role" rules={[{ required: true }]}>
+                                    <Select>
+                                        <Option value="ADMIN">Admin</Option>
+                                        <Option value="USER">User</Option>
+                                        <Option value="MANAGER">Manager</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                            <Col span={14}>
+                                <Form.Item label="Phone" name="phone">
+                                    <Input />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                            <Form.Item label="Address" name="address" style={{ marginBottom: '0' }}>
-                                <TextArea rows={2} style={{ backgroundColor: '#fafafa', cursor: 'default' }} />
-                            </Form.Item>
-                        </div>
+                        {/* Disabled Email */}
+                        <Form.Item label="Email" name="email">
+                            <Input disabled />
+                        </Form.Item>
+
+                        {/* Không hiển thị hoặc Disabled Password - Thường Edit sẽ không sửa pass ở đây */}
+                        <Form.Item label="Password" name="password" help="Mật khẩu không được phép thay đổi tại đây">
+                            <Input.Password placeholder="********" disabled />
+                        </Form.Item>
+
+                        <Form.Item label="Address" name="address">
+                            <TextArea rows={2} />
+                        </Form.Item>
                     </Col>
 
-                    {/* CỘT PHẢI: AVATAR */}
-                    <Col span={8} style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Title level={5} style={{ margin: '0 0 20px 0', fontSize: '16px', alignSelf: 'flex-start' }}>Avatar</Title>
-
-                        {/* Khung Avatar tròn */}
-                        <div style={{
-                            width: '140px',
-                            height: '140px',
-                            borderRadius: '50%',
-                            border: '4px solid #f5f5f5',
-                            boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginBottom: '15px'
-                        }}>
-                            <img
-                                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200&h=200"
-                                alt="Avatar"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                        </div>
-
-                        <Text type="secondary" style={{ fontSize: '13px' }}>
-                            Status: <span style={{ color: '#52c41a', fontWeight: 500 }}>● Active</span>
-                        </Text>
+                    <Col span={8} style={{ borderLeft: '1px solid #f0f0f0', textAlign: 'center' }}>
+                        <Title level={5} style={{ textAlign: 'left' }}>Avatar</Title>
+                        <Form.Item name="avatar">
+                            <Upload
+                                customRequest={handleCustomUpload}
+                                listType="picture-card"
+                                fileList={fileList}
+                                onPreview={handlePreview}
+                                onChange={handleChange}
+                                maxCount={1}
+                            >
+                                {fileList.length > 0 ? null : (
+                                    <div>
+                                        <PlusOutlined />
+                                        <div style={{ marginTop: 8 }}>Upload</div>
+                                    </div>
+                                )}
+                            </Upload>
+                        </Form.Item>
                     </Col>
                 </Row>
             </Form>
+
+            {previewImage && (
+                <Image
+                    wrapperStyle={{ display: 'none' }}
+                    preview={{
+                        visible: previewOpen,
+                        onVisibleChange: (visible) => setPreviewOpen(visible),
+                        afterOpenChange: (visible) => !visible && setPreviewImage(""),
+                    }}
+                    src={previewImage}
+                />
+            )}
         </Modal>
     );
-};
+}
 
-export default UserEdit;
+export default UserFormEdit;

@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
-@RequestMapping("/api")
+@RequestMapping("/api/users")
 @AllArgsConstructor
 @Validated
 @CrossOrigin(origins = "*")
 public class UserController {
     private final UserService userService;
 
-    @PostMapping("/users")
+    @PostMapping("")
     public ResponseEntity<RestResponse<UserResponseDTO>> createUser(
             @RequestBody CreateUserDTO createUserDTO) {
         UserResponseDTO userResponse = this.userService.createUser(createUserDTO);
@@ -37,23 +37,23 @@ public class UserController {
                 .body(RestResponse.of(201, "Create user success", userResponse));
     }
 
-    @GetMapping("/users/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.getUserById(id));
     }
 
-    @PutMapping("/users/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(@RequestBody UpdateUserDTO dto, @PathVariable Long id) {
         UserResponseDTO userResponseDTO = this.userService.updateUser(id, dto);
         return ResponseEntity.status(HttpStatus.OK).body(userResponseDTO);
     }
 
-    @GetMapping("/users")
+    @GetMapping("")
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         return ResponseEntity.status(HttpStatus.OK).body(userService.getAllUsers());
     }
 
-    @DeleteMapping("/users/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         this.userService.delete(id);
         return ResponseEntity.status(HttpStatus.OK).body(null);

@@ -12,6 +12,7 @@ public class UserConvert {
         rs.setCreatedDate(user.getCreatedAt());
         rs.setEmail(user.getEmail());
         rs.setPhoneNumber(user.getPhoneNumber());
+        rs.setAvatar(user.getAvatar());
         return rs;
     }
 }

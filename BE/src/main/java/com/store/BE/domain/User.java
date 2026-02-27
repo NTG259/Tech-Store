@@ -30,6 +30,8 @@ public class User {
 
     private Boolean active = true;
 
+    private String avatar;
+
     private Instant createdAt;
     private String createdBy;
     private Instant updatedAt;

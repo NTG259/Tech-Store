@@ -31,6 +31,7 @@ public class UserService {
         newUser.setPhoneNumber(user.getPhoneNumber());
         newUser.setAddress(user.getAddress());
         newUser.setPassword(user.getPassword());
+        newUser.setAvatar(user.getAvatar());
 
         newUser = this.userRepository.save(newUser);
 
@@ -66,8 +67,9 @@ public class UserService {
         user.setAddress(dto.getAddress());
         user.setFullName(dto.getFullName());
         user.setPhoneNumber(dto.getPhoneNumber());
+        user.setAvatar(dto.getAvatar());
 
-        User updatedUser = this.userRepository.save(user);
+        User updatedUser = this.userRepository.saveAndFlush(user);
         return UserConvert.convertToUserResponseDTO(updatedUser);
     }
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
-import ProductCard from "../../layout/client/ProductCard";
+import ProductCard from "./ProductCard";
 import SectionTag from "../../layout/client/SectionTag";
 import ViewAllButton from "../../layout/client/ViewAllButton";
 
@@ -17,10 +17,10 @@ const imgBookshelf = "https://placehold.co/400x400/f5f5f5/333333/png?text=Small+
 
 /* ─────────────── Data ─────────────── */
 const newProducts = [
-    { id: 1, name: "HAVIT HV-G92 Gamepad", price: "$120", oldPrice: "$160", discount: "-40%", stars: 5, reviews: 88, image: imgGamepad },
+    { id: 1, name: "HAVIT HV-G92 Gamepad", price: "$120", oldPrice: "$160", discount: "-40%", stars: 5, reviews: 88, image: imgGamepad,  showAddToCart: true },
     { id: 2, name: "AK-900 Wired Keyboard", price: "$960", oldPrice: "$1160", discount: "-35%", stars: 4, reviews: 75, image: imgKeyboard, showAddToCart: true },
-    { id: 3, name: "IPS LCD Gaming Monitor", price: "$370", oldPrice: "$400", discount: "-30%", stars: 5, reviews: 99, image: imgMonitor },
-    { id: 4, name: "S-Series Comfort Chair", price: "$375", oldPrice: "$400", discount: "-25%", stars: 4, reviews: 99, image: imgChair },
+    { id: 3, name: "IPS LCD Gaming Monitor", price: "$370", oldPrice: "$400", discount: "-30%", stars: 5, reviews: 99, image: imgMonitor,  showAddToCart: true },
+    { id: 4, name: "S-Series Comfort Chair", price: "$375", oldPrice: "$400", discount: "-25%", stars: 4, reviews: 99, image: imgChair,  showAddToCart: true },
 ];
 
 const bestSelling = [

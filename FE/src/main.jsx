@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import React from 'react';
 import App from './App'
 import './index.css'
 import './global.css'
@@ -14,15 +15,42 @@ import Orders from "./page/admin/Orders";
 import Products from "./page/admin/Products";
 import ECommerceHomePage from './page/client/HomePage';
 import AllProductList from './page/client/ViewAllProductPage'
+import ProductDetail from './page/client/ProductDetail';
+import Cart from './page/client/Cart';
+import CheckOut from './page/client/CheckOut';
+import Profile from './page/client/Profile';
+import OrdersHistory from './page/client/OrderHistory';
+import Login from './page/auth/Login';
+import Register from './page/auth/Register';
 
 const router = createBrowserRouter([
   {
-    path: "/store",
+    path: "/",
     Component: ECommerceHomePage,
   },
   {
-    path: "/store/products",
+    path: "/products",
     Component: AllProductList,
+  },
+  {
+    path: "/products/:id",
+    Component: ProductDetail,
+  },
+  {
+    path: "/cart",
+    Component : Cart,
+  },
+  {
+    path : "/checkout",
+    Component : CheckOut,
+  },
+  {
+    path : "/profile",
+    Component : Profile,
+  },
+  {
+    path : "/orders",
+    Component : OrdersHistory,
   },
   {
     path: "/dashboard",
@@ -47,14 +75,14 @@ const router = createBrowserRouter([
       },
     ]
   },
-  // {
-  //   path: "/login",
-  //   element: <LoginPage></LoginPage>,
-  // },
-  // {
-  //   path: "/register",
-  //   element: <RegisterPage></RegisterPage>,
-  // },
+  {
+    path: "/login",
+    Component : Login,
+  },
+  {
+    path: "/register",
+    Component : Register,
+  },
 ]);
 
 createRoot(document.getElementById('root')).render(

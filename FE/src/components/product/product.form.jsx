@@ -85,7 +85,7 @@ const ProductForm = (props) => {
                 await loadProducts();
                 handleCancel();
             } else {
-                message.error("Tạo sản phẩm thất bại");
+                message.error("Tên sản phẩm bị trùng lặp");
             }
         } catch (error) {
             message.error("Có lỗi xảy ra khi tạo sản phẩm");

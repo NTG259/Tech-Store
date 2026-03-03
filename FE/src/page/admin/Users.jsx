@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Space, message, Button, Card, Typography, Popconfirm, Tooltip, Input, Row, Col } from 'antd';
+import { Table, Space, message, Button, Card, Typography, Popconfirm, Tooltip, Input, Row, Col, Breadcrumb } from 'antd';
 import {
     DeleteOutlined,
     EditOutlined,
@@ -29,13 +29,13 @@ const User = () => {
             const res = await fetchAllUsersAPI();
             if (res && res.data) {
                 const formattedData = res.data.map(user => ({
-                    key: user.id, // Luôn luôn có key cho table
+                    key: user.id,
                     id: user.id,
                     fullName: user.name,
                     email: user.email,
                     phone: user.phoneNumber,
                     address: user.address,
-                    avatar : user.avatar
+                    avatar: user.avatar
                 }));
                 setData(formattedData);
             }
@@ -88,7 +88,7 @@ const User = () => {
             title: 'Địa chỉ',
             dataIndex: 'address',
             key: 'address',
-            ellipsis: true, // Tự động rút gọn nếu quá dài
+            ellipsis: true,
         },
         {
             title: 'Thao tác',
@@ -97,13 +97,11 @@ const User = () => {
             width: 180,
             render: (_, record) => (
                 <Space size="small">
-                    {/* Khi nào hover vào sẽ hiển thị thông tin */}
                     <Tooltip title="Xem chi tiết">
                         <Button
                             shape="circle"
                             icon={<EyeOutlined />}
                             onClick={() => {
-                                console.log(record);
                                 setSelectedUserData(record);
                                 setIsOpenDetailUserModal(true);
                             }}
@@ -121,7 +119,6 @@ const User = () => {
                                 setIsOpenEditUserForm(true);
                             }}
                         />
-                        {console.log(">>> check record", record)}
                     </Tooltip>
 
                     <Popconfirm
@@ -147,77 +144,75 @@ const User = () => {
     ];
 
     return (
-        <div style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
-            <Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                {/* Header của bảng */}
-                <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
-                    <Col xs={24} sm={12}>
-                        <Title level={3} style={{ margin: 0 }}>Danh sách người dùng</Title>
-                    </Col>
-                    <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
-                        <Space>
-                            <Button
-                                icon={<ReloadOutlined />}
-                                onClick={loadUsers}
-                                loading={loading}
-                            >
-                                Làm mới
-                            </Button>
-                            <Button
-                                type="primary"
-                                icon={<UserAddOutlined />}
-                                style={{ borderRadius: '6px' }}
-                                onClick={() => setIsOpenCreateUserForm(true)}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Space>
-                    </Col>
-                </Row>
+        <>
+            <div style={{ padding: '0px', background: '#fff', minHeight: '100vh - 120px' }}>
+                <Card bordered={false} style={{ borderRadius: '8px' }}>
+                    <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
+                        <Col xs={24} sm={12}>
+                            <Title level={3} style={{ margin: 0 }}>Danh sách người dùng</Title>
+                        </Col>
+                        <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
+                            <Space>
+                                <Button
+                                    icon={<ReloadOutlined />}
+                                    onClick={loadUsers}
+                                    loading={loading}
+                                >
+                                    Làm mới
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    icon={<UserAddOutlined />}
+                                    style={{ borderRadius: '6px' }}
+                                    onClick={() => setIsOpenCreateUserForm(true)}
+                                >
+                                    Thêm mới
+                                </Button>
+                            </Space>
+                        </Col>
+                    </Row>
 
-                {/* Thanh tìm kiếm nhanh */}
-                <div style={{ marginBottom: '16px' }}>
-                    <Input
-                        placeholder="Tìm kiếm theo tên hoặc email..."
-                        prefix={<SearchOutlined />}
-                        style={{ width: 300, borderRadius: '6px' }}
+                    <div style={{ marginBottom: '16px' }}>
+                        <Input
+                            placeholder="Tìm kiếm theo tên hoặc email..."
+                            prefix={<SearchOutlined />}
+                            style={{ width: 300, borderRadius: '6px' }}
+                        />
+                    </div>
+
+                    <Table
+                        columns={columns}
+                        dataSource={data}
+                        loading={loading}
+                        pagination={{
+                            pageSize: 8,
+                            showSizeChanger: true,
+                            showTotal: (total) => `Tổng cộng ${total} người dùng`,
+                        }}
+                        rowClassName="editable-row"
+                        bordered
                     />
-                </div>
+                </Card>
 
-                {/* Bảng dữ liệu */}
-                <Table
-                    columns={columns}
-                    dataSource={data}
-                    loading={loading}
-                    pagination={{
-                        pageSize: 8,
-                        showSizeChanger: true,
-                        showTotal: (total) => `Tổng cộng ${total} người dùng`,
-                    }}
-                    rowClassName="editable-row"
-                    bordered
+                <DetailUserModal
+                    isOpenDetailUserModal={isOpenDetailUserModal}
+                    setIsOpenDetailUserModal={setIsOpenDetailUserModal}
+                    selectedUserData={selectedUserData}
                 />
-            </Card>
-
-            {/* Modals */}
-            <DetailUserModal
-                isOpenDetailUserModal={isOpenDetailUserModal}
-                setIsOpenDetailUserModal={setIsOpenDetailUserModal}
-                selectedUserData={selectedUserData}
-            />
-            <UserEdit
-                isOpenEditUserForm={isOpenEditUserForm}
-                setIsOpenEditUserForm={setIsOpenEditUserForm}
-                selectedUserData={selectedUserData}
-                setSelectedUserData={setSelectedUserData}
-                loadUsers={loadUsers}
-            />
-            <UserForm
-                isOpenCreateUserForm={isOpenCreateUserForm}
-                setIsOpenCreateUserForm={setIsOpenCreateUserForm}
-                loadUsers={loadUsers}
-            />
-        </div>
+                <UserEdit
+                    isOpenEditUserForm={isOpenEditUserForm}
+                    setIsOpenEditUserForm={setIsOpenEditUserForm}
+                    selectedUserData={selectedUserData}
+                    setSelectedUserData={setSelectedUserData}
+                    loadUsers={loadUsers}
+                />
+                <UserForm
+                    isOpenCreateUserForm={isOpenCreateUserForm}
+                    setIsOpenCreateUserForm={setIsOpenCreateUserForm}
+                    loadUsers={loadUsers}
+                />
+            </div>
+        </>
     );
 };
 

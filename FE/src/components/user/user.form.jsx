@@ -78,13 +78,12 @@ const UserForm = (props) => {
             setFileList([]);
             setImageUrl("");
         } else {
-            if (error.response) {
-                message.error("Backend báo lỗi: " + (error.response.data.message || error.response.status));
+            if (res.errors) {
+                message.error("Email đã được sử dụng");
             } else {
                 message.error("Không thể kết nối tới server");
             }
         }
-
     };
 
     return (

@@ -1,5 +1,5 @@
+import React, { useState } from "react";
 import { Layout, theme } from "antd";
-import { useState } from "react";
 import AppSider from "./AppSider";
 import AppHeader from "./AppHeader";
 import AppContent from "./AppContent";
@@ -16,13 +16,14 @@ const AdminLayout = () => {
     <Layout style={{ minHeight: "100vh" }}>
       <AppSider collapsed={collapsed} setCollapsed={setCollapsed} />
 
-      <Layout>
-        <AppHeader colorBgContainer={colorBgContainer} />
-        <AppContent
-          colorBgContainer={colorBgContainer}
-          borderRadiusLG={borderRadiusLG}
-        />
-        <AppFooter />
+      <Layout style={{ background: "#f5f5f5" }}>
+        <div style={{ marginTop: "24px" }}>
+          <AppContent
+            colorBgContainer={colorBgContainer}
+            borderRadiusLG={borderRadiusLG}
+            collapsed={collapsed}
+          />
+        </div>
       </Layout>
     </Layout>
   );

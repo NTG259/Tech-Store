@@ -3,10 +3,12 @@ package com.store.BE.service;
 import com.store.BE.domain.User;
 import com.store.BE.domain.dto.CreateUserDTO;
 import com.store.BE.domain.dto.UpdateUserDTO;
+import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.UserResponseDTO;
 import com.store.BE.repo.UserRepository;
 import com.store.BE.utils.convert.UserConvert;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,7 +22,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public UserResponseDTO createUser(CreateUserDTO user) {
+    public ApiResponse<UserResponseDTO> createUser(CreateUserDTO user) {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new DataIntegrityViolationException("Email đã tồn tại");
         }
@@ -35,7 +37,8 @@ public class UserService {
 
         newUser = this.userRepository.save(newUser);
 
-        return UserConvert.convertToUserResponseDTO(newUser);
+        UserResponseDTO responseDTO = UserConvert.convertToUserResponseDTO(newUser);
+        return new ApiResponse<>(responseDTO, "Call api success", null, HttpStatus.OK.value());
     }
 
     public UserResponseDTO getUserById(Long id) {

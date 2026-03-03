@@ -1,3 +1,4 @@
+import React from 'react';
 export default function SectionTag({ label }) {
     return (
         <div className="flex items-center gap-4">

@@ -1,6 +1,7 @@
 package com.store.BE.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,9 +18,11 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 100)
+    @NotBlank(message = "Email cannot null")
     private String email;
 
     @Column(nullable = false)
+    @NotBlank(message = "Password cannot null")
     private String password;
 
     private String fullName;

@@ -19,6 +19,7 @@ public class Product {
 
     @NotBlank(message = "Name must not be blank")
     @Size(max = 255)
+    @Column(unique = true)
     private String name;
 
     @Positive(message = "Price must be greater than 0")

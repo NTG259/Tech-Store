@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Space, message, Button, Card, Typography, Popconfirm, Tooltip, Input, Row, Col, Tag } from 'antd';
+import { Table, Space, message, Button, Card, Typography, Popconfirm, Tooltip, Input, Row, Col, Tag, Breadcrumb } from 'antd';
 import {
     DeleteOutlined,
     EditOutlined,
@@ -82,7 +82,7 @@ const Product = () => {
             title: 'Giá',
             dataIndex: 'price',
             key: 'price',
-            render: (value) => `${value.toLocaleString()} VNĐ`,
+            render: (value) => value ? `${value.toLocaleString()} VNĐ` : '0 VNĐ',
         },
         {
             title: 'Số lượng',
@@ -155,78 +155,80 @@ const Product = () => {
     ];
 
     return (
-        <div style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
-            <Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                {/* Header của bảng */}
-                <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
-                    <Col xs={24} sm={12}>
-                        <Title level={3} style={{ margin: 0 }}>Danh sách sản phẩm</Title>
-                    </Col>
-                    <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
-                        <Space>
-                            <Button
-                                icon={<ReloadOutlined />}
-                                onClick={loadProducts}
-                                loading={loading}
-                            >
-                                Làm mới
-                            </Button>
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                style={{ borderRadius: '6px' }}
-                                onClick={() => setIsOpenCreateProductForm(true)}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Space>
-                    </Col>
-                </Row>
+        <>
+            <div style={{ padding: '0px', background: '#fff', minHeight: '100vh-120px' }}>
+                <Card bordered={false} style={{ borderRadius: '8px' }}>
+                    {/* Header của bảng */}
+                    <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
+                        <Col xs={24} sm={12}>
+                            <Title level={3} style={{ margin: 0 }}>Danh sách sản phẩm</Title>
+                        </Col>
+                        <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
+                            <Space>
+                                <Button
+                                    icon={<ReloadOutlined />}
+                                    onClick={loadProducts}
+                                    loading={loading}
+                                >
+                                    Làm mới
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    icon={<PlusOutlined />}
+                                    style={{ borderRadius: '6px' }}
+                                    onClick={() => setIsOpenCreateProductForm(true)}
+                                >
+                                    Thêm mới
+                                </Button>
+                            </Space>
+                        </Col>
+                    </Row>
 
-                {/* Thanh tìm kiếm nhanh */}
-                <div style={{ marginBottom: '16px' }}>
-                    <Input
-                        placeholder="Tìm kiếm theo tên sản phẩm..."
-                        prefix={<SearchOutlined />}
-                        style={{ width: 300, borderRadius: '6px' }}
+                    {/* Thanh tìm kiếm nhanh */}
+                    <div style={{ marginBottom: '16px' }}>
+                        <Input
+                            placeholder="Tìm kiếm theo tên sản phẩm..."
+                            prefix={<SearchOutlined />}
+                            style={{ width: 300, borderRadius: '6px' }}
+                        />
+                    </div>
+
+                    {/* Bảng dữ liệu */}
+                    <Table
+                        columns={columns}
+                        dataSource={data}
+                        loading={loading}
+                        pagination={{
+                            pageSize: 8,
+                            showSizeChanger: true,
+                            showTotal: (total) => `Tổng cộng ${total} sản phẩm`,
+                        }}
+                        rowClassName="editable-row"
+                        bordered
                     />
-                </div>
+                </Card>
 
-                {/* Bảng dữ liệu */}
-                <Table
-                    columns={columns}
-                    dataSource={data}
-                    loading={loading}
-                    pagination={{
-                        pageSize: 8,
-                        showSizeChanger: true,
-                        showTotal: (total) => `Tổng cộng ${total} sản phẩm`,
-                    }}
-                    rowClassName="editable-row"
-                    bordered
+                {/* Modals */}
+                <DetailProductModal
+                    isOpenDetailProductModal={isOpenDetailProductModal}
+                    setIsOpenDetailProductModal={setIsOpenDetailProductModal}
+                    selectedProductData={selectedProductData}
                 />
-            </Card>
 
-            {/* Modals */}
-            <DetailProductModal
-                isOpenDetailProductModal={isOpenDetailProductModal}
-                setIsOpenDetailProductModal={setIsOpenDetailProductModal}
-                selectedProductData={selectedProductData}
-            />
+                <ProductEdit
+                    isOpenEditProductModal={isOpenEditProductModal}
+                    setIsOpenEditProductModal={setIsOpenEditProductModal}
+                    selectedProductData={selectedProductData}
+                    loadProducts={loadProducts}
+                />
 
-            <ProductEdit
-                isOpenEditProductModal={isOpenEditProductModal}
-                setIsOpenEditProductModal={setIsOpenEditProductModal}
-                selectedProductData={selectedProductData}
-                loadProducts={loadProducts}
-            />
-
-            <ProductForm
-                isOpenCreateProductForm={isOpenCreateProductForm}
-                setIsOpenCreateProductForm={setIsOpenCreateProductForm}
-                loadProducts={loadProducts}
-            />
-        </div>
+                <ProductForm
+                    isOpenCreateProductForm={isOpenCreateProductForm}
+                    setIsOpenCreateProductForm={setIsOpenCreateProductForm}
+                    loadProducts={loadProducts}
+                />
+            </div>
+        </>
     );
 };
 

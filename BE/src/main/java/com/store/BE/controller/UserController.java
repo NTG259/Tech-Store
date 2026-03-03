@@ -3,9 +3,10 @@ package com.store.BE.controller;
 import com.store.BE.domain.User;
 import com.store.BE.domain.dto.CreateUserDTO;
 import com.store.BE.domain.dto.UpdateUserDTO;
-import com.store.BE.domain.response.RestResponse;
+import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.UserResponseDTO;
 import com.store.BE.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collector;
 
 @Controller
 @RequestMapping("/api/users")
@@ -21,20 +25,16 @@ import java.util.List;
 @Validated
 @CrossOrigin(origins = "*")
 public class UserController {
+
     private final UserService userService;
 
     @PostMapping("")
-    public ResponseEntity<RestResponse<UserResponseDTO>> createUser(
+    public ResponseEntity<ApiResponse<UserResponseDTO>> createUser(
+            @Valid
             @RequestBody CreateUserDTO createUserDTO) {
-        UserResponseDTO userResponse = this.userService.createUser(createUserDTO);
-        if (userResponse == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(RestResponse.of(400, "Create failed", null));
-        }
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(RestResponse.of(201, "Create user success", userResponse));
+                .body(this.userService.createUser(createUserDTO));
     }
 
     @GetMapping("/{id}")

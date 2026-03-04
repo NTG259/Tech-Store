@@ -7,12 +7,13 @@ import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.UserResponseDTO;
 import com.store.BE.repo.UserRepository;
 import com.store.BE.utils.convert.UserConvert;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.store.BE.utils.exception.BusinessException;
+import com.store.BE.utils.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -22,49 +23,43 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public ApiResponse<UserResponseDTO> createUser(CreateUserDTO user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new DataIntegrityViolationException("Email đã tồn tại");
+    public ApiResponse<UserResponseDTO> createUser(CreateUserDTO userDto) {
+        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+            // Sử dụng mã lỗi cụ thể từ Enum
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
+
         User newUser = new User();
-        newUser.setEmail(user.getEmail());
-        newUser.setAddress(user.getAddress());
-        newUser.setFullName(user.getFullName());
-        newUser.setPhoneNumber(user.getPhoneNumber());
-        newUser.setAddress(user.getAddress());
-        newUser.setPassword(user.getPassword());
-        newUser.setAvatar(user.getAvatar());
+        // ... set fields (email, address, fullName, password, avatar ...)
+        newUser.setEmail(userDto.getEmail());
+        newUser.setAddress(userDto.getAddress());
+        newUser.setFullName(userDto.getFullName());
+        newUser.setPhoneNumber(userDto.getPhoneNumber());
+        newUser.setPassword(userDto.getPassword());
+        newUser.setAvatar(userDto.getAvatar());
 
         newUser = this.userRepository.save(newUser);
-
-        UserResponseDTO responseDTO = UserConvert.convertToUserResponseDTO(newUser);
-        return new ApiResponse<>(responseDTO, "Call api success", null, HttpStatus.OK.value());
+        return new ApiResponse<>(UserConvert.convertToUserResponseDTO(newUser), "Tạo người dùng thành công", null, HttpStatus.CREATED.value());
     }
 
-    public UserResponseDTO getUserById(Long id) {
+    public ApiResponse<UserResponseDTO> getUserById(Long id) {
         User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return UserConvert.convertToUserResponseDTO(user);
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return new ApiResponse<>(UserConvert.convertToUserResponseDTO(user), "Lấy thông tin thành công", null, HttpStatus.OK.value());
     }
 
-    public List<UserResponseDTO> getAllUsers() {
-        ArrayList<UserResponseDTO> list = new ArrayList<>();
-        List<User> users = this.userRepository.findAll();
-        for (User user : users) {
-            list.add(UserConvert.convertToUserResponseDTO(user));
-        }
-        return list;
-    }
-    public void delete(Long id) {
+    public ApiResponse<Void> deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         userRepository.deleteById(id);
+        return new ApiResponse<>(null, "Xóa người dùng thành công", null, HttpStatus.OK.value());
     }
 
-    public UserResponseDTO updateUser(Long id, UpdateUserDTO dto) {
+    public ApiResponse<UserResponseDTO> updateUser(Long id, UpdateUserDTO dto) {
         User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         user.setActive(dto.getActive());
         user.setAddress(dto.getAddress());
@@ -73,6 +68,13 @@ public class UserService {
         user.setAvatar(dto.getAvatar());
 
         User updatedUser = this.userRepository.saveAndFlush(user);
-        return UserConvert.convertToUserResponseDTO(updatedUser);
+        return new ApiResponse<>(UserConvert.convertToUserResponseDTO(updatedUser), "Cập nhật thành công", null, HttpStatus.OK.value());
+    }
+
+    public ApiResponse<List<UserResponseDTO>> getAllUsers() {
+        List<UserResponseDTO> list = this.userRepository.findAll().stream()
+                .map(UserConvert::convertToUserResponseDTO)
+                .collect(Collectors.toList());
+        return new ApiResponse<>(list, "Lấy danh sách thành công", null, HttpStatus.OK.value());
     }
 }

@@ -1,30 +1,69 @@
-import React, { useEffect } from 'react';
-import { Button, Modal, Form, Input, Row, Col, Typography, InputNumber, Badge, Tag, Space } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Modal, Form, Input, Row, Col, Typography, InputNumber, Tag, Space } from 'antd';
 import { ShoppingOutlined, InfoCircleOutlined } from '@ant-design/icons';
 
-const { Title, Text } = Typography;
+// Import API lấy danh mục
+import { fetchAllCategoriesAPI } from '../../service/category/api';
+
+const { Title } = Typography;
 const { TextArea } = Input;
 
 const DetailProductModal = (props) => {
     const { isOpenDetailProductModal, setIsOpenDetailProductModal, selectedProductData } = props;
     const [form] = Form.useForm();
 
+    // State lưu danh sách category để map ID sang Tên hiển thị
+    const [categories, setCategories] = useState([]);
+
+    // Load danh sách Category từ API
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetchAllCategoriesAPI(1, 100);
+                if (res && res.status === 200 && res.data) {
+                    setCategories(res.data);
+                }
+            } catch (error) {
+                console.error("Lỗi fetch categories:", error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
     useEffect(() => {
         if (isOpenDetailProductModal && selectedProductData) {
+
+            // Xử lý linh hoạt trường hợp category là Object hoặc ID
+            let categoryName = 'Không xác định';
+
+            if (selectedProductData.category && typeof selectedProductData.category === 'object') {
+                // Nếu BE trả luôn object, ta lấy luôn name không cần tìm kiếm
+                categoryName = selectedProductData.category.name;
+            } else if (selectedProductData.category) {
+                // Nếu BE chỉ trả về ID, ta mới đi tìm trong mảng categories
+                const catObj = categories.find(c => c.id === selectedProductData.category || c._id === selectedProductData.category);
+                categoryName = catObj ? catObj.name : selectedProductData.category;
+            }
+
             form.setFieldsValue({
                 name: selectedProductData?.name || '',
                 brand: selectedProductData?.brand || '',
+                category: categoryName, // Sử dụng categoryName đã xử lý an toàn
                 price: selectedProductData?.price || 0,
                 stockQuantity: selectedProductData?.stockQuantity || 0,
                 description: selectedProductData?.description || 'Không có mô tả',
-                productStatus: selectedProductData.productStatus === "available" ? 'Đang kinh doanh' : 'Ngừng kinh doanh',
+                productStatus: selectedProductData.productStatus === "PUBLISHED" ? 'Đang kinh doanh' : 'Ngừng kinh doanh',
             });
         } else {
             form.resetFields();
         }
-    }, [isOpenDetailProductModal, selectedProductData, form]);
+    }, [isOpenDetailProductModal, selectedProductData, form, categories]);
 
     const handleCancel = () => setIsOpenDetailProductModal(false);
+
+    if (!selectedProductData) {
+        return null;
+    }
 
     return (
         <Modal
@@ -46,10 +85,7 @@ const DetailProductModal = (props) => {
             ]}
             styles={{ body: { padding: '20px 24px' } }}
         >
-            <Form
-                form={form}
-                layout="vertical"
-            >
+            <Form form={form} layout="vertical">
                 <Row gutter={24}>
                     <Col span={16}>
                         <Title level={5} style={{ marginBottom: '15px' }}>
@@ -61,12 +97,17 @@ const DetailProductModal = (props) => {
                         </Form.Item>
 
                         <Row gutter={12}>
-                            <Col span={12}>
+                            <Col span={8}>
                                 <Form.Item label="Thương hiệu" name="brand" style={{ marginBottom: '12px' }}>
                                     <Input readOnly />
                                 </Form.Item>
                             </Col>
-                            <Col span={12}>
+                            <Col span={8}>
+                                <Form.Item label="Thể loại" name="category" style={{ marginBottom: '12px' }}>
+                                    <Input readOnly />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
                                 <Form.Item label="Trạng thái" name="productStatus" style={{ marginBottom: '12px' }}>
                                     <Input readOnly />
                                 </Form.Item>
@@ -94,7 +135,8 @@ const DetailProductModal = (props) => {
                             <TextArea rows={4} readOnly style={{ backgroundColor: '#fafafa' }} />
                         </Form.Item>
                     </Col>
-                    <Col span={8} style={{ borderRight: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+                    <Col span={8} style={{ borderLeft: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <div style={{
                             width: '200px',
                             height: '200px',
@@ -107,7 +149,6 @@ const DetailProductModal = (props) => {
                             alignItems: 'center',
                             justifyContent: 'center'
                         }}>
-                            {/* Placeholder cho ảnh sản phẩm */}
                             <img
                                 src={selectedProductData?.productImg || ""}
                                 alt="Product"

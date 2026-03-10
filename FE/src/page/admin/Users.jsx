@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Space, message, Button, Card, Typography, Popconfirm, Tooltip, Input, Row, Col, Breadcrumb } from 'antd';
+import { Table, Space, message, Button, Card, Typography, Popconfirm, Tooltip, Input, Row, Col, Tag } from 'antd';
 import {
     DeleteOutlined,
     EditOutlined,
     EyeOutlined,
     UserAddOutlined,
-    SearchOutlined,
     ReloadOutlined
 } from '@ant-design/icons';
 import { deleteUserAPI, fetchAllUsersAPI } from '../../service/user/api';
@@ -14,30 +13,48 @@ import UserEdit from '../../components/user/user.edit';
 import UserForm from '../../components/user/user.form';
 
 const { Title } = Typography;
+const { Search } = Input;
 
 const User = () => {
     const [isOpenDetailUserModal, setIsOpenDetailUserModal] = useState(false);
     const [isOpenEditUserForm, setIsOpenEditUserForm] = useState(false);
+    const [isOpenCreateUserForm, setIsOpenCreateUserForm] = useState(false);
     const [selectedUserData, setSelectedUserData] = useState(null);
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [isOpenCreateUserForm, setIsOpenCreateUserForm] = useState(false);
+
+    const [current, setCurrent] = useState(1);
+    const [pageSize, setPageSize] = useState(9);
+    const [total, setTotal] = useState(0);
+
+    const [searchText, setSearchText] = useState('');
+    const [inputValue, setInputValue] = useState('');
 
     const loadUsers = async () => {
         setLoading(true);
         try {
-            const res = await fetchAllUsersAPI();
+            const res = await fetchAllUsersAPI(current, pageSize, searchText);
+
             if (res && res.data) {
-                const formattedData = res.data.map(user => ({
+                const users = res.data;
+                const metaData = res.meta;
+
+                const formattedData = users.map(user => ({
                     key: user.id,
                     id: user.id,
-                    fullName: user.name,
+                    fullName: user.fullName,
                     email: user.email,
                     phone: user.phoneNumber,
                     address: user.address,
-                    avatar: user.avatar
+                    avatar: user.avatar,
+                    role: user.role
                 }));
+
                 setData(formattedData);
+
+                if (metaData && metaData.totalItems !== undefined) {
+                    setTotal(metaData.totalItems);
+                }
             }
         } catch (error) {
             message.error("Lỗi khi tải dữ liệu người dùng");
@@ -45,6 +62,16 @@ const User = () => {
             setLoading(false);
         }
     };
+
+    const onSearch = (value) => {
+        setSearchText(value);
+        setCurrent(1);
+    };
+
+    useEffect(() => {
+        loadUsers();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [current, pageSize, searchText]);
 
     const handleDelete = async (id) => {
         try {
@@ -56,9 +83,10 @@ const User = () => {
         }
     };
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
+    const handleTableChange = (pagination) => {
+        setCurrent(pagination.current);
+        setPageSize(pagination.pageSize);
+    };
 
     const columns = [
         {
@@ -89,6 +117,22 @@ const User = () => {
             dataIndex: 'address',
             key: 'address',
             ellipsis: true,
+        },
+        {
+            title: 'Vai trò',
+            dataIndex: 'role',
+            key: 'role',
+            width: 120,
+            render: (role) => {
+                let color = role === 'ADMIN' ? 'volcano' : 'green';
+                let displayRole = role ? role.toUpperCase() : '';
+
+                return (
+                    <Tag color={color} key={role}>
+                        {displayRole}
+                    </Tag>
+                );
+            }
         },
         {
             title: 'Thao tác',
@@ -144,75 +188,91 @@ const User = () => {
     ];
 
     return (
-        <>
-            <div style={{ padding: '0px', background: '#fff', minHeight: '100vh - 120px' }}>
-                <Card bordered={false} style={{ borderRadius: '8px' }}>
-                    <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
-                        <Col xs={24} sm={12}>
-                            <Title level={3} style={{ margin: 0 }}>Danh sách người dùng</Title>
-                        </Col>
-                        <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
-                            <Space>
-                                <Button
-                                    icon={<ReloadOutlined />}
-                                    onClick={loadUsers}
-                                    loading={loading}
-                                >
-                                    Làm mới
-                                </Button>
-                                <Button
-                                    type="primary"
-                                    icon={<UserAddOutlined />}
-                                    style={{ borderRadius: '6px' }}
-                                    onClick={() => setIsOpenCreateUserForm(true)}
-                                >
-                                    Thêm mới
-                                </Button>
-                            </Space>
-                        </Col>
-                    </Row>
+        <div style={{ padding: '0px', background: '#fff', minHeight: '100vh - 120px' }}>
+            <Card bordered={false} style={{ borderRadius: '8px' }}>
+                <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
+                    <Col xs={24} sm={12}>
+                        <Title level={3} style={{ margin: 0 }}>Danh sách người dùng</Title>
+                    </Col>
+                    <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
+                        <Space>
+                            <Button
+                                icon={<ReloadOutlined />}
+                                onClick={() => {
+                                    setCurrent(1);
+                                    setSearchText('');
+                                    setInputValue('');
+                                }}
+                                loading={loading}
+                            >
+                                Làm mới
+                            </Button>
+                            <Button
+                                type="primary"
+                                icon={<UserAddOutlined />}
+                                style={{ borderRadius: '6px' }}
+                                onClick={() => setIsOpenCreateUserForm(true)}
+                            >
+                                Thêm mới
+                            </Button>
+                        </Space>
+                    </Col>
+                </Row>
 
-                    <div style={{ marginBottom: '16px' }}>
-                        <Input
-                            placeholder="Tìm kiếm theo tên hoặc email..."
-                            prefix={<SearchOutlined />}
-                            style={{ width: 300, borderRadius: '6px' }}
+                <Row style={{ marginBottom: '20px' }}>
+                    <Col xs={24} sm={12} md={8}>
+                        <Search
+                            placeholder="Tìm kiếm theo tên người dùng..."
+                            allowClear
+                            enterButton
+                            onSearch={onSearch}
+                            value={inputValue}
+                            onChange={(e) => {
+                                setInputValue(e.target.value);
+                                if (e.target.value === '') {
+                                    setSearchText('');
+                                    setCurrent(1);
+                                }
+                            }}
                         />
-                    </div>
+                    </Col>
+                </Row>
 
-                    <Table
-                        columns={columns}
-                        dataSource={data}
-                        loading={loading}
-                        pagination={{
-                            pageSize: 8,
-                            showSizeChanger: true,
-                            showTotal: (total) => `Tổng cộng ${total} người dùng`,
-                        }}
-                        rowClassName="editable-row"
-                        bordered
-                    />
-                </Card>
+                <Table
+                    columns={columns}
+                    dataSource={data}
+                    loading={loading}
+                    onChange={handleTableChange}
+                    pagination={{
+                        current: current,
+                        pageSize: pageSize,
+                        total: total,
+                        showSizeChanger: false,
+                        showTotal: (total) => `Tổng cộng ${total} người dùng`,
+                    }}
+                    rowClassName="editable-row"
+                    bordered
+                />
+            </Card>
 
-                <DetailUserModal
-                    isOpenDetailUserModal={isOpenDetailUserModal}
-                    setIsOpenDetailUserModal={setIsOpenDetailUserModal}
-                    selectedUserData={selectedUserData}
-                />
-                <UserEdit
-                    isOpenEditUserForm={isOpenEditUserForm}
-                    setIsOpenEditUserForm={setIsOpenEditUserForm}
-                    selectedUserData={selectedUserData}
-                    setSelectedUserData={setSelectedUserData}
-                    loadUsers={loadUsers}
-                />
-                <UserForm
-                    isOpenCreateUserForm={isOpenCreateUserForm}
-                    setIsOpenCreateUserForm={setIsOpenCreateUserForm}
-                    loadUsers={loadUsers}
-                />
-            </div>
-        </>
+            <DetailUserModal
+                isOpenDetailUserModal={isOpenDetailUserModal}
+                setIsOpenDetailUserModal={setIsOpenDetailUserModal}
+                selectedUserData={selectedUserData}
+            />
+            <UserEdit
+                isOpenEditUserForm={isOpenEditUserForm}
+                setIsOpenEditUserForm={setIsOpenEditUserForm}
+                selectedUserData={selectedUserData}
+                setSelectedUserData={setSelectedUserData}
+                loadUsers={loadUsers}
+            />
+            <UserForm
+                isOpenCreateUserForm={isOpenCreateUserForm}
+                setIsOpenCreateUserForm={setIsOpenCreateUserForm}
+                loadUsers={loadUsers}
+            />
+        </div>
     );
 };
 

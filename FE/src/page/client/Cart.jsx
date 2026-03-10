@@ -1,29 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { getCart, updateCart, deleteCart } from "../../service/cart/api";
+import { useRef } from "react";
+const imgFallback = "https://placehold.co/100x100/f5f5f5/333333/png?text=Product";
 
-const imgMonitor = "https://placehold.co/100x100/f5f5f5/333333/png?text=Monitor";
-const imgGamepad = "https://placehold.co/100x100/f5f5f5/333333/png?text=Gamepad";
-
-/**
- * QtySpinner Component
- * - Hiển thị nút tăng/giảm số lượng sản phẩm
- * - value: số lượng hiện tại từ props của CartRow
- * - onChange: hàm callback để gửi số lượng mới lên parent component
- */
 function QtySpinner({ value, onChange }) {
     return (
         <div className="flex items-center border border-gray-400 rounded h-11 w-[120px]">
-            {/* 
-              NÚT GIẢM LƯỢNG (-) 
-              - onClick: gọi onChange với số lượng mới = value - 1 (tối thiểu là 1)
-              - onChange gửi giá trị lên CartRow
-              - CartRow gọi onQtyChange từ parent (Cart component)
-              - updateQty được thực thi để cập nhật state items
-            */}
             <button
-                onClick={() => onChange(Math.max(1, value - 1))}
+                // THAY ĐỔI 1: Cho phép giảm về 0 (để xóa)
+                onClick={() => onChange(value - 1)}
                 className="w-10 h-full flex items-center justify-center hover:bg-[#db4444] hover:text-white transition-colors border-r border-gray-400 hover:border-[#db4444] rounded-l"
             >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,13 +22,6 @@ function QtySpinner({ value, onChange }) {
                 {String(value).padStart(2, "0")}
             </span>
 
-            {/* 
-              NÚT TĂNG LƯỢNG (+)
-              - onClick: gọi onChange với số lượng mới = value + 1
-              - onChange gửi giá trị lên CartRow
-              - CartRow gọi onQtyChange từ parent (Cart component)
-              - updateQty được thực thi để cập nhật state items
-            */}
             <button
                 onClick={() => onChange(value + 1)}
                 className="w-10 h-full flex items-center justify-center hover:bg-[#db4444] hover:text-white transition-colors border-l border-gray-400 hover:border-[#db4444] rounded-r"
@@ -54,24 +35,7 @@ function QtySpinner({ value, onChange }) {
     );
 }
 
-/**
- * CartRow Component
- * - Hiển thị một sản phẩm trong giỏ hàng
- * - image, name, unitPrice, qty: dữ liệu từ mảng items (Cart component)
- * - onQtyChange: callback từ parent Cart component - updateQty
- * - onRemove: callback từ parent Cart component - removeItem
- * 
- * LUỒNG UPDATE SỐ LƯỢNG:
- * 1. User click nút +/- ở QtySpinner
- * 2. QtySpinner gọi onChange(newQty)
- * 3. onChange truyền lên CartRow: onQtyChange={(qty) => updateQty(item.id, qty)}
- * 4. updateQty được gọi với (id, newQty)
- * 5. setItems cập nhật state - tìm sản phẩm có cùng id và update qty
- * 6. Component re-render với dữ liệu mới
- * 7. Subtotal được tính lại: unitPrice * qty
- */
 function CartRow({ image, name, unitPrice, qty, onQtyChange, onRemove }) {
-    // Tính tổng tiền của dòng này: giá/sản phẩm × số lượng
     const subtotal = unitPrice * qty;
 
     return (
@@ -98,13 +62,6 @@ function CartRow({ image, name, unitPrice, qty, onQtyChange, onRemove }) {
             </span>
 
             <div className="w-1/3 md:w-[150px] flex justify-center md:justify-start md:ml-4">
-                {/* 
-                  QtySpinner Component
-                  - value={qty}: truyền số lượng hiện tại vào
-                  - onChange={onQtyChange}: khi user click +/-, onQtyChange được gọi
-                  - onQtyChange = (qty) => updateQty(item.id, qty)
-                  - updateQty sẽ cập nhật state items trong Cart component
-                */}
                 <QtySpinner value={qty} onChange={onQtyChange} />
             </div>
 
@@ -116,59 +73,135 @@ function CartRow({ image, name, unitPrice, qty, onQtyChange, onRemove }) {
 }
 
 export default function Cart() {
-    /**
-     * STATE: items - Mảng chứa tất cả sản phẩm trong giỏ
-     * Cấu trúc mỗi sản phẩm:
-     * {
-     *   id: 1,           // ID sản phẩm - dùng để tìm kiếm
-     *   name: "...",     // Tên sản phẩm
-     *   unitPrice: 650,  // Giá một sản phẩm
-     *   qty: 1,          // Số lượng - GIÁ TRỊ ĐƯỢC UPDATE
-     *   image: "..."     // URL ảnh
-     * }
-     */
-    const [items, setItems] = useState([
-        { id: 1, name: "LCD Monitor", unitPrice: 650, qty: 1, image: imgMonitor },
-        { id: 2, name: "H1 Gamepad", unitPrice: 550, qty: 2, image: imgGamepad },
-    ]);
+    const navigate = useNavigate();
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    /**
-     * LUỒNG UPDATE SỐ LƯỢNG CHI TIẾT:
-     * 
-     * 1️⃣ User click nút +/- trên QtySpinner
-     * 
-     * 2️⃣ QtySpinner gọi onChange(newQty)
-     *    - onChange = onQtyChange từ CartRow
-     *    - onQtyChange = (qty) => updateQty(item.id, qty) từ Cart component
-     * 
-     * 3️⃣ updateQty được gọi với (id=2, newQty=3)
-     *    updateQty(id, qty) => 
-     *      setItems(prev => prev.map(it => 
-     *        it.id === id ? { ...it, qty } : it  // Nếu id match, update qty
-     *      ))
-     * 
-     * 4️⃣ setItems thay đổi state:
-     *    - Items cũ: [ {id:1, qty:1}, {id:2, qty:2} ]
-     *    - Items mới: [ {id:1, qty:1}, {id:2, qty:3} ]
-     * 
-     * 5️⃣ Component re-render với state mới
-     * 
-     * 6️⃣ subtotal tính lại: 1*650 + 3*550 = 650 + 1650 = 2300
-     * 
-     * 7️⃣ Giao diện cập nhật:
-     *    - QtySpinner hiển thị qty=3 mới
-     *    - Subtotal dòng sản phẩm 2: 3*550 = 1650 (cập nhật)
-     *    - Cart Total: 2300 (cập nhật)
-     */
-    const updateQty = (id, qty) =>
-        setItems((prev) => prev.map((it) => (it.id === id ? { ...it, qty } : it)));
+    const itemsRef = useRef(items);
+    const isModifiedRef = useRef(false);
+    
+    useEffect(() => {
+        itemsRef.current = items;
+    }, [items]);
 
-    const removeItem = (id) =>
+    const syncCartWithServer = async () => {
+        // Nếu không có thay đổi gì thì không gọi API cho đỡ tốn tài nguyên
+        if (!isModifiedRef.current) return;
+
+        const payloads = itemsRef.current
+            .filter((it) => it.qty > 0)
+            .map((it) => ({
+                productId: it.id,
+                quantity: it.qty,
+            }));
+
+        try {
+            await Promise.all(payloads.map((p) => updateCart(p)));
+            isModifiedRef.current = false;
+        } catch (err) {
+            console.error("Lỗi đồng bộ giỏ hàng", err);
+        }
+    };
+
+    // 3. XỬ LÝ SỰ KIỆN RỜI KHỎI TRANG HOẶC ĐÓNG TAB
+    useEffect(() => {
+        // Sự kiện khi người dùng đóng tab, f5 hoặc chuyển sang app khác
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                syncCartWithServer();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        // Sự kiện Cleanup function: Chạy khi Component Unmount 
+        // (Ví dụ: bấm vào <Link to="/">Return to shop</Link>)
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            syncCartWithServer(); 
+        };
+    }, []); // Chạy 1 lần khi mount
+
+    // 4. XỬ LÝ KHI BẤM NÚT CHECKOUT
+    const handleCheckout = async (e) => {
+        e.preventDefault();
+        await syncCartWithServer(); 
+        navigate("/checkout");
+    };
+    useEffect(() => {
+        let alive = true;
+
+        const fetchCart = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const res = await getCart();
+                const cartItems = res?.data?.cartItems ?? [];
+
+                const normalized = (Array.isArray(cartItems) ? cartItems : []).map((ci) => {
+                    const product = ci?.product ?? {};
+                    const name = product?.name ?? ci?.name ?? "Unknown product";
+                    const unitPrice = Number(ci?.price ?? product?.price ?? 0);
+                    const qty = Number(ci?.quantity ?? ci?.qty ?? 0);
+                    const image = product?.productImg || product?.image || imgFallback;
+
+                    return {
+                        id: ci?.id ?? product?.id ?? name,
+                        name,
+                        unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
+                        qty: Number.isFinite(qty) ? qty : 0,
+                        image,
+                    };
+                });
+
+                if (!alive) return;
+                setItems(normalized.filter((it) => it.qty > 0));
+            } catch (e) {
+                if (!alive) return;
+                setError(e?.message || "Không thể lấy giỏ hàng. Vui lòng thử lại.");
+                setItems([]);
+            } finally {
+                // eslint-disable-next-line no-unsafe-finally
+                if (!alive) return;
+                setLoading(false);
+            }
+        };
+
+        fetchCart();
+        return () => {
+            alive = false;
+        };
+    }, []);
+
+    const removeItem = async (id) => {
+        // Cập nhật state local trước (UX mượt hơn)
         setItems((prev) => prev.filter((it) => it.id !== id));
+        // Đánh dấu giỏ hàng đã bị thay đổi
+        isModifiedRef.current = true;
 
-    // Tính tổng tiền của tất cả sản phẩm = Σ(giá × số lượng)
-    // Ví dụ: (650×1) + (550×3) = 650 + 1650 = 2300
-    const subtotal = items.reduce((sum, it) => sum + it.unitPrice * it.qty, 0);
+        try {
+            await deleteCart(id);
+        } catch (err) {
+            console.error("Lỗi xóa item khỏi giỏ hàng", err);
+        }
+    };
+
+    // THAY ĐỔI 2: Xử lý logic xóa khi số lượng = 0
+    const updateQty = (id, qty) => {
+        if (qty === 0) {
+            // Nếu người dùng giảm từ 1 xuống 0 -> Xóa khỏi giỏ hàng
+            removeItem(id);
+        } else {
+            // Ngược lại thì cập nhật số lượng bình thường
+            setItems((prev) => prev.map((it) => (it.id === id ? { ...it, qty } : it)));
+            isModifiedRef.current = true;
+        }
+    };
+
+    const subtotal = useMemo(
+        () => items.reduce((sum, it) => sum + it.unitPrice * it.qty, 0),
+        [items]
+    );
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900">
@@ -179,7 +212,19 @@ export default function Cart() {
                     <span className="hover:text-black cursor-pointer">Home</span> <span className="mx-2">/</span> <span className="text-black font-medium">Cart</span>
                 </div>
 
-                {items.length > 0 ? (
+                {loading ? (
+                    <div className="py-20 text-center text-gray-500">Đang tải giỏ hàng...</div>
+                ) : error ? (
+                    <div className="py-20 text-center">
+                        <p className="text-gray-600 mb-4">{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-[#db4444] text-white px-8 py-3 rounded font-medium hover:bg-[#c03c3c] transition-colors"
+                        >
+                            Thử lại
+                        </button>
+                    </div>
+                ) : items.length > 0 ? (
                     <>
                         <div className="hidden md:flex bg-white rounded shadow-[0px_1px_13px_0px_rgba(0,0,0,0.05)] h-[72px] items-center px-6 mb-4">
                             <span className="text-base font-medium text-black w-[320px]">Product</span>
@@ -189,15 +234,6 @@ export default function Cart() {
                         </div>
 
                         <div className="flex flex-col gap-4 mb-6">
-                            {/* 
-                              Render tất cả CartRow
-                              - items: dữ liệu từ state
-                              - onQtyChange: callback để update qty khi user click +/-
-                              - onRemove: callback để xóa sản phẩm
-                              
-                              KHI USER THAY ĐỔI SỐ LƯỢNG:
-                              CartRow → QtySpinner → onChange → onQtyChange → updateQty → setItems → re-render
-                            */}
                             {items.map((item) => (
                                 <CartRow
                                     key={item.id}
@@ -208,30 +244,12 @@ export default function Cart() {
                             ))}
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-16">
-                            <Link to = "/" className="w-full sm:w-auto border border-black border-opacity-50 text-base font-medium text-black px-10 py-3 rounded hover:bg-gray-50 transition-colors">
-                                Return To Shop
-                            </Link>
-                            <button className="w-full sm:w-auto border border-black border-opacity-50 text-base font-medium text-black px-10 py-3 rounded hover:bg-gray-50 transition-colors">
-                                Update Cart
-                            </button>
-                        </div>
-
                         <div className="flex justify-end">
                             <div className="border border-black border-opacity-50 rounded w-full md:w-[470px] p-6">
                                 <h3 className="text-xl font-medium text-black mb-6">Cart Total</h3>
 
                                 <div className="flex items-center justify-between py-4 border-b border-black border-opacity-20">
                                     <span className="text-base text-black">Subtotal:</span>
-                                    {/* 
-                                      Hiển thị giá trị SUBTOTAL
-                                      - subtotal được tính lại mỗi khi items thay đổi
-                                      - subtotal = tổng (giá × số lượng) của tất cả sản phẩm
-                                      - Khi user update qty, subtotal tự động cập nhật
-                                      - Ví dụ: nếu qty của Monitor thay đổi từ 1 → 2
-                                        subtotal cũ: (650×1) + (550×2) = 1750
-                                        subtotal mới: (650×2) + (550×2) = 2400
-                                    */}
                                     <span className="text-base font-medium text-black">${subtotal.toLocaleString()}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-black border-opacity-20">
@@ -244,9 +262,12 @@ export default function Cart() {
                                 </div>
 
                                 <div className="flex justify-center mt-4">
-                                    <Link to = "/checkout" className="bg-[#db4444] text-white px-10 py-3 rounded font-medium hover:bg-[#c03c3c] transition-colors">
+                                    <button
+                                        onClick={handleCheckout}
+                                        className="bg-[#db4444] text-white px-10 py-3 rounded font-medium hover:bg-[#c03c3c] transition-colors"
+                                    >
                                         Proceed to checkout
-                                    </Link>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -259,9 +280,10 @@ export default function Cart() {
                             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                         </svg>
                         <p className="text-xl font-medium text-gray-500">Your cart is currently empty.</p>
-                        <button className="mt-4 bg-[#db4444] text-white px-8 py-3 rounded font-medium hover:bg-[#c03c3c] transition-colors">
-                            Return To Shop
-                        </button>
+                        {/* THAY ĐỔI 3: Dùng Link thay cho button để điều hướng về trang chủ */}
+                        <Link to="/" className="mt-4 bg-[#db4444] text-white px-8 py-3 rounded font-medium hover:bg-[#c03c3c] transition-colors">
+                            Tiếp tục mua sắm
+                        </Link>
                     </div>
                 )}
             </main>

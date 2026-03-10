@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Input, Row, Col, Typography, InputNumber, Select, Upload, message, Image, Space } from 'antd';
-import { ShoppingOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { ShoppingOutlined, PlusOutlined } from '@ant-design/icons';
 
 import { createProductAPI } from '../../service/product/api';
 import { uploadToCloudinary } from '../../service/img/api';
+
+// Import API lấy danh mục
+import { fetchAllCategoriesAPI } from '../../service/category/api';
 
 import "./product.css"
 
@@ -28,6 +31,7 @@ const ProductForm = (props) => {
     const [previewImage, setPreviewImage] = useState("");
     const [fileList, setFileList] = useState([]);
     const [imageUrl, setImageUrl] = useState("");
+    const [categories, setCategories] = useState([]);
 
     const handlePreview = async (file) => {
         if (!file.url && !file.preview) {
@@ -36,6 +40,24 @@ const ProductForm = (props) => {
         setPreviewImage(file.url || file.preview);
         setPreviewOpen(true);
     };
+
+    // Load danh mục từ API thật
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetchAllCategoriesAPI(1, 100); 
+                if (res && res.status === 200 && res.data) {
+                    setCategories(res.data);
+                } else {
+                    message.error("Không thể tải danh sách thể loại");
+                }
+            } catch (error) {
+                console.error("Lỗi fetch categories:", error);
+                message.error("Lỗi khi tải danh sách thể loại");
+            }
+        };
+        fetchCategories();
+    }, []);
 
     const handleChange = ({ fileList: newFileList }) => {
         setFileList(newFileList);
@@ -70,25 +92,24 @@ const ProductForm = (props) => {
             name: values.name,
             brand: values.brand,
             price: values.price,
+            categoryId: values.category, // Hoặc `category: { id: values.category }` tùy theo chuẩn BE của bạn
             stockQuantity: values.stockQuantity,
             description: values.description,
             productImg: imageUrl,
             productStatus: values.productStatus,
         };
 
-        console.log(">>> Payload gửi lên Backend:", payloadToBackend);
-
         try {
             const res = await createProductAPI(payloadToBackend);
-            if (res && res.data) {
+            if (res && res.status < 400) {
                 message.success("Tạo sản phẩm thành công!");
                 await loadProducts();
                 handleCancel();
             } else {
-                message.error("Tên sản phẩm bị trùng lặp");
+                message.error(res?.message || "Tên sản phẩm bị trùng lặp hoặc có lỗi");
             }
         } catch (error) {
-            message.error("Có lỗi xảy ra khi tạo sản phẩm");
+            message.error(error.message);
         } finally {
             setLoading(false);
         }
@@ -106,7 +127,7 @@ const ProductForm = (props) => {
             onCancel={handleCancel}
             width={850}
             centered
-            maskClosable={false} // Sửa thành false giống ProductEdit
+            maskClosable={false}
             footer={[
                 <Button key="close" onClick={handleCancel}>
                     Hủy bỏ
@@ -120,7 +141,7 @@ const ProductForm = (props) => {
                 form={form}
                 layout="vertical"
                 onFinish={onFinish}
-                initialValues={{ stockQuantity: 0, productStatus: 'available' }} // Đổi giá trị mặc định thành 'ACTIVE'
+                initialValues={{ stockQuantity: 0, productStatus: 'DISCONTINUED' }}
             >
                 <Row gutter={24}>
                     {/* CỘT TRÁI: THÔNG TIN CƠ BẢN */}
@@ -138,7 +159,7 @@ const ProductForm = (props) => {
                         </Form.Item>
 
                         <Row gutter={12}>
-                            <Col span={12}>
+                            <Col span={8}>
                                 <Form.Item
                                     label="Thương hiệu"
                                     name="brand"
@@ -147,11 +168,29 @@ const ProductForm = (props) => {
                                     <Input placeholder="Apple, Samsung, Sony..." />
                                 </Form.Item>
                             </Col>
-                            <Col span={12}>
+                            <Col span={8}>
+                                <Form.Item
+                                    label="Thể loại"
+                                    name="category"
+                                    rules={[{ required: true, message: 'Vui lòng chọn thể loại' }]} // ĐÃ SỬA thành true
+                                >
+                                    <Select placeholder="Chọn thể loại">
+                                        {categories.map(cat => {
+                                            const catId = cat.id || cat._id;
+                                            return (
+                                                <Option key={catId} value={catId}>
+                                                    {cat.name}
+                                                </Option>
+                                            );
+                                        })}
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
                                 <Form.Item label="Trạng thái kinh doanh" name="productStatus" rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}>
                                     <Select>
-                                        <Option value="available">Còn hàng / Đang bán</Option>
-                                        <Option value="unavailable">Ngừng kinh doanh</Option>
+                                        <Option value="PUBLISHED">Đang bán</Option>
+                                        <Option value="DISCONTINUED">Ngừng kinh doanh</Option>
                                     </Select>
                                 </Form.Item>
                             </Col>

@@ -4,7 +4,10 @@ import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { updateProductAPI } from '../../service/product/api';
 import { uploadToCloudinary } from '../../service/img/api';
 
-const { Title, Text } = Typography;
+// Import API lấy danh mục
+import { fetchAllCategoriesAPI } from '../../service/category/api';
+
+const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -17,10 +20,11 @@ const getBase64 = (file) =>
     });
 
 const ProductEdit = (props) => {
-    // Nhớ truyền thêm setSelectedProductData từ component cha xuống nhé
     const { isOpenEditProductModal, setIsOpenEditProductModal, loadProducts, selectedProductData, setSelectedProductData } = props;
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
+
+    const [categories, setCategories] = useState([]);
 
     // State cho việc xử lý ảnh
     const [previewOpen, setPreviewOpen] = useState(false);
@@ -28,13 +32,40 @@ const ProductEdit = (props) => {
     const [fileList, setFileList] = useState([]);
     const [imageUrl, setImageUrl] = useState("");
 
+    // Load danh sách Category từ API thật
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetchAllCategoriesAPI(1, 100);
+                if (res && res.status === 200 && res.data) {
+                    setCategories(res.data);
+                } else {
+                    message.error("Không thể tải danh sách thể loại");
+                }
+            } catch (error) {
+                console.error("Lỗi fetch categories:", error);
+                message.error("Lỗi khi tải danh sách thể loại");
+            }
+        };
+        fetchCategories();
+    }, []);
+
     // Đổ dữ liệu từ row đã chọn vào Form khi Modal mở
     useEffect(() => {
         if (selectedProductData && isOpenEditProductModal) {
+            
+            // ĐÃ SỬA: Xử lý lấy ID của category từ Object do Backend trả về
+            let categoryId = selectedProductData.category;
+            if (selectedProductData.category && typeof selectedProductData.category === 'object') {
+                categoryId = selectedProductData.category.id || selectedProductData.category._id;
+            }
+
+
             form.setFieldsValue({
                 id: selectedProductData.id,
                 name: selectedProductData.name,
                 brand: selectedProductData.brand,
+                category: categoryId, // Truyền đúng ID vào đây
                 price: selectedProductData.price,
                 stockQuantity: selectedProductData.stockQuantity,
                 description: selectedProductData.description,
@@ -83,21 +114,21 @@ const ProductEdit = (props) => {
             ...options,
             onSuccess: (data, file) => {
                 setImageUrl(data.secure_url);
-                // hello hi how are you me fine
                 options.onSuccess(data, file);
             },
             onError: (err) => {
                 options.onError(err);
             }
         });
-
     };
 
     const onFinish = async (values) => {
+        
         setLoading(true);
         const payloadToBackend = {
             name: values.name,
             brand: values.brand,
+            categoryId: values.category, // Cần đảm bảo backend của bạn map trường categoryId này
             price: values.price,
             stockQuantity: values.stockQuantity,
             description: values.description,
@@ -161,16 +192,32 @@ const ProductEdit = (props) => {
                         </Form.Item>
 
                         <Row gutter={12}>
-                            <Col span={12}>
+                            <Col span={8}>
                                 <Form.Item label="Thương hiệu" name="brand" rules={[{ required: true, message: 'Vui lòng nhập thương hiệu' }]}>
                                     <Input placeholder="Apple, Samsung, Sony..." />
                                 </Form.Item>
                             </Col>
-                            <Col span={12}>
+
+                            <Col span={8}>
+                                <Form.Item label="Thể loại" name="category" rules={[{ required: true, message: 'Vui lòng chọn thể loại' }]}>
+                                    <Select placeholder="Chọn thể loại">
+                                        {categories.map(category => {
+                                            const catId = category.id || category._id;
+                                            return (
+                                                <Option key={catId} value={catId}>
+                                                    {category.name}
+                                                </Option>
+                                            );
+                                        })}
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+
+                            <Col span={8}>
                                 <Form.Item label="Trạng thái kinh doanh" name="productStatus" rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}>
                                     <Select>
-                                        <Option value="available">Còn hàng / Đang bán</Option>
-                                        <Option value="unavailable">Ngừng kinh doanh</Option>
+                                        <Option value="PUBLISHED">Đang bán</Option>
+                                        <Option value="DISCONTINUED">Ngừng kinh doanh</Option>
                                     </Select>
                                 </Form.Item>
                             </Col>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Input, Row, Col, Typography, Select, Upload, message, Image } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { uploadToCloudinary } from '../../service/img/api';
-import { updateUserAPI } from '../../service/user/api';
+import { updateUserByAdminAPI } from '../../service/user/api';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -17,7 +17,6 @@ const getBase64 = (file) =>
     });
 
 const UserFormEdit = (props) => {
-    // Thêm selectedUserData để nhận dữ liệu người dùng cần sửa
     const { isOpenEditUserForm, setIsOpenEditUserForm, loadUsers, selectedUserData, setSelectedUserData } = props;
     const [form] = Form.useForm();
 
@@ -25,8 +24,19 @@ const UserFormEdit = (props) => {
     const [previewImage, setPreviewImage] = useState("");
     const [fileList, setFileList] = useState([]);
     const [imageUrl, setImageUrl] = useState("");
+    const [roles, setRoles] = useState([]);
 
-    console.log(">>> check data ", selectedUserData);
+    useEffect(() => {
+        const fetchRoles = async () => {
+            setRoles([
+                { _id: 'ADMIN', name: 'Quản lý' },
+                { _id: 'USER', name: 'Khách hàng' },
+            ]);
+        };
+        fetchRoles();
+    }, []);
+
+
     useEffect(() => {
         if (selectedUserData && isOpenEditUserForm) {
             form.setFieldsValue({
@@ -40,15 +50,14 @@ const UserFormEdit = (props) => {
             if (selectedUserData.avatar) {
                 setFileList([
                     {
-                        uid: '-1', // ID bắt buộc phải có, đặt âm để không trùng với file upload mới
+                        uid: '-1',
                         name: 'avatar.png',
-                        status: 'done', // Trạng thái 'done' báo cho Upload biết ảnh đã tải xong
+                        status: 'done',
                         url: selectedUserData.avatar,
                     }
                 ]);
                 setImageUrl(selectedUserData.avatar);
             } else {
-                // Nếu user chưa có avatar thì dọn sạch vùng hiển thị
                 setFileList([]);
                 setImageUrl("");
             }
@@ -87,12 +96,12 @@ const UserFormEdit = (props) => {
     };
 
     const onFinish = async (values) => {
-        console.log(values)
         const payloadToBackend = {
             fullName: values.fullName,
             role: values.role,
             phoneNumber: values.phone,
             address: values.address,
+            role: values.role,
             avatar: previewImage || imageUrl
         };
 
@@ -102,7 +111,7 @@ const UserFormEdit = (props) => {
             return;
         }
 
-        const res = await updateUserAPI(userId, payloadToBackend);
+        const res = await updateUserByAdminAPI(userId, payloadToBackend);
 
         if (res.status < 400) {
             message.success("Cập nhật người dùng thành công!");
@@ -141,11 +150,16 @@ const UserFormEdit = (props) => {
 
                         <Row gutter={12}>
                             <Col span={10}>
-                                <Form.Item label="Role" name="role" rules={[{ required: true }]}>
-                                    <Select>
-                                        <Option value="ADMIN">Admin</Option>
-                                        <Option value="USER">User</Option>
-                                        <Option value="MANAGER">Manager</Option>
+                                <Form.Item
+                                    label="Role"
+                                    name="role"
+                                    style={{ marginBottom: '12px' }}
+                                    rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
+                                >
+                                    <Select placeholder="Chọn vai trò">
+                                        {roles.map(r => (
+                                            <Option key={r._id} value={r._id}>{r.name}</Option>
+                                        ))}
                                     </Select>
                                 </Form.Item>
                             </Col>

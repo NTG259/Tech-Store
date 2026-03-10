@@ -5,6 +5,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -109,6 +110,16 @@ public class GlobalException {
         String message = "Dữ liệu bị trùng lặp hoặc vi phạm liên kết hệ thống";
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiResponse<>(null, message, ex.getMostSpecificCause().getMessage(), HttpStatus.CONFLICT.value()));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Object>> badCredential(BadCredentialsException ex) {
+        return ResponseEntity.status(ErrorCode.BAD_CREDENTIALS.getStatus())
+                .body(new ApiResponse<>(
+                        null,
+                        ErrorCode.BAD_CREDENTIALS.getMessage(),
+                        ErrorCode.BAD_CREDENTIALS.name(),
+                        ErrorCode.BAD_CREDENTIALS.getStatus().value()));
     }
 
 }

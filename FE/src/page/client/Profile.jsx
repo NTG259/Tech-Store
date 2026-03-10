@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
 import { Upload, message, Image } from 'antd';
+import { useNavigate } from "react-router-dom";
 import { PlusOutlined } from '@ant-design/icons';
 import { uploadToCloudinary } from "../../service/img/api";
+import { fetchProfileAPI, updateProfileAPI, lockedAccountAPI } from "../../service/user/api";
 
 // Hàm chuyển đổi file sang base64 để preview
 const getBase64 = (file) =>
@@ -14,14 +16,47 @@ const getBase64 = (file) =>
         reader.onerror = (error) => reject(error);
     });
 
+function FormField({ label, value, onChange, disabled, placeholder }) {
+    return (
+        <div className="flex flex-col gap-2">
+            <label className="text-base text-black">{label}</label>
+            <input
+                type="text"
+                value={value}
+                onChange={(e) => onChange && onChange(e.target.value)}
+                placeholder={placeholder}
+                disabled={disabled}
+                className={`h-[50px] w-[330px] rounded px-4 text-base text-black placeholder-black placeholder-opacity-50 outline-none focus:ring-2 focus:ring-[#db4444] ${disabled ? "bg-[#c2c2c2] cursor-not-allowed" : "bg-[#f5f5f5]"}`}
+            />
+        </div>
+    );
+}
+
+function UploadIcon() {
+    return (
+        <svg width="64" height="50" viewBox="0 0 78.5 60.5" fill="none">
+            <path
+                d="M10 40L30 20L45 35L55 25L70 40" // Placeholder path for icon
+                stroke="#1E1E1E"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="3.5"
+            />
+            <circle cx="25" cy="15" r="3" stroke="#1E1E1E" strokeWidth="3.5" />
+        </svg>
+    );
+}
+
 const Profile = () => {
+    const navigate = useNavigate();
     const [form, setForm] = useState({
-        fullName: "Nguyen Truong Giang",
-        phone: "08345678",
-        email: "rimel1111@gmail.com",
-        address: "Kingston, 5236, United State",
+        fullName: "",
+        phone: "",
+        email: "",
+        address: "",
         avatar: "https://via.placeholder.com/298x166" // Ảnh mặc định
     });
+    const [loading, setLoading] = useState(false);
 
     // Các state phục vụ việc upload và preview
     const [previewOpen, setPreviewOpen] = useState(false);
@@ -29,6 +64,34 @@ const Profile = () => {
     const [fileList, setFileList] = useState([]);
 
     const setField = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+    // Load profile từ API khi mở trang
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                setLoading(true);
+                const res = await fetchProfileAPI();
+                const user = res?.data || res;
+
+                if (!user) return;
+
+                setForm((prev) => ({
+                    ...prev,
+                    fullName: user.fullName || "",
+                    phone: user.phoneNumber || "",
+                    email: user.email || "",
+                    address: user.address || "",
+                    avatar: user.avatar || prev.avatar,
+                }));
+            } catch (error) {
+                message.error("Không thể tải thông tin hồ sơ");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadProfile();
+    }, []);
 
     // Logic xử lý Preview
     const handlePreview = async (file) => {
@@ -62,40 +125,52 @@ const Profile = () => {
         }
     };
 
-    function FormField({ label, value, onChange, disabled, placeholder }) {
-        return (
-            <div className="flex flex-col gap-2">
-                <label className="text-base text-black">{label}</label>
-                <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => onChange && onChange(e.target.value)}
-                    placeholder={placeholder}
-                    disabled={disabled}
-                    className={`h-[50px] w-[330px] rounded px-4 text-base text-black placeholder-black placeholder-opacity-50 outline-none focus:ring-2 focus:ring-[#db4444] ${disabled ? "bg-[#c2c2c2] cursor-not-allowed" : "bg-[#f5f5f5]"}`}
-                />
-            </div>
-        );
-    }
+    const handleSaveChanges = async () => {
+        try {
+            const payload = {
+                fullName: form.fullName,
+                phone: form.phone,
+                address: form.address,
+                avatar: form.avatar,
+            };
+            const res = await updateProfileAPI(payload);
+            const updated = res?.data || res;
 
-    function UploadIcon() {
-        return (
-            <svg width="64" height="50" viewBox="0 0 78.5 60.5" fill="none">
-                <path
-                    d="M10 40L30 20L45 35L55 25L70 40" // Placeholder path for icon
-                    stroke="#1E1E1E"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="3.5"
-                />
-                <circle cx="25" cy="15" r="3" stroke="#1E1E1E" strokeWidth="3.5" />
-            </svg>
-        );
-    }
+            if (updated) {
+                setForm((prev) => ({
+                    ...prev,
+                    fullName: updated.fullName || prev.fullName,
+                    phone: updated.phone || prev.phone,
+                    address: updated.address || prev.address,
+                    avatar: updated.avatar || prev.avatar,
+                }));
+            }
 
-    const handleSaveChanges = () => {
-        console.log("Dữ liệu cập nhật:", form);
-        message.success("Đã lưu thay đổi thành công!");
+            message.success("Đã lưu thay đổi thành công!");
+        } catch (error) {
+            message.error(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Cập nhật hồ sơ thất bại"
+            );
+        }
+    };
+
+    const handleCancel = () => {
+        navigate(-1);
+    };
+
+    const handleLockAccount = async () => {
+        try {
+            await lockedAccountAPI();
+            message.success("Tài khoản đã được khóa");
+        } catch (error) {
+            message.error(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Không thể khóa tài khoản"
+            );
+        }
     };
 
     return (
@@ -166,7 +241,18 @@ const Profile = () => {
                     )}
 
                     <div className="flex items-center justify-end gap-8 mt-4">
-                        <button className="text-base text-black hover:opacity-70 transition-opacity">Cancel</button>
+                        <button
+                            onClick={handleLockAccount}
+                            className="text-base text-[#db4444] hover:opacity-80 transition-opacity"
+                        >
+                            Lock account
+                        </button>
+                        <button
+                            onClick={handleCancel}
+                            className="text-base text-black hover:opacity-70 transition-opacity"
+                        >
+                            Cancel
+                        </button>
                         <button
                             onClick={handleSaveChanges}
                             className="bg-[#db4444] text-white px-12 py-4 rounded hover:bg-[#c03c3c] transition-colors"

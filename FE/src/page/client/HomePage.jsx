@@ -4,7 +4,7 @@ import Footer from "../../layout/client/Footer";
 import ProductCard from "./ProductCard";
 import SectionTag from "../../layout/client/SectionTag";
 import ViewAllButton from "../../layout/client/ViewAllButton";
-
+import { Link } from "react-router-dom";
 // --- Image URLs ---
 const imgGamepad = "https://placehold.co/400x400/f5f5f5/333333/png?text=HAVIT+Gamepad";
 const imgKeyboard = "https://placehold.co/400x400/f5f5f5/333333/png?text=AK-900+Keyboard";
@@ -17,17 +17,15 @@ const imgBookshelf = "https://placehold.co/400x400/f5f5f5/333333/png?text=Small+
 
 /* ─────────────── Data ─────────────── */
 const newProducts = [
-    { id: 1, name: "HAVIT HV-G92 Gamepad", price: "$120", oldPrice: "$160", discount: "-40%", stars: 5, reviews: 88, image: imgGamepad,  showAddToCart: true },
+    { id: 1, name: "HAVIT HV-G92 Gamepad", price: "$120", oldPrice: "$160", discount: "-40%", stars: 5, reviews: 88, image: imgGamepad, showAddToCart: true },
     { id: 2, name: "AK-900 Wired Keyboard", price: "$960", oldPrice: "$1160", discount: "-35%", stars: 4, reviews: 75, image: imgKeyboard, showAddToCart: true },
-    { id: 3, name: "IPS LCD Gaming Monitor", price: "$370", oldPrice: "$400", discount: "-30%", stars: 5, reviews: 99, image: imgMonitor,  showAddToCart: true },
-    { id: 4, name: "S-Series Comfort Chair", price: "$375", oldPrice: "$400", discount: "-25%", stars: 4, reviews: 99, image: imgChair,  showAddToCart: true },
-];
-
-const bestSelling = [
-    { id: 5, name: "The north coat", price: "$260", oldPrice: "$360", stars: 5, reviews: 65, image: imgCoat },
-    { id: 6, name: "Gucci duffle bag", price: "$960", oldPrice: "$1160", stars: 4, reviews: 65, image: imgBag },
-    { id: 7, name: "RGB liquid CPU Cooler", price: "$160", oldPrice: "$170", stars: 4, reviews: 65, image: imgCooler },
-    { id: 8, name: "Small BookSelf", price: "$360", stars: 5, reviews: 65, image: imgBookshelf },
+    { id: 3, name: "IPS LCD Gaming Monitor", price: "$370", oldPrice: "$400", discount: "-30%", stars: 5, reviews: 99, image: imgMonitor, showAddToCart: true },
+    { id: 4, name: "S-Series Comfort Chair", price: "$375", oldPrice: "$400", discount: "-25%", stars: 4, reviews: 99, image: imgChair, showAddToCart: true },
+    // Đưa 4 sản phẩm bestSelling cũ lên đây bù vào
+    { id: 5, name: "The north coat", price: "$260", oldPrice: "$360", discount: "-27%", stars: 5, reviews: 65, image: imgCoat, showAddToCart: true },
+    { id: 6, name: "Gucci duffle bag", price: "$960", oldPrice: "$1160", discount: "-17%", stars: 4, reviews: 65, image: imgBag, showAddToCart: true },
+    { id: 7, name: "RGB liquid CPU Cooler", price: "$160", oldPrice: "$170", discount: "-5%", stars: 4, reviews: 65, image: imgCooler, showAddToCart: true },
+    { id: 8, name: "Small BookSelf", price: "$360", oldPrice: "", discount: "", stars: 5, reviews: 65, image: imgBookshelf, showAddToCart: true },
 ];
 
 /* ─────────────── Main Page ─────────────── */
@@ -36,7 +34,7 @@ export default function ECommerceHomePage() {
         <div className="min-h-screen bg-white font-sans">
             <Header />
 
-            <main className="max-w-[1170px] mx-auto px-4">
+            <main className="max-w-[1170px] mx-auto px-4 mb-20">
                 {/* ── New Products ── */}
                 <section className="mt-20">
                     <div className="flex flex-col gap-6 mb-10">
@@ -45,28 +43,14 @@ export default function ECommerceHomePage() {
                             New Products
                         </h2>
                     </div>
-                    <div className="grid grid-cols-4 gap-[30px]">
+                    {/* Lưới chia 4 cột, 8 sản phẩm sẽ tự động rớt xuống thành 2 hàng */}
+                    <div className="grid grid-cols-4 gap-[30px] mb-10">
                         {newProducts.map((p) => (
                             <ProductCard key={p.id} {...p} />
                         ))}
                     </div>
-                    <ViewAllButton />
-                </section>
-
-                {/* ── Best Selling ── */}
-                <section className="mt-20 mb-20">
-                    <div className="flex flex-col gap-5 mb-10">
-                        <SectionTag label="This Month" />
-                        <h2 className="text-[36px] font-semibold tracking-wide text-black leading-[1.2]">
-                            Best Selling Products
-                        </h2>
-                    </div>
-                    <div className="grid grid-cols-4 gap-[30px]">
-                        {bestSelling.map((p) => (
-                            <ProductCard key={p.id} {...p} />
-                        ))}
-                    </div>
-                    <ViewAllButton />
+                    <Link to = "/products"><ViewAllButton /></Link>
+                    
                 </section>
             </main>
 

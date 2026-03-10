@@ -7,8 +7,12 @@ import './global.css'
 import {
   createBrowserRouter,
   RouterProvider,
+  Navigate,
+  useLocation,
 } from "react-router-dom";
-
+import { Provider } from 'react-redux';
+import { useSelector } from 'react-redux';
+import store from './service/auth/store';
 import Users from "./page/admin/Users";
 import Dashboard from "./page/admin/Dashboard";
 import Orders from "./page/admin/Orders";
@@ -22,71 +26,135 @@ import Profile from './page/client/Profile';
 import OrdersHistory from './page/client/OrderHistory';
 import Login from './page/auth/Login';
 import Register from './page/auth/Register';
+import Success from './layout/response/Success';
+import Error from './layout/response/Error';
+import RouteError from './layout/response/RouteError';
+import Category from './page/admin/Category';
+
+function RequireAuth({ children }) {
+  const location = useLocation();
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return children;
+}
 
 const router = createBrowserRouter([
   {
     path: "/",
     Component: ECommerceHomePage,
+    errorElement: <RouteError />,
   },
   {
     path: "/products",
     Component: AllProductList,
+    errorElement: <RouteError />,
   },
   {
     path: "/products/:id",
     Component: ProductDetail,
+    errorElement: <RouteError />,
   },
   {
     path: "/cart",
-    Component : Cart,
+    element: (
+      <RequireAuth>
+        <Cart />
+      </RequireAuth>
+    ),
+    errorElement: <RouteError />,
   },
   {
-    path : "/checkout",
-    Component : CheckOut,
+    path: "/checkout",
+    element: (
+      <RequireAuth>
+        <CheckOut />
+      </RequireAuth>
+    ),
+    errorElement: <RouteError />,
+  },
+
+  {
+    path: "/success",
+    element: (
+      <RequireAuth>
+        <Success />
+      </RequireAuth>
+    ),
+    errorElement: <RouteError />,
   },
   {
-    path : "/profile",
-    Component : Profile,
+    path: "/error",
+    Component: Error,
   },
   {
-    path : "/orders",
-    Component : OrdersHistory,
+    path: "/profile",
+    element: (
+      <RequireAuth>
+        <Profile />
+      </RequireAuth>
+    ),
+    errorElement: <RouteError />,
+  },
+  {
+    path: "/orders",
+    element: (
+      <RequireAuth>
+        <OrdersHistory />
+      </RequireAuth>
+    ),
+    errorElement: <RouteError />,
   },
   {
     path: "/dashboard",
     element: <App />,
-    // errorElement: <ErrorPage />,
+    errorElement: <RouteError />,
     children: [
       {
         path: "/dashboard",
-        element: <Dashboard></Dashboard>,
+        Component : Dashboard
       },
       {
         path: "/dashboard/users",
-        element: <Users></Users>,
+        Component: Users,
       },
       {
         path: "/dashboard/products",
-        element: <Products></Products>,
+        Component: Products,
       },
       {
         path: "/dashboard/orders",
-        element: <Orders></Orders>,
+        Component: Orders,
       },
+      {
+        path : "/dashboard/categories",
+        Component : Category,
+      }
     ]
   },
   {
     path: "/login",
-    Component : Login,
+    Component: Login,
+    errorElement: <RouteError />,
   },
   {
     path: "/register",
-    Component : Register,
+    Component: Register,
+    errorElement: <RouteError />,
+  },
+  {
+    path: "*",
+    Component: Error,
   },
 ]);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>,
 )

@@ -1,0 +1,18 @@
+package com.store.BE.service;
+
+import com.store.BE.domain.order.CheckoutRequest;
+import com.store.BE.domain.order.Order;
+import com.store.BE.domain.order.OrderResponse;
+import com.store.BE.domain.response.ApiResponse;
+import com.store.BE.domain.response.PaginationResponse;
+import com.store.BE.domain.search.OrderSearchRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+@Service
+public interface OrderService {
+    public PaginationResponse<OrderResponse> getAllOrdersByClient(OrderSearchRequest request, Pageable pageable);
+    public PaginationResponse<OrderResponse> getAllOrdersByAdmin(OrderSearchRequest searchRequest, Pageable pageable);
+    public ApiResponse<Order> checkout(CheckoutRequest request);
+    public ApiResponse<Order> updateOrder(Order order);
+}

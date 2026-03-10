@@ -1,31 +1,31 @@
-//package com.store.B23DCCN259.utils.security;
-//
-//import com.store.B23DCCN259.domain.User;
-//import com.store.B23DCCN259.repo.UserRepository;
-//import org.jspecify.annotations.NonNull;
-//import org.springframework.security.core.userdetails.*;
-//import org.springframework.stereotype.Service;
-//
-//import java.util.Optional;
-//
-//@Service
-//public class CustomUserDetailsService implements UserDetailsService {
-//
-//    private final UserRepository userRepository;
-//
-//    public CustomUserDetailsService(UserRepository userRepository) {
-//        this.userRepository = userRepository;
-//    }
-//
-//    @Override
-//    public UserDetails loadUserByUsername(@NonNull String email) {
-//        Optional<User> optionalUser = userRepository.findByEmail(email);
-//        if (optionalUser.isEmpty()) throw new UsernameNotFoundException("User not found");
-//        User user = optionalUser.get();
-//        return org.springframework.security.core.userdetails.User
-//                .withUsername(user.getEmail())
-//                .password(user.getPassword())
-//                .roles("CUSTOMER")
-//                .build();
-//    }
-//}
+package com.store.BE.utils.security;
+
+import com.store.BE.domain.user.User;
+import com.store.BE.repository.UserRepository;
+import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.*;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+
+@Component("userDetailService")
+public class CustomUserDetailsService implements UserDetailsService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(@NonNull String email) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) throw new UsernameNotFoundException("User not found");
+        User user = optionalUser.get();
+        return new CustomUsersDetail(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                List.of(() -> user.getRole().name())
+        );
+    }
+}

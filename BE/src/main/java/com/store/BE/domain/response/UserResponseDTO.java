@@ -1,6 +1,7 @@
 package com.store.BE.domain.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.store.BE.domain.user.Role;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +12,7 @@ import java.time.Instant;
 public class UserResponseDTO {
     private Long id;
 
-    private String name;
+    private String fullName;
 
     private String phoneNumber;
 
@@ -20,6 +21,8 @@ public class UserResponseDTO {
     private String address;
 
     private String avatar;
+
+    private Role role;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdDate;

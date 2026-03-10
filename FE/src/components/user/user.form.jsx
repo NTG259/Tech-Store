@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Input, Row, Col, Typography, Select, Upload, message, Image } from 'antd';
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import { uploadToCloudinary } from '../../service/img/api';
-import { createUserAPI } from '../../service/user/api';
+import { createUserByAdminAPI } from '../../service/user/api';
 import Password from 'antd/es/input/Password';
-
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -18,7 +17,6 @@ const getBase64 = (file) =>
         reader.onerror = (error) => reject(error);
     });
 
-
 const UserForm = (props) => {
     const { isOpenCreateUserForm, setIsOpenCreateUserForm, loadUsers } = props;
     const [form] = Form.useForm();
@@ -27,6 +25,18 @@ const UserForm = (props) => {
     const [previewImage, setPreviewImage] = useState("");
     const [fileList, setFileList] = useState([]);
     const [imageUrl, setImageUrl] = useState("");
+    const [roles, setRoles] = useState([]);
+    const [loading, setLoading] = useState(false); // Thêm state loading để nút button hiển thị vòng xoay khi submit
+
+    useEffect(() => {
+        const fetchRoles = async () => {
+            setRoles([
+                { _id: 'ADMIN', name: 'Quản lý' },
+                { _id: 'USER', name: 'Khách hàng' },
+            ]);
+        };
+        fetchRoles();
+    }, []);
 
     const handlePreview = async (file) => {
         if (!file.url && !file.preview) {
@@ -59,6 +69,7 @@ const UserForm = (props) => {
     );
 
     const onFinish = async (values) => {
+        setLoading(true);
         const payloadToBackend = {
             fullName: values.fullName,
             email: values.email,
@@ -68,21 +79,31 @@ const UserForm = (props) => {
             address: values.address,
             avatar: imageUrl
         };
-        const res = await createUserAPI(payloadToBackend);
-        console.log(">>> res", res);
-        if (res.status < 400) {
+
+        try {
+            // Gọi API, Axios sẽ trả thẳng cục data thành công vào res
+            const res = await createUserByAdminAPI(payloadToBackend);
+            
             message.success("Tạo người dùng thành công!");
             await loadUsers();
             setIsOpenCreateUserForm(false);
             form.resetFields();
             setFileList([]);
             setImageUrl("");
-        } else {
-            if (res.errors) {
-                message.error("Email đã được sử dụng");
+            
+        } catch (error) {
+            console.log(">>> Lỗi khi tạo user nhận được từ Axios:", error);
+
+            if (error?.errors === 'EMAIL_ALREADY_EXISTS') {
+                message.error("Email này đã được sử dụng, vui lòng thử email khác!");
+            } else if (error?.message) {
+                // In ra luôn thông báo tiếng Việt từ Backend (ví dụ: "Email đã được sử dụng")
+                message.error(error.message);
             } else {
-                message.error("Không thể kết nối tới server");
+                message.error("Không thể kết nối tới server hoặc có lỗi xảy ra!");
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -91,18 +112,17 @@ const UserForm = (props) => {
             title="Tạo mới người dùng"
             open={isOpenCreateUserForm}
             onCancel={() => {
-                setIsOpenCreateUserForm(false)
-                form.resetFields()
-            }
-            }
+                setIsOpenCreateUserForm(false);
+                form.resetFields();
+            }}
             width={750}
             centered
-            maskClosable={false} // tránh click nhầm ra ngoài làm mất dữ liệu
+            maskClosable={false}
             footer={[
-                <Button key="close" onClick={() => {setIsOpenCreateUserForm(false); form.resetFields()}} style={{ borderRadius: '6px' }}>
+                <Button key="close" onClick={() => { setIsOpenCreateUserForm(false); form.resetFields() }} style={{ borderRadius: '6px' }}>
                     Hủy
                 </Button>,
-                <Button key="submit" type="primary" onClick={() => form.submit()} style={{ borderRadius: '6px' }}>
+                <Button key="submit" type="primary" loading={loading} onClick={() => form.submit()} style={{ borderRadius: '6px' }}>
                     Tạo mới
                 </Button>
             ]}
@@ -137,9 +157,9 @@ const UserForm = (props) => {
                                         rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
                                     >
                                         <Select placeholder="Chọn vai trò">
-                                            <Option value="ADMIN">Admin</Option>
-                                            <Option value="USER">User</Option>
-                                            <Option value="MANAGER">Manager</Option>
+                                            {roles.map(r => (
+                                                <Option key={r._id} value={r._id}>{r.name}</Option>
+                                            ))}
                                         </Select>
                                     </Form.Item>
                                 </Col>

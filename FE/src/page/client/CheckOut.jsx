@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
+import { Link, useNavigate } from "react-router-dom"; // Import thêm useNavigate
+import { message } from "antd";
+import { getCart, checkoutCart } from "../../service/cart/api";
 
 const imgMonitor = "https://placehold.co/100x100/f5f5f5/333333/png?text=Monitor";
 const imgGamepad = "https://placehold.co/100x100/f5f5f5/333333/png?text=Gamepad";
 
-function BillingField({ label, required, type = "text", multiline = false }) {
+function BillingField({ label, required, type = "text", multiline = false, value, onChange, name }) {
     return (
         <div className="flex flex-col gap-2">
             <label className="text-base text-black opacity-40">
@@ -14,12 +17,18 @@ function BillingField({ label, required, type = "text", multiline = false }) {
             </label>
             {multiline ? (
                 <textarea
+                    name={name}
                     rows={6}
+                    value={value}
+                    onChange={onChange}
                     className="w-full bg-[#f5f5f5] rounded px-4 py-3 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444] resize-none"
                 />
             ) : (
                 <input
+                    name={name}
                     type={type}
+                    value={value}
+                    onChange={onChange}
                     className="w-full h-[50px] bg-[#f5f5f5] rounded px-4 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444]"
                 />
             )}
@@ -41,14 +50,80 @@ function OrderItem({ image, name, price }) {
     );
 }
 
-const orderItems = [
-    { id: 1, name: "LCD Monitor", price: "$650", image: imgMonitor },
-    { id: 2, name: "H1 Gamepad", price: "$1100", image: imgGamepad },
-];
-
 export default function CheckOut() {
     const [payMethod, setPayMethod] = useState("cod");
-    const [ordered, setOrdered] = useState(false);
+    const [form, setForm] = useState({
+        fullName: "",
+        address: "",
+        phone: "",
+        notes: "",
+    });
+    const [cartItems, setCartItems] = useState([]);
+    const [subTotal, setSubTotal] = useState(0);
+    
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchCart = async () => {
+            try {
+                const res = await getCart();
+                const items = res?.data?.cartItems ?? [];
+                setCartItems(items);
+
+                const total = items.reduce((sum, it) => {
+                    const unitPrice = Number(it?.price ?? it?.product?.price ?? 0);
+                    const qty = Number(it?.quantity ?? it?.qty ?? 0);
+                    return sum + (Number.isFinite(unitPrice * qty) ? unitPrice * qty : 0);
+                }, 0);
+                setSubTotal(total);
+            } catch (error) {
+                message.error("Không thể tải giỏ hàng để thanh toán");
+            }
+        };
+
+        fetchCart();
+    }, []);
+
+    const formatCurrency = (value) =>
+        new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+        }).format(value || 0);
+
+    // Hàm xử lý khi nhấn Place Order
+    const handlePlaceOrder = async () => {
+        if (!form.fullName || !form.address || !form.phone) {
+            message.error("Vui lòng nhập đầy đủ Họ tên, Địa chỉ và Số điện thoại");
+            return;
+        }
+
+        if (!cartItems.length) {
+            message.error("Giỏ hàng trống, không thể đặt hàng");
+            return;
+        }
+
+        const payload = {
+            shippingAddress: form.address,
+            receiverName: form.fullName,
+            phone: form.phone,
+            paymentMethod: payMethod === "cod" ? "COD" : payMethod.toUpperCase(),
+            items: cartItems.map((item) => ({
+                productId: item?.product?.id ?? item?.productId,
+                quantity: item?.quantity ?? item?.qty ?? 1,
+            })),
+        };
+
+        try {
+            await checkoutCart(payload);
+            navigate("/success");
+        } catch (error) {
+            message.error(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Đặt hàng thất bại, vui lòng thử lại"
+            );
+        }
+    };
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900">
@@ -65,23 +140,71 @@ export default function CheckOut() {
 
                 <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-start">
                     <div className="flex flex-col gap-6 w-full lg:flex-1">
-                        <BillingField label="Full Name" required />
-                        <BillingField label="Address" required />
-                        <BillingField label="Phone Number" required type="tel" />
-                        <BillingField label="Order Notes" multiline />
+                        <BillingField
+                            label="Full Name"
+                            required
+                            name="fullName"
+                            value={form.fullName}
+                            onChange={(e) =>
+                                setForm((prev) => ({ ...prev, fullName: e.target.value }))
+                            }
+                        />
+                        <BillingField
+                            label="Address"
+                            required
+                            name="address"
+                            value={form.address}
+                            onChange={(e) =>
+                                setForm((prev) => ({ ...prev, address: e.target.value }))
+                            }
+                        />
+                        <BillingField
+                            label="Phone Number"
+                            required
+                            type="tel"
+                            name="phone"
+                            value={form.phone}
+                            onChange={(e) =>
+                                setForm((prev) => ({ ...prev, phone: e.target.value }))
+                            }
+                        />
+                        <BillingField
+                            label="Order Notes"
+                            multiline
+                            name="notes"
+                            value={form.notes}
+                            onChange={(e) =>
+                                setForm((prev) => ({ ...prev, notes: e.target.value }))
+                            }
+                        />
                     </div>
 
                     <div className="w-full lg:w-[470px] shrink-0 lg:mt-6">
                         <div className="flex flex-col mb-6">
-                            {orderItems.map((item) => (
-                                <OrderItem key={item.id} {...item} />
-                            ))}
+                            {cartItems.map((item) => {
+                                const product = item?.product ?? {};
+                                const name = product?.name ?? item?.name ?? "Product";
+                                const priceValue =
+                                    (Number(item?.price ?? product?.price ?? 0) *
+                                        Number(item?.quantity ?? item?.qty ?? 0)) || 0;
+
+                                return (
+                                    <OrderItem
+                                        key={item.id}
+                                        image={product?.productImg || product?.image || imgMonitor}
+                                        name={name}
+                                        price={formatCurrency(priceValue)}
+                                    />
+                                );
+                            })}
                         </div>
 
                         <div className="flex flex-col gap-0 border-b border-black border-opacity-40 pb-4 mb-4">
                             <div className="flex items-center justify-between py-4 border-b border-black border-opacity-20">
                                 <span className="text-base text-black">Subtotal:</span>
-                                <span className="text-base font-medium text-black">$1750</span>
+                                <span className="text-base font-medium text-black">
+                                    {formatCurrency(subTotal)}
+                                </span>
                             </div>
                             <div className="flex items-center justify-between py-4 border-b border-black border-opacity-20">
                                 <span className="text-base text-black">Shipping:</span>
@@ -89,12 +212,13 @@ export default function CheckOut() {
                             </div>
                             <div className="flex items-center justify-between py-4">
                                 <span className="text-base text-black">Total:</span>
-                                <span className="text-base font-medium text-black">$1750</span>
+                                <span className="text-base font-medium text-black">
+                                    {formatCurrency(subTotal)}
+                                </span>
                             </div>
                         </div>
 
                         <div className="flex flex-col gap-4 mt-2 mb-6">
-
                             <label className="flex items-center gap-3 cursor-pointer">
                                 <input
                                     type="radio"
@@ -108,8 +232,9 @@ export default function CheckOut() {
                             </label>
                         </div>
 
+                        {/* Thay đổi nút bấm ở đây */}
                         <button
-                            onClick={() => setOrdered(true)}
+                            onClick={handlePlaceOrder}
                             className="bg-[#db4444] text-white px-10 py-4 rounded font-medium hover:bg-[#c03c3c] transition-colors w-full sm:w-auto"
                         >
                             Place Order

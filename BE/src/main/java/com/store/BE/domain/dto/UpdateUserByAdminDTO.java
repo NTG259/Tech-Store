@@ -25,5 +25,5 @@ public class UpdateUserByAdminDTO {
 
     private Role role;
 
-    private Boolean active;
+    private Boolean isEnabled;
 }

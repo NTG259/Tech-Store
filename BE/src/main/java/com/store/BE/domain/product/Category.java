@@ -3,6 +3,7 @@ package com.store.BE.domain.product;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.store.BE.domain.product.Product;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,6 +20,7 @@ public class Category {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @NotBlank(message = "Tên danh mục không được trống")
     private String name;
 
     @Column(unique = true)

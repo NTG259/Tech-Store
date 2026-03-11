@@ -1,35 +1,9 @@
-import React, { useState } from 'react';
-import { Card, Col, Row, Typography } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Col, Row, Typography, Spin, message } from 'antd';
 import { ArrowUpOutlined } from '@ant-design/icons';
+import { getSummaryAPI } from '../../service/dashboard/api';
 
 const { Text, Title } = Typography;
-
-const statisticsData = [
-    {
-        id: 1,
-        title: 'Total Revenue',
-        value: '$81.000',
-        isActive: false,
-    },
-    {
-        id: 2,
-        title: 'Total Customer',
-        value: '5.000',
-        isActive: false,
-    },
-    {
-        id: 3,
-        title: 'Total Product',
-        value: '5.000',
-        isActive: false,
-    },
-    {
-        id: 4,
-        title: 'Total Transactions',
-        value: '12.000',
-        isActive: false,
-    },
-];
 
 const StatCard = ({ title, value, isActive }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -78,19 +52,80 @@ const StatCard = ({ title, value, isActive }) => {
 };
 
 const Dashboard = () => {
+    // State để lưu dữ liệu thống kê
+    const [statisticsData, setStatisticsData] = useState([]);
+    // State để hiển thị loading trong lúc chờ gọi API
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        fetchSummaryData();
+    }, []);
+
+    const fetchSummaryData = async () => {
+        try {
+            setIsLoading(true);
+            // Gọi API, kết quả nhận được đã được Interceptor xử lý
+            const response = await getSummaryAPI();
+
+            // SỬA Ở ĐÂY: Kiểm tra status trực tiếp trên response
+            if (response && response.status === 200) {
+                // SỬA Ở ĐÂY: Dữ liệu thực sự nằm ở response.data thay vì response.data.data
+                const apiData = response.data;
+
+                const mappedData = [
+                    {
+                        id: 1,
+                        title: 'Tổng doanh thu',
+                        value: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(apiData.totalRevenue || 0),
+                        isActive: false,
+                    },
+                    {
+                        id: 2,
+                        title: 'Số lượng khách hàng',
+                        value: new Intl.NumberFormat('vi-VN').format(apiData.userCount || 0),
+                        isActive: false,
+                    },
+                    {
+                        id: 3,
+                        title: 'Số lượng sản phẩm',
+                        value: new Intl.NumberFormat('vi-VN').format(apiData.productCount || 0),
+                        isActive: false,
+                    },
+                    {
+                        id: 4,
+                        title: 'Số lượng giao dịch',
+                        value: new Intl.NumberFormat('vi-VN').format(apiData.orderSuccessCount || 0),
+                        isActive: false,
+                    },
+                ];
+
+                setStatisticsData(mappedData);
+            } else {
+                console.warn("API trả về nhưng không có status 200:", response);
+            }
+        } catch (error) {
+            console.error("Lỗi khi gọi API Dashboard: ", error);
+            message.error("Không thể tải dữ liệu thống kê!");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div style={{ padding: '24px', background: '#fff', minHeight: '100vh' }}>
-            <Row gutter={[24, 24]}>
-                {statisticsData.map((stat) => (
-                    <Col xs={24} sm={12} md={6} key={stat.id}>
-                        <StatCard
-                            title={stat.title}
-                            value={stat.value}
-                            isActive={stat.isActive}
-                        />
-                    </Col>
-                ))}
-            </Row>
+            <Spin spinning={isLoading} tip="Đang tải dữ liệu...">
+                <Row gutter={[24, 24]}>
+                    {statisticsData.map((stat) => (
+                        <Col xs={24} sm={12} md={6} key={stat.id}>
+                            <StatCard
+                                title={stat.title}
+                                value={stat.value}
+                                isActive={stat.isActive}
+                            />
+                        </Col>
+                    ))}
+                </Row>
+            </Spin>
         </div>
     );
 };

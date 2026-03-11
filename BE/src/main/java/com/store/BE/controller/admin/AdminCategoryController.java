@@ -8,6 +8,7 @@ import com.store.BE.domain.search.CategorySearchRequest;
 import com.store.BE.domain.search.ProductSearchRequest;
 import com.store.BE.service.CategoryService;
 import com.store.BE.utils.convert.SlugUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -59,7 +60,7 @@ public class AdminCategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Category>> updateCategory(
             @PathVariable Long id,
-            @RequestBody Category category) {
+            @Valid @RequestBody Category category) {
         category.setSlug(SlugUtils.createSlug(category.getName()));
 
         return ResponseEntity.ok().body(this.categoryService.updateCategory(id, category));

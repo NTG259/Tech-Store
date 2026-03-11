@@ -5,9 +5,12 @@ import {
     EditOutlined,
     EyeOutlined,
     UserAddOutlined,
-    ReloadOutlined
+    ReloadOutlined,
+    LockOutlined,
+    UnlockOutlined
 } from '@ant-design/icons';
-import { deleteUserAPI, fetchAllUsersAPI } from '../../service/user/api';
+// Đã thêm import lockUserByAdmin
+import { deleteUserAPI, fetchAllUsersAPI, lockUserByAdminAPI } from '../../service/user/api';
 import DetailUserModal from '../../components/user/user.detail';
 import UserEdit from '../../components/user/user.edit';
 import UserForm from '../../components/user/user.form';
@@ -47,7 +50,9 @@ const User = () => {
                     phone: user.phoneNumber,
                     address: user.address,
                     avatar: user.avatar,
-                    role: user.role
+                    role: user.role,
+                    // SỬA: Lấy chính xác trường isEnabled từ API
+                    isEnabled: user.isEnabled 
                 }));
 
                 setData(formattedData);
@@ -79,7 +84,18 @@ const User = () => {
             message.success("Xóa người dùng thành công");
             await loadUsers();
         } catch (error) {
-            message.error("Xóa thất bại");
+            message.error("Xóa thất bại. Tài khoản vẫn đang hoạt động, chỉ có thể khóa tài khoản");
+        }
+    };
+
+    // SỬA: Gọi API lockUserByAdmin
+    const handleToggleLock = async (id, currentStatus) => {
+        try {
+            await lockUserByAdminAPI(id); 
+            message.success(`Đã ${currentStatus ? 'khóa' : 'mở khóa'} tài khoản thành công`);
+            await loadUsers(); // Load lại danh sách để cập nhật UI
+        } catch (error) {
+            message.error("Thao tác thất bại");
         }
     };
 
@@ -113,10 +129,19 @@ const User = () => {
             key: 'phone',
         },
         {
-            title: 'Địa chỉ',
-            dataIndex: 'address',
-            key: 'address',
-            ellipsis: true,
+            title: 'Trạng thái',
+            // SỬA: Đổi dataIndex thành isEnabled
+            dataIndex: 'isEnabled',
+            key: 'isEnabled',
+            align: 'center',
+            width: 120,
+            render: (isEnabled) => {
+                return isEnabled ? (
+                    <Tag color="success">Hoạt động</Tag>
+                ) : (
+                    <Tag color="error">Đã khóa</Tag>
+                );
+            }
         },
         {
             title: 'Vai trò',
@@ -138,7 +163,7 @@ const User = () => {
             title: 'Thao tác',
             key: 'action',
             align: 'center',
-            width: 180,
+            width: 220,
             render: (_, record) => (
                 <Space size="small">
                     <Tooltip title="Xem chi tiết">
@@ -165,6 +190,24 @@ const User = () => {
                         />
                     </Tooltip>
 
+                    {/* SỬA: Sử dụng isEnabled cho logic hiển thị và thông báo */}
+                    <Popconfirm
+                        title={record.isEnabled ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+                        description={`Bạn có chắc muốn ${record.isEnabled ? "khóa" : "mở khóa"} ${record.fullName}?`}
+                        onConfirm={() => handleToggleLock(record.id, record.isEnabled)}
+                        okText="Đồng ý"
+                        cancelText="Hủy"
+                    >
+                        <Tooltip title={record.isEnabled ? "Khóa tài khoản" : "Mở khóa"}>
+                            <Button
+                                type="default"
+                                shape="circle"
+                                danger={record.isEnabled} 
+                                icon={record.isEnabled ? <LockOutlined /> : <UnlockOutlined style={{ color: '#52c41a' }} />}
+                            />
+                        </Tooltip>
+                    </Popconfirm>
+
                     <Popconfirm
                         title="Xóa người dùng"
                         description={`Bạn có chắc muốn xóa ${record.fullName}?`}
@@ -187,6 +230,7 @@ const User = () => {
         },
     ];
 
+    // ... (Phần return JSX phía dưới giữ nguyên như cũ)
     return (
         <div style={{ padding: '0px', background: '#fff', minHeight: '100vh - 120px' }}>
             <Card bordered={false} style={{ borderRadius: '8px' }}>
@@ -202,6 +246,7 @@ const User = () => {
                                     setCurrent(1);
                                     setSearchText('');
                                     setInputValue('');
+                                    loadUsers();
                                 }}
                                 loading={loading}
                             >

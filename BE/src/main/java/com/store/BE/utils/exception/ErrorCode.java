@@ -12,6 +12,8 @@ public enum ErrorCode {
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập"),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "Token không hợp lệ"),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "Token đã hết hạn"),
+    USER_DISABLED(HttpStatus.BAD_REQUEST, "Tài khoản đã bị khóa"),
+    USER_LOCKED(HttpStatus.BAD_REQUEST, "Tài khoản đã bị khóa"),
     // DATA
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"),
     EMAIL_ALREADY_EXIST(HttpStatus.CONFLICT, "Email đã được sử dụng"),
@@ -27,8 +29,8 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Hệ thống gặp lỗi không mong muốn"),
     ENDPOINT_NOT_FOUND(HttpStatus.NOT_FOUND, "Đường dẫn không hợp lệ"),
     DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "Dữ liệu không tồn tại"),
-    ;
 
+    ;
     private final HttpStatus status;
     private final String message;
     ErrorCode(HttpStatus status, String message) {

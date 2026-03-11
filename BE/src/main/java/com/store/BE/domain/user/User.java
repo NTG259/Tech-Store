@@ -31,7 +31,7 @@ public class User {
 
     private String phoneNumber;
 
-    private Boolean active = true;
+    private boolean enabled = true;
 
     private String avatar;
 
@@ -40,23 +40,4 @@ public class User {
 
     @Column(columnDefinition = "MEDIUMTEXT")
     private String refreshToken;
-
-//    private Instant createdAt;
-//    private String createdBy;
-//    private Instant updatedAt;
-//    private String updatedBy;
-
-//    @PrePersist
-//    private void handleBeforeCreate() {
-//        createdAt = Instant.now();
-//        Optional<String> currentUser =  SecurityUtils.getCurrentUserLogin();
-//        this.createdBy = currentUser.orElse("");
-//    }
-//
-//    @PreUpdate
-//    public void handleUpdatedAt() {
-//        this.updatedAt = Instant.now();
-//        Optional<String> currentUser =  SecurityUtils.getCurrentUserLogin();
-//        this.updatedBy = currentUser.orElse("");
-//    }
 }

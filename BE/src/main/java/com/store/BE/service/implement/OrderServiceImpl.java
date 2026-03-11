@@ -144,4 +144,23 @@ public class OrderServiceImpl implements OrderService {
                 HttpStatus.OK.value()
         );
     }
+
+    public Long totalSuccessOrder() {
+        Specification<Order> specification = ((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("status"), OrderStatus.CONFIRMED));
+        return this.orderRepository.count(specification);
+    }
+
+    public Long totalRevenue() {
+        Specification<Order> specification = ((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("status"), OrderStatus.CONFIRMED));
+        List<Order> orders = this.orderRepository.findAll(specification);
+        long rs = 0;
+
+        for (Order order : orders) {
+            rs += order.getTotalAmount();
+        }
+
+        return rs;
+    }
 }

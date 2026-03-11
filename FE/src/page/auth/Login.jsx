@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { message } from "antd"; // 1. IMPORT MESSAGE TỪ ANTD
 import { loginAPI } from "../../service/auth/api";
 import { setCredentials } from "../../service/auth/authSlice";
 import { setAuthToStorage } from "../../service/auth/storage";
@@ -31,33 +32,48 @@ const Login = () => {
     const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
     const handleLogin = async () => {
+        // Kiểm tra validation cơ bản trước khi gọi API
+        if (!form.username || !form.password) {
+            message.warning("Vui lòng nhập đầy đủ email và mật khẩu!");
+            return;
+        }
+
         try {
             const response = await loginAPI(form);
-            console.log("DỮ LIỆU THÀNH CÔNG TỪ BACKEND:", response);
+            
             // 1. Lấy token từ cục data trả về
             const access_token = response.data.access_token;
             const user = response.data.user;
 
-            // 2. Lưu vào Redux + LocalStorage (để không mất khi F5)
+            // 2. Lưu vào Redux + LocalStorage
             dispatch(setCredentials({ user, access_token }));
             setAuthToStorage({ user, access_token });
-            console.log("access_token sau khi đăng nhập:", access_token);
 
             try {
-                const refreshRes = await refreshTokenAPI();   // POST /api/auth/refresh
+                const refreshRes = await refreshTokenAPI();   
                 console.log("Kết quả refresh token:", refreshRes);
-              } catch (e) {
+            } catch (e) {
                 console.log("Gọi refresh token lỗi:", e);
-              }
+            }
           
-            
-            // 3. Chuyển trang (ví dụ chuyển thẳng vào Admin/Dashboard)
+            // Thông báo đăng nhập thành công
+            message.success("Đăng nhập thành công!");
+
+            // 3. Chuyển trang
             if (user?.role === "ADMIN") navigate("/dashboard");
             else navigate("/");
 
         } catch (error) {
             console.log("Lỗi đăng nhập:", error);
-            alert("Đăng nhập thất bại!");
+            
+            const errorPayload = error.response?.data || error;
+
+            // 2. THAY THẾ ALERT BẰNG MESSAGE.ERROR
+            if (errorPayload && errorPayload.errors === "USER_DISABLED") {
+                message.error(errorPayload.message || "Tài khoản của bạn đã bị khóa!");
+            } else {
+                message.error(errorPayload?.message || "Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.");
+            }
         }
     }
 

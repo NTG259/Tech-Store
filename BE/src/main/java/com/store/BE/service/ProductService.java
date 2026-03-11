@@ -2,6 +2,7 @@ package com.store.BE.service;
 
 import com.store.BE.domain.dto.ProductRequestDTO;
 import com.store.BE.domain.product.Product;
+import com.store.BE.domain.product.ProductStatus;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.ProductSearchRequest;
@@ -20,5 +21,6 @@ public interface ProductService {
     public PaginationResponse<Product> getAllProductIsPubLicPagination(ProductSearchRequest request, Pageable pageable);
     public ApiResponse<Void> deleteProduct(Long id);
 //    public ApiResponse<List<Product>> getAllProductIsPublishing();
-    public ApiResponse<List<Product>> getLatestProducts();
+    public ApiResponse<List<Product>> getLatestProducts(ProductStatus productStatus);
+    public Long productCount();
 }

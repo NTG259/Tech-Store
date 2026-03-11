@@ -48,7 +48,7 @@ public class ProfileController {
 
     // Khóa / xóa tài khoản
     @DeleteMapping("/locked")
-    public ResponseEntity<ApiResponse<Void>> deleteAccount() {
+    public ResponseEntity<ApiResponse<Void>> lockAccount() {
         ApiResponse<Void> response = this.userService.disableAccount(getCurrentUserId());
         return ResponseEntity
                 .status(HttpStatus.OK)

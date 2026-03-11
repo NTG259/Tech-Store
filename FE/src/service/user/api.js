@@ -40,6 +40,11 @@ const deleteUserAPI = (id) => {
     return axios.delete(URL_BACKEND);
 }
 
+const lockUserByAdminAPI = (id) => {
+    const URL_BACKEND = `/api/admin/users/lock/${id}`;
+    return axios.put(URL_BACKEND);
+}
+
 const fetchProfileAPI = () => {
     const URL_BACKEND = `/api/client/profile`;
     return axios.get(URL_BACKEND);
@@ -65,4 +70,5 @@ export {
     fetchProfileAPI,
     updateProfileAPI,
     lockedAccountAPI,
+    lockUserByAdminAPI
 }

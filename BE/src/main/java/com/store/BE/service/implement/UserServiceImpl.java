@@ -69,7 +69,6 @@ public class UserServiceImpl implements UserService {
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        user.setActive(dto.getActive());
         user.setAddress(dto.getAddress());
         user.setFullName(dto.getFullName());
         user.setPhoneNumber(dto.getPhoneNumber());
@@ -115,7 +114,7 @@ public class UserServiceImpl implements UserService {
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        user.setActive(dto.getActive());
+        user.setEnabled(dto.getIsEnabled());
         user.setAddress(dto.getAddress());
         user.setFullName(dto.getFullName());
         user.setPhoneNumber(dto.getPhoneNumber());
@@ -129,7 +128,7 @@ public class UserServiceImpl implements UserService {
     public ApiResponse<Void> disableAccount(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        user.setActive(false);
+        user.setEnabled(!user.isEnabled());
         userRepository.save(user);
         return new ApiResponse<>(null, "Xóa tài khoản thành công", null, HttpStatus.OK.value());
     }
@@ -148,5 +147,9 @@ public class UserServiceImpl implements UserService {
     public User getUserByEmailAndRefreshToken(String email, String token) {
         return this.userRepository.findByEmailAndRefreshToken(email, token)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
+    }
+
+    public Long totalUser() {
+        return this.userRepository.count();
     }
 }

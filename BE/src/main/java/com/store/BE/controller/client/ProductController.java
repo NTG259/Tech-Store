@@ -58,7 +58,7 @@ public class ProductController {
     @GetMapping("/new")
     public ResponseEntity<ApiResponse<List<Product>>> getLatestProducts() {
         return ResponseEntity.ok().body(
-                this.productService.getLatestProducts()
+                this.productService.getLatestProducts(ProductStatus.PUBLISHED)
         );
     }
 }

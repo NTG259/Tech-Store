@@ -103,10 +103,6 @@ const DetailUserModal = (props) => {
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                         </div>
-
-                        <Text type="secondary" style={{ fontSize: '13px' }}>
-                            Status: <span style={{ color: '#52c41a', fontWeight: 500 }}>● Active</span>
-                        </Text>
                     </Col>
                 </Row>
             </Form>

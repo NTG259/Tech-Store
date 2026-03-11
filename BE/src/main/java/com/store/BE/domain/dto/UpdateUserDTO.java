@@ -14,5 +14,4 @@ public class UpdateUserDTO {
 
     private String avatar;
 
-    private Boolean active;
 }

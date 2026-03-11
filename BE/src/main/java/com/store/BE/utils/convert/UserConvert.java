@@ -13,6 +13,7 @@ public class UserConvert {
         rs.setPhoneNumber(user.getPhoneNumber());
         rs.setAvatar(user.getAvatar());
         rs.setRole(user.getRole());
+        rs.setIsEnabled(user.isEnabled());
         return rs;
     }
 }

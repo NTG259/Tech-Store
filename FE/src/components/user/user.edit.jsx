@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Form, Input, Row, Col, Typography, Select, Upload, message, Image } from 'antd';
+import { Button, Modal, Form, Input, Row, Col, Typography, Select, Upload, message, Image, Switch } from 'antd'; // 1. IMPORT THÊM Switch
 import { PlusOutlined } from '@ant-design/icons';
 import { uploadToCloudinary } from '../../service/img/api';
 import { updateUserByAdminAPI } from '../../service/user/api';
@@ -46,6 +46,7 @@ const UserFormEdit = (props) => {
                 role: selectedUserData.role,
                 phone: selectedUserData.phone,
                 address: selectedUserData.address,
+                isEnabled: selectedUserData.isEnabled, // 2. MAP DỮ LIỆU isEnabled VÀO FORM
             });
             if (selectedUserData.avatar) {
                 setFileList([
@@ -101,7 +102,7 @@ const UserFormEdit = (props) => {
             role: values.role,
             phoneNumber: values.phone,
             address: values.address,
-            role: values.role,
+            isEnabled: values.isEnabled, // 3. THÊM isEnabled VÀO PAYLOAD GỬI LÊN BACKEND
             avatar: previewImage || imageUrl
         };
 
@@ -170,12 +171,10 @@ const UserFormEdit = (props) => {
                             </Col>
                         </Row>
 
-                        {/* Disabled Email */}
                         <Form.Item label="Email" name="email">
                             <Input disabled />
                         </Form.Item>
 
-                        {/* Không hiển thị hoặc Disabled Password - Thường Edit sẽ không sửa pass ở đây */}
                         <Form.Item label="Password" name="password" help="Mật khẩu không được phép thay đổi tại đây">
                             <Input.Password placeholder="********" disabled />
                         </Form.Item>
@@ -183,6 +182,16 @@ const UserFormEdit = (props) => {
                         <Form.Item label="Address" name="address">
                             <TextArea rows={2} />
                         </Form.Item>
+
+                        {/* 4. THÊM TRƯỜNG TRẠNG THÁI HOẠT ĐỘNG (isEnabled) */}
+                        <Form.Item 
+                            label="Trạng thái tài khoản" 
+                            name="isEnabled" 
+                            valuePropName="checked" // Bắt buộc phải có thuộc tính này đối với Switch/Checkbox
+                        >
+                            <Switch checkedChildren="Hoạt động" unCheckedChildren="Đã khóa" />
+                        </Form.Item>
+
                     </Col>
 
                     <Col span={8} style={{ borderLeft: '1px solid #f0f0f0', textAlign: 'center' }}>

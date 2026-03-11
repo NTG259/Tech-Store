@@ -24,7 +24,6 @@ public class UserResponseDTO {
 
     private Role role;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
-    private Instant createdDate;
+    private Boolean isEnabled;
 
 }

@@ -19,6 +19,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -43,41 +46,52 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginDTO loginDTO) {
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
-        Authentication authentication =
-                authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            Authentication authentication =
+                    authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
-        //create token
-        LoginResponse loginResponse = new LoginResponse();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User currentUserDB = this.userService.handleFindUserByEmail(loginDTO.getUsername());
-        if(currentUserDB != null) {
-            LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
-                    currentUserDB.getId(),
-                    currentUserDB.getEmail(),
-                    currentUserDB.getFullName(),
-                    currentUserDB.getRole()
-            );
-            loginResponse.setUser(userLogin);
+            //create token
+            LoginResponse loginResponse = new LoginResponse();
+
+            User currentUserDB = this.userService.handleFindUserByEmail(loginDTO.getUsername());
+            if(currentUserDB != null) {
+                LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
+                        currentUserDB.getId(),
+                        currentUserDB.getEmail(),
+                        currentUserDB.getFullName(),
+                        currentUserDB.getRole()
+                );
+                loginResponse.setUser(userLogin);
+            }
+            loginResponse.setAccessToken(this.securityService.createAccessToken(loginResponse));
+
+            // create refresh-token
+            String refreshToken = securityService.createRefreshToken(loginResponse);
+            this.userService.updateUserToken(refreshToken, loginResponse.getUser().getEmail());
+
+            ResponseCookie cookie = ResponseCookie
+                    .from("rf_token", refreshToken)
+                    .httpOnly(true)
+                    .path("/")
+                    .maxAge(expiration)
+                    .build();
+
+
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(new ApiResponse<>(loginResponse, "Đăng nhập thành công", null, HttpStatus.OK.value()));
+        } catch (DisabledException e) {
+            throw new BusinessException(ErrorCode.USER_DISABLED);
+
+        } catch (BadCredentialsException e) {
+            throw new BusinessException(ErrorCode.BAD_CREDENTIALS);
+
+        } catch (LockedException e) {
+            throw new BusinessException(ErrorCode.USER_LOCKED);
         }
-        loginResponse.setAccessToken(this.securityService.createAccessToken(loginResponse));
-
-        // create refresh-token
-        String refreshToken = securityService.createRefreshToken(loginResponse);
-        this.userService.updateUserToken(refreshToken, loginResponse.getUser().getEmail());
-
-        ResponseCookie cookie = ResponseCookie
-                .from("rf_token", refreshToken)
-                .httpOnly(true)
-                .path("/")
-                .maxAge(expiration)
-                .build();
-
-
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new ApiResponse<>(loginResponse, "Đăng nhập thành công", null, HttpStatus.OK.value()));
     }
 
     @PostMapping("/register")

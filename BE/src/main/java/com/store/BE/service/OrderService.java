@@ -15,4 +15,6 @@ public interface OrderService {
     public PaginationResponse<OrderResponse> getAllOrdersByAdmin(OrderSearchRequest searchRequest, Pageable pageable);
     public ApiResponse<OrderResponse> checkout(CheckoutRequest request);
     public ApiResponse<OrderResponse> updateOrder(Long orderId, OrderStatus status);
+    public Long totalRevenue();
+    public Long totalSuccessOrder();
 }

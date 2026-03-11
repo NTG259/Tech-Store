@@ -84,12 +84,16 @@ public class ProductServiceImpl implements ProductService {
         return new ApiResponse<>(null, "Xóa sản phẩm thành công", null, HttpStatus.OK.value());
     }
 
-    public ApiResponse<List<Product>> getLatestProducts() {
+    public ApiResponse<List<Product>> getLatestProducts(ProductStatus productStatus) {
         return new ApiResponse<>(
-                productRepository.findTop8ByOrderByCreatedAtDesc(),
+                productRepository.findTop8ByProductStatusOrderByCreatedAtDesc(productStatus),
                 "Lấy 8 sản phẩm mới nhất",
                 null,
                 HttpStatus.OK.value()
         );
+    }
+
+    public Long productCount() {
+        return productRepository.count();
     }
 }

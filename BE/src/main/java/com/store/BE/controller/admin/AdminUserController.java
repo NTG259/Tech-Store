@@ -75,4 +75,12 @@ public class AdminUserController {
                 .status(HttpStatus.OK)
                 .body(response);
     }
+
+    @PutMapping("/lock/{id}")
+    public ResponseEntity<ApiResponse<Void>> lockUser(@PathVariable Long id) {
+        ApiResponse<Void> response = this.userService.disableAccount(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
 }

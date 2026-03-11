@@ -28,4 +28,5 @@ public interface UserService {
     public void updateUserToken(String token, String email);
     public User getUserByEmailAndRefreshToken(String email, String token);
     public ApiResponse<UserResponseDTO> getUserById(Long id);
+    public Long totalUser();
 }

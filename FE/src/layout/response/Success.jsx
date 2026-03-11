@@ -1,10 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom"; 
+import { Link } from "react-router-dom";
 
 // Import Header và Footer của bạn
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
-
+import { useEffect } from "react";
 /* ─── Green Checkmark Circle ─── */
 function CheckCircle() {
   return (
@@ -18,6 +18,11 @@ function CheckCircle() {
 }
 
 const Success = () => {
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+    });
+  }, []);
   return (
     <div className="min-h-screen bg-white font-sans flex flex-col">
       {/* Header của bạn */}
@@ -25,25 +30,25 @@ const Success = () => {
 
       {/* ── Success Hero ── */}
       <main className="flex-1 flex flex-col items-center justify-center gap-10 py-20 mt-10">
-        
+
         {/* Checkmark + Success text side by side */}
         <div className="flex items-center gap-6">
           <CheckCircle />
           <h1
             className="text-black tracking-wide select-none"
-            style={{ fontSize: "110px", lineHeight: "1.05", fontFamily: "Inter, sans-serif", fontWeight: 500 }}
+            style={{ fontSize: "70px", lineHeight: "1.05", fontFamily: "Inter, sans-serif", fontWeight: 500 }}
           >
-            Success
+            Đặt hàng thành công
           </h1>
         </div>
 
         {/* Subtitle */}
-        <p className="text-base text-black text-xl">Thank iu for your order &lt;3</p>
+        <p className="text-base text-black text-xl">Cảm ơn quý khách đã tin tưởng sốp &lt;3</p>
 
         {/* Nút chuyển về trang chủ */}
         <Link to="/">
           <button className="bg-[#db4444] text-white text-base px-20 py-4 rounded hover:bg-[#c03c3c] transition-colors mt-4 font-medium">
-            Continue shopping
+            Tiếp tục mua hàng 
           </button>
         </Link>
       </main>

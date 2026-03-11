@@ -30,7 +30,7 @@ const Register = () => {
     // Hàm xử lý gọi API đăng ký
     const handleRegister = async () => {
         // Validate cơ bản
-        if (!form.name || !form.email || !form.password) {
+        if (!form.fullName || !form.email || !form.password) {
             message.warning("Vui lòng điền đầy đủ thông tin!");
             return;
         }
@@ -74,8 +74,8 @@ const Register = () => {
                         <div className="flex flex-col gap-10">
                             <UnderlineInput
                                 placeholder="Name"
-                                value={form.name}
-                                onChange={set("name")}
+                                value={form.fullName}
+                                onChange={set("fullName")}
                             />
                             <UnderlineInput
                                 placeholder="Email"

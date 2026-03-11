@@ -38,11 +38,11 @@ export default function Header() {
         const items = [
             {
                 key: 'profile',
-                label: <Link to="/profile">Profile</Link>,
+                label: <Link to="/profile">Trang cá nhân</Link>,
             },
             {
                 key: 'orders',
-                label: <Link to="/orders">Order History</Link>,
+                label: <Link to="/orders">Lịch sử mua hàng</Link>,
             },
         ];
 
@@ -57,7 +57,7 @@ export default function Header() {
         // Đẩy Log out xuống dưới cùng
         items.push({
             key: 'logout',
-            label: <span>Log out</span>,
+            label: <span>Đăng xuất</span>,
         });
 
         return items;
@@ -70,8 +70,8 @@ export default function Header() {
                 <div className="flex items-center gap-40">
                     <span className="text-2xl font-bold text-black tracking-wider">Exclusive</span>
                     <nav className="flex items-center gap-12">
-                        <Link to="/" className="text-black text-base hover:text-[#db4444] transition-colors">Home</Link>
-                        <Link to="/products" className="text-black text-base hover:text-[#db4444] transition-colors">Products</Link>
+                        <Link to="/" className="text-black text-base hover:text-[#db4444] transition-colors">Trang chủ</Link>
+                        <Link to="/products" className="text-black text-base hover:text-[#db4444] transition-colors">Sản phẩm</Link>
                     </nav>
                 </div>
 

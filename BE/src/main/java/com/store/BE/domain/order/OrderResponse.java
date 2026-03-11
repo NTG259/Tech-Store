@@ -14,6 +14,7 @@ public class OrderResponse {
 
     private Long id;
 
+    private String email;
     // Thông tin người nhận
     private String receiverName;
     private String receiverPhone;

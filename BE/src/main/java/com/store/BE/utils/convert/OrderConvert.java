@@ -14,6 +14,7 @@ public class OrderConvert {
     public static OrderResponse convertToOrderResponse(Order order) {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
+        response.setEmail(order.getUser().getEmail());
         response.setReceiverName(order.getReceiverName());
         response.setShippingAddress(order.getShippingAddress());
         response.setNote(order.getNote());

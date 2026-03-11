@@ -28,6 +28,11 @@ const fetchAllProductsAPI = (page, size, status, categoryId) => {
     });
 }
 
+const get8LatestProductAPI = () => {
+    const URL_BACKEND = `/api/client/products/new`;
+    return axios.get(URL_BACKEND);
+}
+
 const createProductAPI = (data) => {
     const URL_BACKEND = `/api/admin/products`;
     return axios.post(URL_BACKEND, data);
@@ -49,11 +54,13 @@ const fetchProductDetailAPI = (id) => {
     return axios.get(URL_BACKEND);
 }
 
+
 export {
     fetchAllProductsAPI,
     deleteProductAPI,
     createProductAPI,
     updateProductAPI,
     fetchAllProductsByAdminAPI,
-    fetchProductDetailAPI
+    fetchProductDetailAPI,
+    get8LatestProductAPI
 }

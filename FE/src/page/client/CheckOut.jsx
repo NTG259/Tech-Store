@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
-import { Link, useNavigate } from "react-router-dom"; // Import thêm useNavigate
+import { Link, useNavigate } from "react-router-dom"; 
 import { message } from "antd";
 import { getCart, checkoutCart } from "../../service/cart/api";
 
@@ -60,6 +60,7 @@ export default function CheckOut() {
     });
     const [cartItems, setCartItems] = useState([]);
     const [subTotal, setSubTotal] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false); // Thêm state loading khi submit
     
     const navigate = useNavigate();
 
@@ -102,10 +103,12 @@ export default function CheckOut() {
             return;
         }
 
+        // Bổ sung field note vào payload
         const payload = {
             shippingAddress: form.address,
             receiverName: form.fullName,
             phone: form.phone,
+            note: form.notes, // <--- THÊM FIELD NÀY (hoặc 'notes' tùy thuộc vào BE của bạn yêu cầu)
             paymentMethod: payMethod === "cod" ? "COD" : payMethod.toUpperCase(),
             items: cartItems.map((item) => ({
                 productId: item?.product?.id ?? item?.productId,
@@ -114,7 +117,9 @@ export default function CheckOut() {
         };
 
         try {
+            setIsSubmitting(true);
             await checkoutCart(payload);
+            message.success("Đặt hàng thành công!");
             navigate("/success");
         } catch (error) {
             message.error(
@@ -122,6 +127,8 @@ export default function CheckOut() {
                 error?.message ||
                 "Đặt hàng thất bại, vui lòng thử lại"
             );
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -232,12 +239,13 @@ export default function CheckOut() {
                             </label>
                         </div>
 
-                        {/* Thay đổi nút bấm ở đây */}
+                        {/* Thêm xử lý disabled khi đang submit */}
                         <button
                             onClick={handlePlaceOrder}
-                            className="bg-[#db4444] text-white px-10 py-4 rounded font-medium hover:bg-[#c03c3c] transition-colors w-full sm:w-auto"
+                            disabled={isSubmitting}
+                            className="bg-[#db4444] text-white px-10 py-4 rounded font-medium hover:bg-[#c03c3c] transition-colors w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Place Order
+                            {isSubmitting ? "Placing Order..." : "Place Order"}
                         </button>
                     </div>
                 </div>

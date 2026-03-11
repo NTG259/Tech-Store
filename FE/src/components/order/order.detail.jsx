@@ -1,25 +1,28 @@
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Row, Col, Typography, Divider, Space, Button, Select } from 'antd'; // Thêm Select
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Input, Row, Col, Typography, Divider, Space, Button, Select, message } from 'antd';
 import { TruckOutlined, CheckCircleOutlined } from '@ant-design/icons';
+// Nhớ import đúng đường dẫn API của bạn
+import { updateOrdersByAdminAPI } from '../../service/order/api';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { Option } = Select; // Khai báo Option cho Dropdown
+const { Option } = Select;
 
 const OrderDetailModal = (props) => {
-    // Nhận thêm hàm onUpdateStatus từ component cha để xử lý logic gọi API
-    const { isOpenOrderDetail, setIsOpenOrderDetail, orderData, onUpdateStatus } = props;
+    const { isOpenOrderDetail, setIsOpenOrderDetail, orderData, onRefresh } = props;
     const [form] = Form.useForm();
 
-    // Điền dữ liệu vào form mỗi khi orderData thay đổi hoặc Modal được mở
+    const [isUpdating, setIsUpdating] = useState(false);
+
     useEffect(() => {
         if (isOpenOrderDetail && orderData) {
             form.setFieldsValue({
-                fullName: orderData.customer || 'NTG', 
-                address: orderData.address || '123 ABC Street',
-                phone: orderData.phone || '0123456789',
-                note: orderData.note || 'Không có ghi chú',
-                status: orderData.status || 'pending', // Lấy trạng thái từ orderData (mặc định pending)
+                // Đã bỏ dữ liệu mẫu, nếu không có sẽ để chuỗi rỗng
+                fullName: orderData.receiverName || '',
+                address: orderData.shippingAddress || '',
+                phone: orderData.receiverPhone || '',
+                note: orderData.note || '',
+                status: orderData.status ? orderData.status.toUpperCase() : 'PENDING',
             });
         } else {
             form.resetFields();
@@ -30,32 +33,43 @@ const OrderDetailModal = (props) => {
         setIsOpenOrderDetail(false);
     };
 
-    // Hàm xử lý khi bấm nút Cập nhật
     const handleUpdate = async () => {
         try {
             const values = await form.validateFields();
-            console.log("Dữ liệu cập nhật:", values.status);
-            
-            // Gọi hàm từ component cha truyền vào để gọi API cập nhật status
-            if (onUpdateStatus && orderData) {
-                onUpdateStatus(orderData._id, values.status);
+
+            if (!orderData?.id) {
+                message.error("Không tìm thấy ID đơn hàng!");
+                return;
             }
-            
-            // Có thể đóng modal sau khi cập nhật thành công (tuỳ logic của bạn)
-            // handleClose(); 
+
+            setIsUpdating(true);
+
+            await updateOrdersByAdminAPI(orderData.id, { status: values.status });
+
+            message.success('Cập nhật trạng thái đơn hàng thành công!');
+
+            if (onRefresh) {
+                onRefresh();
+            }
+
+            handleClose();
+
         } catch (error) {
-            console.log("Lỗi validate form:", error);
+            console.error("Lỗi cập nhật:", error);
+            if (!error.errorFields) {
+                message.error('Cập nhật thất bại. Vui lòng thử lại!');
+            }
+        } finally {
+            setIsUpdating(false);
         }
     };
 
-    // Dữ liệu mẫu cho sản phẩm
-    const items = orderData?.items || [
-        { _id: '1', name: 'LCD Monitor', price: 650, image: 'https://placehold.co/200x200/f5f5f5/333333/png?text=No+Image' },
-        { _id: '2', name: 'H1 Gamepad', price: 1100, image: 'https://placehold.co/200x200/f5f5f5/333333/png?text=No+Image' },
-    ];
+    // Đã bỏ mảng dữ liệu mẫu, fallback về mảng rỗng
+    const items = orderData?.items || [];
 
-    const subtotal = orderData?.total ? Number(orderData.total) : 1750;
-    const shippingFee = orderData?.shippingFee || 0;
+    // Tính toán tiền lấy hoàn toàn từ data thật
+    const subtotal = orderData?.totalAmount ? Number(orderData.totalAmount) : 0;
+    const shippingFee = 0; // Shipping fee not in Orders data
     const total = subtotal + shippingFee;
 
     return (
@@ -70,8 +84,13 @@ const OrderDetailModal = (props) => {
                 <Button key="close" onClick={handleClose} style={{ borderRadius: '6px' }}>
                     Đóng
                 </Button>,
-                // Thêm nút Cập nhật vào Footer
-                <Button key="update" type="primary" onClick={handleUpdate} style={{ borderRadius: '6px' }}>
+                <Button
+                    key="update"
+                    type="primary"
+                    onClick={handleUpdate}
+                    loading={isUpdating}
+                    style={{ borderRadius: '6px' }}
+                >
                     Cập nhật
                 </Button>
             ]}
@@ -97,12 +116,10 @@ const OrderDetailModal = (props) => {
                             <TextArea rows={3} readOnly style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} />
                         </Form.Item>
 
-                        {/* DROPDOWN UPDATE STATUS MỚI THÊM VÀO */}
                         <Form.Item label="Order Status" name="status" style={{ marginBottom: '0' }}>
                             <Select style={{ width: '100%' }}>
                                 <Option value="PENDING">Pending (Chờ xử lý)</Option>
-                                <Option value="PROCESSING">Processing (Đang xử lý)</Option>
-                                <Option value="SHIPPED">Shipped (Đang giao)</Option>
+                                <Option value="SHIPPING">Shipping (Đang giao)</Option>
                                 <Option value="DELIVERED">Delivered (Đã giao thành công)</Option>
                                 <Option value="CANCELLED">Cancelled (Đã hủy)</Option>
                             </Select>
@@ -112,55 +129,64 @@ const OrderDetailModal = (props) => {
                     {/* CỘT PHẢI */}
                     <Col xs={24} md={12} style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ flex: 1, maxHeight: '200px', overflowY: 'auto', marginBottom: '16px' }}>
-                            {items.map(item => (
-                                <Row key={item._id} align="middle" justify="space-between" style={{ marginBottom: '16px' }}>
-                                    <Space>
-                                        <img
-                                            src={item?.image || "https://placehold.co/200x200/f5f5f5/333333/png?text=No+Image"}
-                                            alt={item.name}
-                                            style={{ width: '45px', height: '45px', objectFit: 'contain' }}
-                                        />
-                                        <Text>{item.name}</Text>
-                                    </Space>
-                                    <Text>${item.price}</Text>
-                                </Row>
-                            ))}
+                            {items.length > 0 ? (
+                                items.map(item => (
+                                    <Row key={item.id} align="middle" justify="space-between" style={{ marginBottom: '16px' }}>
+                                        <Space>
+                                            <img
+                                                src={item?.productImg || item?.image || "https://placehold.co/200x200/f5f5f5/333333/png?text=No+Image"}
+                                                alt={item.productName || item.name || 'Product'}
+                                                style={{ width: '45px', height: '45px', objectFit: 'contain' }}
+                                            />
+                                            <Text>{item.productName || item.name}</Text>
+                                        </Space>
+                                        <Text>
+                                            {item.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price) : '0 ₫'}
+                                        </Text>
+                                    </Row>
+                                ))
+                            ) : (
+                                <Text type="secondary" style={{ display: 'block', textAlign: 'center', marginTop: '20px' }}>
+                                    Không có sản phẩm nào
+                                </Text>
+                            )}
                         </div>
 
                         <div>
                             <Row justify="space-between" style={{ marginBottom: '12px' }}>
                                 <Text>Subtotal:</Text>
-                                <Text>${subtotal.toLocaleString()}</Text>
+                                <Text>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(subtotal)}</Text>
                             </Row>
                             <Row justify="space-between" style={{ marginBottom: '16px' }}>
                                 <Text>Shipping:</Text>
-                                <Text>{shippingFee === 0 ? 'Free' : `$${shippingFee}`}</Text>
+                                <Text>{shippingFee === 0 ? 'Free' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(shippingFee)}</Text>
                             </Row>
 
                             <Divider style={{ margin: '12px 0' }} />
 
                             <Row justify="space-between" style={{ marginBottom: '24px' }}>
                                 <Text>Total:</Text>
-                                <Text strong>${total.toLocaleString()}</Text>
+                                <Text strong>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}</Text>
                             </Row>
 
-                            {/* Logic hiển thị trạng thái động (Optional) */}
-                            {/* Bạn có thể thay đổi icon dựa vào orderData.status nếu muốn */}
-                            <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                                <Space align="center" size="middle">
-                                    <TruckOutlined style={{ fontSize: '18px' }} />
-                                    <Text>Cash on delivery</Text>
+                            {/* Logic hiển thị trạng thái giao hàng động dựa trên orderData.status */}
+                            {orderData?.status?.toUpperCase() === 'DELIVERED' && (
+                                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                                    <Space align="center" size="middle">
+                                        <TruckOutlined style={{ fontSize: '18px' }} />
+                                        <Text>Đã giao hàng</Text>
+                                    </Space>
+                                    <Space align="start" size="middle">
+                                        <CheckCircleOutlined style={{ fontSize: '24px', marginTop: '2px', color: '#52c41a' }} />
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <Text strong style={{ color: '#52c41a' }}>Thành công</Text>
+                                            <Text type="secondary" style={{ fontSize: '12px' }}>
+                                                Đơn hàng đã được giao thành công tới khách hàng.
+                                            </Text>
+                                        </div>
+                                    </Space>
                                 </Space>
-                                <Space align="start" size="middle">
-                                    <CheckCircleOutlined style={{ fontSize: '24px', marginTop: '2px', color: '#52c41a' }} />
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <Text strong style={{ color: '#52c41a' }}>Success</Text>
-                                        <Text type="secondary" style={{ fontSize: '12px', textDecoration: 'underline' }}>
-                                            Your order has been delivered successfully
-                                        </Text>
-                                    </div>
-                                </Space>
-                            </Space>
+                            )}
                         </div>
                     </Col>
                 </Row>

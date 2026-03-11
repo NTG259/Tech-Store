@@ -28,8 +28,19 @@ const fetchAllOrdersByAdminAPI = (page, size, name, status) => {
     });
 }
 
+const updateOrdersAPI = (orderId, orderStatus) => {
+    const URL_BACKEND = `/api/client/orders/${orderId}`;
+    return axios.put(URL_BACKEND, orderStatus);
+}
+
+const updateOrdersByAdminAPI = (orderId, orderStatus) => {
+    const URL_BACKEND = `/api/admin/orders/${orderId}`;
+    return axios.put(URL_BACKEND, orderStatus);
+}
 export {
     fetchOrderDetailAPI,
     fetchAllOrdersAPI,
-    fetchAllOrdersByAdminAPI
+    fetchAllOrdersByAdminAPI,
+    updateOrdersAPI,
+    updateOrdersByAdminAPI
 }

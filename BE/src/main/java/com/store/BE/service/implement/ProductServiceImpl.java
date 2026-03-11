@@ -79,9 +79,12 @@ public class ProductServiceImpl implements ProductService {
         return new ApiResponse<>(null, "Xóa sản phẩm thành công", null, HttpStatus.OK.value());
     }
 
-    // Lấy tất cả sản phẩm đang kinh doanh
-//    public ApiResponse<List<Product>> getAllProductIsPublishing() {
-//        List<Product> products = this.productRepository.findAllProductsIsPublishing(ProductStatus.PUBLISHED);
-//        return new ApiResponse<List<Product>>(products, "Lấy sản phẩm đang kinh doanh thành công", null, HttpStatus.OK.value());
-//    }
+    public ApiResponse<List<Product>> getLatestProducts() {
+        return new ApiResponse<>(
+                productRepository.findTop8ByOrderByCreatedAtDesc(),
+                "Lấy 8 sản phẩm mới nhất",
+                null,
+                HttpStatus.OK.value()
+        );
+    }
 }

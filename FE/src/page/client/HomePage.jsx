@@ -1,41 +1,52 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
 import ProductCard from "./ProductCard";
 import SectionTag from "../../layout/client/SectionTag";
 import ViewAllButton from "../../layout/client/ViewAllButton";
 import { Link } from "react-router-dom";
-// --- Image URLs ---
-const imgGamepad = "https://placehold.co/400x400/f5f5f5/333333/png?text=HAVIT+Gamepad";
-const imgKeyboard = "https://placehold.co/400x400/f5f5f5/333333/png?text=AK-900+Keyboard";
-const imgMonitor = "https://placehold.co/400x400/f5f5f5/333333/png?text=Gaming+Monitor";
-const imgChair = "https://placehold.co/400x400/f5f5f5/333333/png?text=Comfort+Chair";
-const imgCoat = "https://placehold.co/400x400/f5f5f5/333333/png?text=North+Coat";
-const imgBag = "https://placehold.co/400x400/f5f5f5/333333/png?text=Gucci+Bag";
-const imgCooler = "https://placehold.co/400x400/f5f5f5/333333/png?text=CPU+Cooler";
-const imgBookshelf = "https://placehold.co/400x400/f5f5f5/333333/png?text=Small+Bookshelf";
+// Nhớ đổi lại đường dẫn import file API cho đúng
+import { get8LatestProductAPI } from "../../service/product/api"; 
 
-/* ─────────────── Data ─────────────── */
-const newProducts = [
-    { id: 1, name: "HAVIT HV-G92 Gamepad", price: "$120", oldPrice: "$160", discount: "-40%", stars: 5, reviews: 88, image: imgGamepad, showAddToCart: true },
-    { id: 2, name: "AK-900 Wired Keyboard", price: "$960", oldPrice: "$1160", discount: "-35%", stars: 4, reviews: 75, image: imgKeyboard, showAddToCart: true },
-    { id: 3, name: "IPS LCD Gaming Monitor", price: "$370", oldPrice: "$400", discount: "-30%", stars: 5, reviews: 99, image: imgMonitor, showAddToCart: true },
-    { id: 4, name: "S-Series Comfort Chair", price: "$375", oldPrice: "$400", discount: "-25%", stars: 4, reviews: 99, image: imgChair, showAddToCart: true },
-    // Đưa 4 sản phẩm bestSelling cũ lên đây bù vào
-    { id: 5, name: "The north coat", price: "$260", oldPrice: "$360", discount: "-27%", stars: 5, reviews: 65, image: imgCoat, showAddToCart: true },
-    { id: 6, name: "Gucci duffle bag", price: "$960", oldPrice: "$1160", discount: "-17%", stars: 4, reviews: 65, image: imgBag, showAddToCart: true },
-    { id: 7, name: "RGB liquid CPU Cooler", price: "$160", oldPrice: "$170", discount: "-5%", stars: 4, reviews: 65, image: imgCooler, showAddToCart: true },
-    { id: 8, name: "Small BookSelf", price: "$360", oldPrice: "", discount: "", stars: 5, reviews: 65, image: imgBookshelf, showAddToCart: true },
-];
-
-/* ─────────────── Main Page ─────────────── */
 export default function ECommerceHomePage() {
+    const [newProducts, setNewProducts] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }, []);
+        
+    useEffect(() => {
+        const fetchLatestProducts = async () => {
+            setIsLoading(true);
+            try {
+                const response = await get8LatestProductAPI();
+                
+                // Lấy mảng data (khớp với log số 1 của bạn)
+                if (response && Array.isArray(response.data)) {
+                    // Truyền thẳng mảng data nguyên bản từ Backend vào state
+                    setNewProducts(response.data);
+                } else {
+                    setNewProducts([]);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải sản phẩm mới nhất:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLatestProducts();
+    }, []);
+
     return (
         <div className="min-h-screen bg-white font-sans">
             <Header />
 
             <main className="max-w-[1170px] mx-auto px-4 mb-20">
-                {/* ── New Products ── */}
                 <section className="mt-20">
                     <div className="flex flex-col gap-6 mb-10">
                         <SectionTag label="This week" />
@@ -43,14 +54,33 @@ export default function ECommerceHomePage() {
                             New Products
                         </h2>
                     </div>
-                    {/* Lưới chia 4 cột, 8 sản phẩm sẽ tự động rớt xuống thành 2 hàng */}
-                    <div className="grid grid-cols-4 gap-[30px] mb-10">
-                        {newProducts.map((p) => (
-                            <ProductCard key={p.id} {...p} />
-                        ))}
-                    </div>
-                    <Link to = "/products"><ViewAllButton /></Link>
                     
+                    {isLoading ? (
+                        <div className="flex justify-center items-center py-20 text-gray-500">
+                            Đang tải sản phẩm...
+                        </div>
+                    ) : newProducts.length === 0 ? (
+                        <div className="flex justify-center items-center py-20 text-gray-500">
+                            Không có sản phẩm nào.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-4 gap-[30px] mb-10">
+                            {newProducts.map((p) => (
+                                // Rải thẳng toàn bộ object (p) vào ProductCard
+                                // Vì các keys trong p (id, name, price, productImg, category, stockQuantity)
+                                // đã TRÙNG KHỚP HOÀN TOÀN với props mà ProductCard yêu cầu!
+                                <ProductCard 
+                                    key={p.id} 
+                                    {...p} 
+                                    showAddToCart={true} 
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    <Link to="/products">
+                        <ViewAllButton />
+                    </Link>
                 </section>
             </main>
 

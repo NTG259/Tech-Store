@@ -1,8 +1,12 @@
 package com.store.BE.domain.product;
 
+import com.store.BE.utils.security.SecurityUtils;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+
+import java.time.Instant;
+import java.util.Optional;
 
 @Entity
 @Table(name = "products")
@@ -42,4 +46,12 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = true)
     private Category category;
+
+    private Instant createdAt;
+
+    @PrePersist
+    private void handleBeforeCreate() {
+        createdAt = Instant.now();
+        Optional<String> currentUser =  SecurityUtils.getCurrentUserLogin();
+    }
 }

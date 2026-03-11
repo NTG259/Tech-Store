@@ -113,6 +113,12 @@ const Orders = () => {
       }
     },
     {
+      title: 'ACCOUNT',
+      dataIndex: 'email',
+      key: 'email',
+      render: (text) => <span style={{ fontWeight: 500 }}>{text || 'Khách vãng lai'}</span>
+    },
+    {
       title: 'CUSTOMER',
       dataIndex: 'receiverName',
       key: 'receiverName',
@@ -224,6 +230,8 @@ const Orders = () => {
         isOpenOrderDetail={isOpenOrderDetail}
         setIsOpenOrderDetail={setIsOpenOrderDetail}
         orderData={selectedOrder}
+        // THÊM DÒNG NÀY ĐỂ TRUYỀN HÀM XUỐNG MODAL
+        onRefresh={() => fetchOrders(pagination.current, pagination.pageSize, searchText, statusFilter)}
       />
     </>
   );

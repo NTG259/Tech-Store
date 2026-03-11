@@ -37,4 +37,5 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         WHERE p.category.id = :id
     """)
     void updateCategory(Long id, Long uncategorizedId);
+    List<Product> findTop8ByOrderByCreatedAtDesc();
 }

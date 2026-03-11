@@ -40,6 +40,12 @@ export default function AllProductList() {
     };
 
     useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    }, []);
+    useEffect(() => {
         loadProducts();
     }, [currentPage, filters]);
 

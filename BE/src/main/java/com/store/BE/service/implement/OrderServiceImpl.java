@@ -86,6 +86,7 @@ public class OrderServiceImpl implements OrderService {
         order.setReceiverName(request.getReceiverName());
         order.setReceiverPhone(request.getPhone());
         order.setShippingAddress(request.getShippingAddress());
+        order.setNote(request.getNote());
         order.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "COD");
         order.setStatus(OrderStatus.PENDING); // Đặt trạng thái mặc định là chờ xử lý
 
@@ -128,14 +129,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public ApiResponse<Order> updateOrder(Order order) {
-        if (!orderRepository.existsById(order.getId())) {
-            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
-        }
-
-        Order newOrder = orderRepository.save(order);
+    public ApiResponse<OrderResponse> updateOrder(Long orderId, OrderStatus orderStatus) {
+        Order updateOrder = this.orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
+        updateOrder.setStatus(orderStatus);
+        updateOrder = this.orderRepository.save(updateOrder);
         return new ApiResponse<>(
-                newOrder,
+                OrderConvert.convertToOrderResponse(updateOrder),
                 "Cập nhật đơn hàng thành công",
                 null,
                 HttpStatus.OK.value()

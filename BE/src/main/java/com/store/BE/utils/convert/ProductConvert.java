@@ -21,6 +21,7 @@ public class ProductConvert {
         rs.setBrand(dto.getBrand());
         rs.setProductStatus(dto.getProductStatus());
         rs.setDescription(dto.getDescription());
+        rs.setStockQuantity(dto.getStockQuantity());
         return rs;
     }
 }

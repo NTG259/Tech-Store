@@ -20,4 +20,5 @@ public interface ProductService {
     public PaginationResponse<Product> getAllProductIsPubLicPagination(ProductSearchRequest request, Pageable pageable);
     public ApiResponse<Void> deleteProduct(Long id);
 //    public ApiResponse<List<Product>> getAllProductIsPublishing();
+    public ApiResponse<List<Product>> getLatestProducts();
 }

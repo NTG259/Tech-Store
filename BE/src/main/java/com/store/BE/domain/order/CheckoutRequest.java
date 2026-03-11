@@ -10,6 +10,7 @@ public class CheckoutRequest {
     private String receiverName;
     private String phone;
     private String paymentMethod;
+    private String note;
 
     private List<OrderItemRequest> items;
 }

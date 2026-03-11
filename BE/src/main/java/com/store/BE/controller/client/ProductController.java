@@ -50,4 +50,11 @@ public class ProductController {
                 .status(HttpStatus.OK)
                 .body(this.productService.getAllProductIsPubLicPagination(request, pageable));
     }
+
+    @GetMapping("/new")
+    public ResponseEntity<ApiResponse<List<Product>>> getLatestProducts() {
+        return ResponseEntity.ok().body(
+                this.productService.getLatestProducts()
+        );
+    }
 }

@@ -46,9 +46,27 @@ public class ProductSpecification {
                 }
             }
             // where cate = ...
+            if (req.getProductStatus() != null && !req.getProductStatus().isBlank()) {
+                predicates.add(cb.equal(root.get("productStatus"), ProductStatus.valueOf(req.getProductStatus())));
+            }
 
-            if (req.getProductStatus() != null) {
-                predicates.add(cb.equal(root.get("productStatus"), req.getProductStatus()));
+            if (req.getMinPrice() != null) {
+                predicates.add(
+                        cb.greaterThanOrEqualTo(
+                                root.get("price"),
+                                req.getMinPrice()
+                        )
+                );
+            }
+
+            // filter theo giá <= maxPrice
+            if (req.getMaxPrice() != null) {
+                predicates.add(
+                        cb.lessThanOrEqualTo(
+                                root.get("price"),
+                                req.getMaxPrice()
+                        )
+                );
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

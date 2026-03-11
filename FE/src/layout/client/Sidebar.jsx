@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
-// Nhớ sửa lại đường dẫn import file API này cho đúng với cấu trúc thư mục của bạn nhé
 import { fetchAllCategoriesAPI } from "../../service/category/api";
 
-// Component hỗ trợ tạo các mục Accordion (Dropdown) có viền đứt
 const FilterSection = ({ title, isOpen, onToggle, children, hideBorder }) => {
     return (
         <div className={`py-4 ${hideBorder ? "" : "border-b border-dashed border-gray-300"}`}>
@@ -13,7 +11,6 @@ const FilterSection = ({ title, isOpen, onToggle, children, hideBorder }) => {
                 <span className="text-base font-medium text-black tracking-wide group-hover:text-[#db4444] transition-colors">
                     {title}
                 </span>
-                {/* Đổi icon dựa trên trạng thái (Mở: hướng lên, Đóng: hướng sang phải) */}
                 <svg
                     width="16" height="16" viewBox="0 0 24 24"
                     fill="none" stroke="currentColor" strokeWidth="2"
@@ -21,32 +18,30 @@ const FilterSection = ({ title, isOpen, onToggle, children, hideBorder }) => {
                     className="text-gray-600 transition-transform duration-200"
                 >
                     {isOpen ? (
-                        <polyline points="18 15 12 9 6 15"></polyline> // Hướng lên
+                        <polyline points="18 15 12 9 6 15"></polyline>
                     ) : (
-                        <polyline points="9 18 15 12 9 6"></polyline> // Hướng phải
+                        <polyline points="9 18 15 12 9 6"></polyline>
                     )}
                 </svg>
             </div>
-            {/* Nội dung bên trong sẽ hiển thị nếu isOpen = true */}
             {isOpen && <div className="mt-4 flex flex-col gap-3">{children}</div>}
         </div>
     );
 };
 
-export default function Sidebar({ searchValue, onSearchChange, filters, onFilterChange }) {
-    // 1. State quản lý việc đóng mở của các mục filter
+export default function Sidebar({ 
+    searchName, onSearchChange, onApplySearch,
+    categoryId, onCategoryChange,
+    minPrice, maxPrice, onPriceChange, onApplyPrice 
+}) {
     const [openSections, setOpenSections] = useState({
-        availability: false,
-        category: true, // Mặc định mở để dễ thao tác
-        colors: false,
-        priceRange: false
+        category: true,
+        priceRange: true
     });
 
-    // 2. State lưu danh sách Category từ API
     const [categories, setCategories] = useState([]);
     const [isLoadingCats, setIsLoadingCats] = useState(false);
 
-    // 3. Gọi API lấy danh mục khi Sidebar vừa render
     useEffect(() => {
         const loadCategories = async () => {
             setIsLoadingCats(true);
@@ -74,41 +69,45 @@ export default function Sidebar({ searchValue, onSearchChange, filters, onFilter
         }));
     };
 
+    // Hàm xử lý Reload trang
+    const handleReloadPage = () => {
+        window.location.reload();
+    };
+
     return (
         <aside className="w-[240px] shrink-0 flex flex-col">
-            {/* Availability Section */}
-            <FilterSection
-                title="Availability"
-                isOpen={openSections.availability}
-                onToggle={() => toggleSection("availability")}
-            >
-                <label className="flex items-center gap-4 cursor-pointer group">
-                    <input
-                        type="checkbox"
-                        checked={filters.availability || false}
-                        onChange={(e) => onFilterChange("availability", e.target.checked)}
-                        className="w-[18px] h-[18px] border-gray-300 rounded-sm accent-[#db4444] cursor-pointer"
-                    />
-                    <span className="text-[15px] text-[#333] group-hover:text-black tracking-wide">
-                        Availability
-                    </span>
-                </label>
-                <label className="flex items-center gap-4 cursor-pointer group">
-                    <input
-                        type="checkbox"
-                        checked={filters.outOfStock || false}
-                        onChange={(e) => onFilterChange("outOfStock", e.target.checked)}
-                        className="w-[18px] h-[18px] border-gray-300 rounded-sm accent-[#db4444] cursor-pointer"
-                    />
-                    <span className="text-[15px] text-[#333] group-hover:text-black tracking-wide">
-                        Out Of Stock
-                    </span>
-                </label>
-            </FilterSection>
+            
+            {/* TÌM KIẾM THEO TÊN */}
+            <div className="pb-4 border-b border-dashed border-gray-300">
+                <span className="block text-base font-medium text-black tracking-wide mb-3">
+                    Tìm kiếm
+                </span>
+                <input
+                    type="text"
+                    placeholder="Nhập tên sản phẩm"
+                    value={searchName || ""}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        onSearchChange(val); // Vẫn lưu giá trị đang gõ
+                        
+                        // Nếu xóa hết chữ -> Reload lại trang như bạn yêu cầu
+                        if (val === "") {
+                            handleReloadPage();
+                        }
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault(); 
+                            onApplySearch();    
+                        }
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-[#db4444] focus:ring-1 focus:ring-[#db4444] transition-colors"
+                />
+            </div>
 
-            {/* Category Section (Đã kết nối API) */}
+            {/* DANH MỤC */}
             <FilterSection
-                title="Category"
+                title="Danh mục"
                 isOpen={openSections.category}
                 onToggle={() => toggleSection("category")}
             >
@@ -116,27 +115,26 @@ export default function Sidebar({ searchValue, onSearchChange, filters, onFilter
                     <span className="text-sm text-gray-500 italic">Đang tải danh mục...</span>
                 ) : (
                     <>
-                        {/* THÊM TÙY CHỌN "TẤT CẢ" ĐỂ XÓA LỌC */}
                         <label className="flex items-center gap-4 cursor-pointer group">
                             <input
                                 type="radio"
                                 name="category"
                                 value=""
-                                checked={!filters.category} // Nếu rỗng thì coi như đang chọn "Tất cả"
-                                onChange={(e) => onFilterChange("category", "")}
+                                checked={!categoryId} 
+                                onChange={() => {
+                                    onCategoryChange("");
+                                    handleReloadPage(); // Bấm 'Tất cả' cũng reload lại trang
+                                }}
                                 className="w-[18px] h-[18px] accent-[#db4444] cursor-pointer"
                             />
-                            <span className={`text-[15px] tracking-wide group-hover:text-[#db4444] transition-colors ${!filters.category ? "text-[#db4444] font-medium" : "text-[#333]"}`}>
+                            <span className={`text-[15px] tracking-wide group-hover:text-[#db4444] transition-colors ${!categoryId ? "text-[#db4444] font-medium" : "text-[#333]"}`}>
                                 Tất cả
                             </span>
                         </label>
 
-                        {/* RENDER DANH MỤC TỪ API */}
                         {categories.map((cat) => {
                             const val = cat.id;
-
-                            // Ép kiểu val về string để so sánh an toàn
-                            const isChecked = String(filters.category) === String(val);
+                            const isChecked = String(categoryId) === String(val);
 
                             return (
                                 <label key={val} className="flex items-center gap-4 cursor-pointer group">
@@ -145,7 +143,7 @@ export default function Sidebar({ searchValue, onSearchChange, filters, onFilter
                                         name="category"
                                         value={val}
                                         checked={isChecked}
-                                        onChange={(e) => onFilterChange("category", e.target.value)}
+                                        onChange={(e) => onCategoryChange(e.target.value)}
                                         className="w-[18px] h-[18px] accent-[#db4444] cursor-pointer"
                                     />
                                     <span className={`text-[15px] tracking-wide group-hover:text-[#db4444] transition-colors ${isChecked ? "text-[#db4444] font-medium" : "text-[#333]"}`}>
@@ -156,6 +154,71 @@ export default function Sidebar({ searchValue, onSearchChange, filters, onFilter
                         })}
                     </>
                 )}
+            </FilterSection>
+
+            {/* LỌC THEO KHOẢNG GIÁ */}
+            <FilterSection
+                title="Lọc theo giá"
+                isOpen={openSections.priceRange}
+                onToggle={() => toggleSection("priceRange")}
+                hideBorder={true}
+            >
+                <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="text" 
+                            placeholder="Từ"
+                            value={minPrice || ""}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, '');
+                                onPriceChange("minPrice", val);
+                                // Xóa hết giá cũng có thể gọi Reload ở đây (Tuỳ chọn)
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    onApplyPrice();
+                                }
+                            }}
+                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-[#db4444] focus:ring-1 focus:ring-[#db4444] transition-colors"
+                        />
+                        <span className="text-gray-500">-</span>
+                        <input
+                            type="text" 
+                            placeholder="Đến"
+                            value={maxPrice || ""}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, '');
+                                onPriceChange("maxPrice", val);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    onApplyPrice();
+                                }
+                            }}
+                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-[#db4444] focus:ring-1 focus:ring-[#db4444] transition-colors"
+                        />
+                    </div>
+                    
+                    {/* NÚT ÁP DỤNG */}
+                    <button
+                        type="button" 
+                        onClick={onApplyPrice}
+                        className="w-full py-2 bg-black text-white text-sm font-medium rounded hover:bg-[#db4444] transition-colors mt-2"
+                    >
+                        Áp dụng giá
+                    </button>
+                    
+                    {/* NÚT LÀM MỚI (TẶNG THÊM - BẤM VÀO SẼ RELOAD LẠI TRANG) */}
+                    <button
+                        type="button" 
+                        onClick={handleReloadPage}
+                        className="w-full py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-300 transition-colors"
+                    >
+                        Xóa bộ lọc
+                    </button>
+                </div>
             </FilterSection>
         </aside>
     );

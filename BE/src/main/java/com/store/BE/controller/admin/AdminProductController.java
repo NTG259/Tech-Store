@@ -2,6 +2,7 @@ package com.store.BE.controller.admin;
 
 import com.store.BE.domain.dto.ProductRequestDTO;
 import com.store.BE.domain.product.Product;
+import com.store.BE.domain.product.ProductStatus;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.ProductSearchRequest;
@@ -26,12 +27,13 @@ public class AdminProductController {
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
             @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "productStatus", required = false) String productStatus,
             @RequestParam(value = "categoryId", required = false) Long categoryId) {
         Pageable pageable = PageRequest.of(page - 1, size);
         ProductSearchRequest request = new ProductSearchRequest();
         request.setName(name);
         request.setCategoryId(categoryId);
-
+        request.setProductStatus(productStatus);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(this.productService.getAllProducts(request, pageable));

@@ -83,14 +83,14 @@ const UserForm = (props) => {
         try {
             // Gọi API, Axios sẽ trả thẳng cục data thành công vào res
             const res = await createUserByAdminAPI(payloadToBackend);
-            
+
             message.success("Tạo người dùng thành công!");
             await loadUsers();
             setIsOpenCreateUserForm(false);
             form.resetFields();
             setFileList([]);
             setImageUrl("");
-            
+
         } catch (error) {
             console.log(">>> Lỗi khi tạo user nhận được từ Axios:", error);
 

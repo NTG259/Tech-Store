@@ -26,10 +26,9 @@ public class OrderItem {
     @JsonIgnore
     private Order order;
 
-    // Product được mua
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
+    private String name;
+
+    private String productImg;
 
     // Số lượng
     private Long quantity;
@@ -38,4 +37,6 @@ public class OrderItem {
     private Long price;
 
     private String description;
+
+
 }

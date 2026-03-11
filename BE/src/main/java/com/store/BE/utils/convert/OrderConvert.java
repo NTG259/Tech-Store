@@ -35,9 +35,8 @@ public class OrderConvert {
 
         for (OrderItem orderItem : orderItems) {
             OrderItemResponse token = new OrderItemResponse();
-            token.setProductId(orderItem.getProduct().getId());
-            token.setProductName(orderItem.getProduct().getName());
-            token.setProductImg(orderItem.getProduct().getProductImg());
+            token.setProductName(orderItem.getName());
+            token.setProductImg(orderItem.getProductImg());
             token.setPrice(orderItem.getPrice());
             token.setQuantity(orderItem.getQuantity());
             token.setDescription(orderItem.getDescription());

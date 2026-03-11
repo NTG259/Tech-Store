@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public ApiResponse<Order> checkout(CheckoutRequest request) {
+    public ApiResponse<OrderResponse> checkout(CheckoutRequest request) {
         // 1. Lấy thông tin user hiện tại từ Security context
         String currentUserLogin = SecurityUtils.getCurrentUserLogin()
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin đăng nhập!"));
@@ -104,11 +104,14 @@ public class OrderServiceImpl implements OrderService {
             // Tạo OrderItem
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order); // Set quan hệ 2 chiều
-            orderItem.setProduct(product);
+            orderItem.setName(product.getName());
+            orderItem.setProductImg(product.getProductImg());
             orderItem.setQuantity(itemReq.getQuantity());
             orderItem.setPrice(product.getPrice()); // Lưu lại giá tại thời điểm mua
             orderItem.setDescription(product.getDescription());
             orderItems.add(orderItem);
+
+            product.setStockQuantity(product.getStockQuantity() - itemReq.getQuantity());
 
             // Tính tổng tiền cho item này: (giá * số lượng) và cộng vào tổng đơn
             long itemTotal = product.getPrice() * itemReq.getQuantity();
@@ -122,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
         // 5. Lưu Order vào Database
         // Vì class Order có CascadeType.ALL ở mappedBy="order", các OrderItem sẽ được tự động lưu theo.
         return new ApiResponse<>(
-                orderRepository.save(order),
+                OrderConvert.convertToOrderResponse(orderRepository.save(order)),
                 "Tạo đơn hàng thành công",
                 null,
                 HttpStatus.CREATED.value());

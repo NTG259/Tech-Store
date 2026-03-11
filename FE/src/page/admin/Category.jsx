@@ -38,14 +38,19 @@ const Category = () => {
                 const categories = res.data;
                 const metaData = res.meta;
 
-                const formattedData = categories.map(item => ({
-                    ...item,
-                    key: item.id 
-                }));
+                // LỌC DANH MỤC Ở ĐÂY: Bỏ qua các item có tên "Chưa xác định"
+                const formattedData = categories
+                    .filter(item => item.name !== "Chưa xác định") 
+                    .map(item => ({
+                        ...item,
+                        key: item.id 
+                    }));
 
                 setData(formattedData);
                 
                 if (metaData && metaData.totalItems !== undefined) {
+                    // Nếu "Chưa xác định" luôn tồn tại trong DB, bạn có thể cân nhắc 
+                    // setTotal(metaData.totalItems - 1) để con số tổng hiển thị chính xác hơn
                     setTotal(metaData.totalItems);
                 }
             }

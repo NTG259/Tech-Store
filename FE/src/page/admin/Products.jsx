@@ -8,12 +8,12 @@ import {
     ReloadOutlined
 } from '@ant-design/icons';
 import { deleteProductAPI, fetchAllProductsByAdminAPI } from '../../service/product/api';
-import { fetchAllCategoriesAPI } from '../../service/category/api'; // Thêm import API category
+import { fetchAllCategoriesAPI } from '../../service/category/api'; 
 import DetailProductModal from '../../components/product/product.detail';
 import ProductEdit from '../../components/product/product.edit';
 import ProductForm from '../../components/product/product.form';
 
-const { Title } = Typography; 
+const { Title } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 
@@ -62,7 +62,7 @@ const Product = () => {
     const loadProducts = async () => {
         setLoading(true);
         try {
-            // Nhớ update hàm fetchAllProductsByAdminAPI trong file api.js để nhận thêm tham số này
+            // Đã truyền đầy đủ 5 tham số theo đúng API của bạn: page, size, searchText, categoryId, status
             const res = await fetchAllProductsByAdminAPI(current, pageSize, searchText, categoryFilter, statusFilter);
 
             if (res && res.data) {
@@ -88,8 +88,8 @@ const Product = () => {
 
     // Hàm xử lý khi người dùng bấm nút Tìm kiếm
     const onSearch = (value) => {
-        setSearchText(value); 
-        setCurrent(1); 
+        setSearchText(value);
+        setCurrent(1);
     };
 
     const handleDelete = async (id) => {
@@ -104,7 +104,7 @@ const Product = () => {
         }
     };
 
-    // Tự động gọi API mỗi khi phân trang, search, hoặc bộ lọc thay đổi
+    // Tự động gọi API mỗi khi phân trang, search, hoặc bộ lọc (category, status) thay đổi
     useEffect(() => {
         loadProducts();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -278,7 +278,7 @@ const Product = () => {
                                 }}
                             />
                         </Col>
-                        
+
                         <Col xs={24} sm={12} md={5}>
                             <Select
                                 style={{ width: '100%' }}
@@ -308,7 +308,7 @@ const Product = () => {
                             >
                                 <Option value="ALL">Tất cả trạng thái</Option>
                                 <Option value="PUBLISHED">Đang kinh doanh</Option>
-                                <Option value="UNPUBLISHED">Ngừng kinh doanh</Option>
+                                <Option value="DISCONTINUED">Ngừng kinh doanh</Option>
                             </Select>
                         </Col>
                     </Row>

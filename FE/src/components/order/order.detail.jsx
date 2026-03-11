@@ -17,7 +17,6 @@ const OrderDetailModal = (props) => {
     useEffect(() => {
         if (isOpenOrderDetail && orderData) {
             form.setFieldsValue({
-                // Đã bỏ dữ liệu mẫu, nếu không có sẽ để chuỗi rỗng
                 fullName: orderData.receiverName || '',
                 address: orderData.shippingAddress || '',
                 phone: orderData.receiverPhone || '',
@@ -64,12 +63,10 @@ const OrderDetailModal = (props) => {
         }
     };
 
-    // Đã bỏ mảng dữ liệu mẫu, fallback về mảng rỗng
     const items = orderData?.items || [];
 
-    // Tính toán tiền lấy hoàn toàn từ data thật
     const subtotal = orderData?.totalAmount ? Number(orderData.totalAmount) : 0;
-    const shippingFee = 0; // Shipping fee not in Orders data
+    const shippingFee = 0; 
     const total = subtotal + shippingFee;
 
     return (
@@ -128,23 +125,43 @@ const OrderDetailModal = (props) => {
 
                     {/* CỘT PHẢI */}
                     <Col xs={24} md={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ flex: 1, maxHeight: '200px', overflowY: 'auto', marginBottom: '16px' }}>
+                        <div style={{ flex: 1, maxHeight: '260px', overflowY: 'auto', marginBottom: '16px', paddingRight: '8px' }}>
                             {items.length > 0 ? (
-                                items.map(item => (
-                                    <Row key={item.id} align="middle" justify="space-between" style={{ marginBottom: '16px' }}>
-                                        <Space>
-                                            <img
-                                                src={item?.productImg || item?.image || "https://placehold.co/200x200/f5f5f5/333333/png?text=No+Image"}
-                                                alt={item.productName || item.name || 'Product'}
-                                                style={{ width: '45px', height: '45px', objectFit: 'contain' }}
-                                            />
-                                            <Text>{item.productName || item.name}</Text>
-                                        </Space>
-                                        <Text>
-                                            {item.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price) : '0 ₫'}
-                                        </Text>
-                                    </Row>
-                                ))
+                                items.map(item => {
+                                    // Xử lý lấy data an toàn
+                                    const productName = item.productName || item.name || 'Product';
+                                    const productImage = item.productImg || item.image || "https://placehold.co/200x200/f5f5f5/333333/png?text=No+Image";
+                                    const price = item.price ? Number(item.price) : 0;
+                                    const qty = item.quantity || item.qty || 1; // Fallback về 1 nếu không có
+                                    const lineTotal = price * qty;
+
+                                    return (
+                                        <Row key={item.id} align="middle" justify="space-between" style={{ marginBottom: '16px' }}>
+                                            <Space align="start">
+                                                <div style={{ position: 'relative' }}>
+                                                    <img
+                                                        src={productImage}
+                                                        alt={productName}
+                                                        style={{ width: '50px', height: '50px', objectFit: 'contain', border: '1px solid #f0f0f0', borderRadius: '4px' }}
+                                                    />
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <Text style={{ fontWeight: 500, maxWidth: '160px' }} ellipsis={{ tooltip: productName }}>
+                                                        {productName}
+                                                    </Text>
+                                                    <Text type="secondary" style={{ fontSize: '13px' }}>
+                                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)} x {qty}
+                                                    </Text>
+                                                </div>
+                                            </Space>
+                                            
+                                            {/* Tổng tiền của dòng đó */}
+                                            <Text strong>
+                                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(lineTotal)}
+                                            </Text>
+                                        </Row>
+                                    );
+                                })
                             ) : (
                                 <Text type="secondary" style={{ display: 'block', textAlign: 'center', marginTop: '20px' }}>
                                     Không có sản phẩm nào
@@ -166,22 +183,23 @@ const OrderDetailModal = (props) => {
 
                             <Row justify="space-between" style={{ marginBottom: '24px' }}>
                                 <Text>Total:</Text>
-                                <Text strong>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}</Text>
+                                <Text strong style={{ fontSize: '16px', color: '#db4444' }}>
+                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}
+                                </Text>
                             </Row>
 
-                            {/* Logic hiển thị trạng thái giao hàng động dựa trên orderData.status */}
                             {orderData?.status?.toUpperCase() === 'DELIVERED' && (
-                                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                                <Space direction="vertical" size="large" style={{ width: '100%', backgroundColor: '#f6ffed', padding: '12px', borderRadius: '8px', border: '1px solid #b7eb8f' }}>
                                     <Space align="center" size="middle">
-                                        <TruckOutlined style={{ fontSize: '18px' }} />
-                                        <Text>Đã giao hàng</Text>
+                                        <TruckOutlined style={{ fontSize: '18px', color: '#52c41a' }} />
+                                        <Text strong style={{ color: '#52c41a' }}>Đã giao hàng</Text>
                                     </Space>
                                     <Space align="start" size="middle">
                                         <CheckCircleOutlined style={{ fontSize: '24px', marginTop: '2px', color: '#52c41a' }} />
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <Text strong style={{ color: '#52c41a' }}>Thành công</Text>
-                                            <Text type="secondary" style={{ fontSize: '12px' }}>
-                                                Đơn hàng đã được giao thành công tới khách hàng.
+                                            <Text type="secondary" style={{ fontSize: '13px' }}>
+                                                Đơn hàng đã được giao thành công tới tay khách hàng.
                                             </Text>
                                         </div>
                                     </Space>

@@ -1,7 +1,6 @@
 package com.store.BE.service;
 
 import com.store.BE.domain.order.CheckoutRequest;
-import com.store.BE.domain.order.Order;
 import com.store.BE.domain.order.OrderResponse;
 import com.store.BE.domain.order.OrderStatus;
 import com.store.BE.domain.response.ApiResponse;
@@ -14,6 +13,6 @@ import org.springframework.stereotype.Service;
 public interface OrderService {
     public PaginationResponse<OrderResponse> getAllOrdersByClient(OrderSearchRequest request, Pageable pageable);
     public PaginationResponse<OrderResponse> getAllOrdersByAdmin(OrderSearchRequest searchRequest, Pageable pageable);
-    public ApiResponse<Order> checkout(CheckoutRequest request);
+    public ApiResponse<OrderResponse> checkout(CheckoutRequest request);
     public ApiResponse<OrderResponse> updateOrder(Long orderId, OrderStatus status);
 }

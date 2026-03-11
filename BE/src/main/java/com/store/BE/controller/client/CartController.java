@@ -1,9 +1,11 @@
 package com.store.BE.controller.client;
 
 import com.store.BE.domain.cart.Cart;
+import com.store.BE.domain.cart.CartResponse;
 import com.store.BE.domain.dto.CartRequest;
 import com.store.BE.domain.order.CheckoutRequest;
 import com.store.BE.domain.order.Order;
+import com.store.BE.domain.order.OrderResponse;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.service.OrderService;
 import com.store.BE.service.UserService;
@@ -33,7 +35,7 @@ public class CartController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Cart>> getMyCart() {
+    public ResponseEntity<ApiResponse<CartResponse>> getMyCart() {
         Long userId = getCurrentUserId();
         return ResponseEntity.ok().body(this.cartService.getCartByUserId(userId));
     }
@@ -68,8 +70,8 @@ public class CartController {
     }
 
     @PostMapping("/checkout")
-    public  ResponseEntity<ApiResponse<Order>> checkOut(@RequestBody CheckoutRequest checkoutRequest) {
-            ApiResponse<Order> response = this.orderService.checkout(checkoutRequest);
+    public  ResponseEntity<ApiResponse<OrderResponse>> checkOut(@RequestBody CheckoutRequest checkoutRequest) {
+            ApiResponse<OrderResponse> response = this.orderService.checkout(checkoutRequest);
             cartService.removeCart(getCurrentUserId());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

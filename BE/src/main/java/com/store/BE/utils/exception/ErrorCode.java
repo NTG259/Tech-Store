@@ -19,6 +19,7 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy sản phẩm"),
     ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy sản phẩm trong giỏ hàng"),
     CATEGORIES_ALREADY_EXIST(HttpStatus.CONFLICT, "Danh mục đã tồn tại"),
+    QUANTITY_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "Sản phẩm không đủ số lượng trong kho"),
     //VALIDATION
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dữ liệu đầu vào không hợp lệ"),
 

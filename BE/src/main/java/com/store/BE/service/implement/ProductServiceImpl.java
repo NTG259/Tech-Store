@@ -66,6 +66,11 @@ public class ProductServiceImpl implements ProductService {
 
     public PaginationResponse<Product> getAllProductIsPubLicPagination(ProductSearchRequest request, Pageable pageable) {
         Specification<Product> specification = ProductSpecification.filter(request);
+        Specification<Product> isPublic = (root, query, cb) ->
+                cb.equal(root.get("productStatus"), ProductStatus.PUBLISHED);
+        Specification<Product> inStock = (root, query, cb) ->
+                cb.greaterThan(root.get("stockQuantity"), 0);
+        specification = specification.and(isPublic).and(inStock);
         Page<Product> productPage = this.productRepository.findAll(specification, pageable);
         return PaginationUtil.convertResponse(productPage);
     }

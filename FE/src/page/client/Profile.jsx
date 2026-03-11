@@ -16,10 +16,13 @@ const getBase64 = (file) =>
         reader.onerror = (error) => reject(error);
     });
 
-function FormField({ label, value, onChange, disabled, placeholder }) {
+// 1. Thêm prop "required" vào FormField
+function FormField({ label, value, onChange, disabled, placeholder, required }) {
     return (
         <div className="flex flex-col gap-2">
-            <label className="text-base text-black">{label}</label>
+            <label className="text-base text-black">
+                {label} {required && <span className="text-[#db4444] ml-1">*</span>}
+            </label>
             <input
                 type="text"
                 value={value}
@@ -36,7 +39,7 @@ function UploadIcon() {
     return (
         <svg width="64" height="50" viewBox="0 0 78.5 60.5" fill="none">
             <path
-                d="M10 40L30 20L45 35L55 25L70 40" // Placeholder path for icon
+                d="M10 40L30 20L45 35L55 25L70 40"
                 stroke="#1E1E1E"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -51,7 +54,7 @@ const Profile = () => {
     const navigate = useNavigate();
     const [form, setForm] = useState({
         fullName: "",
-        phone: "",
+        phoneNumber: "",
         email: "",
         address: "",
         avatar: "https://via.placeholder.com/298x166" // Ảnh mặc định
@@ -78,7 +81,7 @@ const Profile = () => {
                 setForm((prev) => ({
                     ...prev,
                     fullName: user.fullName || "",
-                    phone: user.phoneNumber || "",
+                    phoneNumber: user.phoneNumber || "",
                     email: user.email || "",
                     address: user.address || "",
                     avatar: user.avatar || prev.avatar,
@@ -126,10 +129,18 @@ const Profile = () => {
     };
 
     const handleSaveChanges = async () => {
+        // 2. Thêm logic Validate kiểm tra không null / khoảng trắng
+        if (!form.fullName || !form.fullName.trim()) {
+            return message.error("Vui lòng nhập họ và tên!");
+        }
+        if (!form.phoneNumber || !form.phoneNumber.trim()) {
+            return message.error("Vui lòng nhập số điện thoại!");
+        }
+
         try {
             const payload = {
                 fullName: form.fullName,
-                phone: form.phone,
+                phoneNumber: form.phoneNumber,
                 address: form.address,
                 avatar: form.avatar,
             };
@@ -140,7 +151,7 @@ const Profile = () => {
                 setForm((prev) => ({
                     ...prev,
                     fullName: updated.fullName || prev.fullName,
-                    phone: updated.phone || prev.phone,
+                    phoneNumber: updated.phoneNumber || prev.phoneNumber,
                     address: updated.address || prev.address,
                     avatar: updated.avatar || prev.avatar,
                 }));
@@ -160,18 +171,6 @@ const Profile = () => {
         navigate(-1);
     };
 
-    const handleLockAccount = async () => {
-        try {
-            await lockedAccountAPI();
-            message.success("Tài khoản đã được khóa");
-        } catch (error) {
-            message.error(
-                error?.response?.data?.message ||
-                error?.message ||
-                "Không thể khóa tài khoản"
-            );
-        }
-    };
 
     return (
         <div className="min-h-screen bg-white font-sans">
@@ -182,13 +181,33 @@ const Profile = () => {
                     <h2 className="text-xl text-[#db4444] mb-8">Edit Your Profile</h2>
 
                     <div className="flex gap-12 mb-8">
-                        <FormField label="Full Name" value={form.fullName} onChange={setField("fullName")} />
-                        <FormField label="Phone number" value={form.phone} onChange={setField("phone")} />
+                        {/* 3. Truyền prop required và sửa lỗi cú pháp */}
+                        <FormField
+                            label="Full Name"
+                            value={form.fullName}
+                            onChange={setField("fullName")}
+                            required
+                        />
+                        <FormField
+                            label="Phone number"
+                            value={form.phoneNumber}
+                            onChange={setField("phoneNumber")}
+                            required
+                        />
                     </div>
 
                     <div className="flex gap-12 mb-8">
-                        <FormField label="Email" value={form.email} disabled />
-                        <FormField label="Address" value={form.address} onChange={setField("address")} />
+                        <FormField
+                            label="Email"
+                            value={form.email}
+                            disabled
+                        />
+                        <FormField
+                            label="Address"
+                            value={form.address}
+                            onChange={setField("address")}
+                            
+                        />
                     </div>
 
                     <div className="mb-8">
@@ -216,7 +235,7 @@ const Profile = () => {
                                     onPreview={handlePreview}
                                     onChange={handleChange}
                                     maxCount={1}
-                                    showUploadList={false} // Ẩn danh sách file của AntD vì đã có khung hiển thị riêng
+                                    showUploadList={false}
                                 >
                                     <div className="flex flex-col items-center justify-center gap-2">
                                         <PlusOutlined style={{ fontSize: '24px' }} />
@@ -242,22 +261,17 @@ const Profile = () => {
 
                     <div className="flex items-center justify-end gap-8 mt-4">
                         <button
-                            onClick={handleLockAccount}
-                            className="text-base text-[#db4444] hover:opacity-80 transition-opacity"
+                            onClick={handleSaveChanges}
+                            disabled={loading} // Vô hiệu hóa nút khi đang loading nếu cần
+                            className="bg-[#db4444] text-white px-12 py-4 rounded hover:bg-[#c03c3c] transition-colors"
                         >
-                            Lock account
+                            Save Changes
                         </button>
                         <button
                             onClick={handleCancel}
                             className="text-base text-black hover:opacity-70 transition-opacity"
                         >
                             Cancel
-                        </button>
-                        <button
-                            onClick={handleSaveChanges}
-                            className="bg-[#db4444] text-white px-12 py-4 rounded hover:bg-[#c03c3c] transition-colors"
-                        >
-                            Save Changes
                         </button>
                     </div>
                 </div>

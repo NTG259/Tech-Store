@@ -2,8 +2,12 @@ package com.store.BE.service.implement;
 
 import com.store.BE.domain.cart.Cart;
 import com.store.BE.domain.cart.CartItem;
+import com.store.BE.domain.cart.CartItemResponse;
+import com.store.BE.domain.cart.CartResponse;
 import com.store.BE.domain.dto.CartRequest;
 import com.store.BE.domain.product.Product;
+import com.store.BE.domain.product.ProductResponse;
+import com.store.BE.domain.product.ProductStatus;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.user.User;
 import com.store.BE.repository.CartItemRepository;
@@ -13,11 +17,12 @@ import com.store.BE.repository.UserRepository;
 import com.store.BE.utils.exception.BusinessException;
 import com.store.BE.utils.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -28,28 +33,56 @@ public class CartService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    public ApiResponse<Cart> getCartByUserId(Long userId) {
+    public ApiResponse<CartResponse> getCartByUserId(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Optional<Cart> optionalCart = cartRepository.findByUserId(userId);
-
+        CartResponse cartResponse = new CartResponse();
         if (optionalCart.isEmpty()) {
             Cart newCart = new Cart();
             newCart.setUser(user);
             Cart cartRes = cartRepository.save(newCart);
-            return new ApiResponse<>(cartRes, "Tạo giỏ hàng thành công", null, HttpStatus.CREATED.value());
+            cartResponse.setCart(cartRes);
+            return new ApiResponse<>(cartResponse, "Tạo giỏ hàng thành công", null, HttpStatus.CREATED.value());
+        } else {
+            cartResponse.setCart(optionalCart.get());
+            List<CartItemResponse> removeItems = new ArrayList<>();
+            List<CartItem> validItems = new ArrayList<>();
+            for (CartItem item : optionalCart.get().getCartItems()) {
+                if (item.getProduct().getProductStatus() == ProductStatus.DISCONTINUED) {
+                    Product product = item.getProduct();
+                    CartItemResponse cartItemResponse = new CartItemResponse();
+                    ProductResponse productResponse = new ProductResponse();
+                    productResponse.setId(item.getId());
+                    productResponse.setName(product.getName());
+                    productResponse.setProductImg(product.getProductImg());
+                    productResponse.setDescription(product.getDescription());
+                    productResponse.setPrice(productResponse.getPrice());
+                    cartItemResponse.setProductResponse(productResponse);
+                    cartItemResponse.setReason("Sản phẩm đã ngừng kinh doanh");
+                    removeItems.add(cartItemResponse);
+                } else {
+                    validItems.add(item);
+                }
+            }
+            cartResponse.setInvalidItems(removeItems);
+            cartResponse.setCartItems(validItems);
+            return new ApiResponse<>(cartResponse, "Lấy giỏ hàng thành công", null, HttpStatus.OK.value());
         }
-        return new ApiResponse<>(optionalCart.get(), "Lấy giỏ hàng thành công", null, HttpStatus.OK.value());
     }
 
     @Transactional
     public ApiResponse<Cart> addToCart(Long userId, CartRequest request) {
-        Cart cart = getCartByUserId(userId).data();
+        Cart cart = getCartByUserId(userId).data().getCart();
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         Optional<CartItem> existingItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId());
+
+        if (request.getQuantity() > product.getStockQuantity()) {
+            throw new BusinessException(ErrorCode.QUANTITY_NOT_ENOUGH);
+        }
 
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
@@ -78,12 +111,15 @@ public class CartService {
 
         item.setQuantity(newQuantity);
         cartItemRepository.save(item);
-        return getCartByUserId(userId);
+        return new ApiResponse<>(
+                getCartByUserId(userId).data().getCart(),
+                "Cập nhật sản phẩm trong giỏ hàng",
+                null, HttpStatus.OK.value());
     }
 
     @Transactional
     public ApiResponse<Cart> removeCartItem(Long userId, Long itemId) {
-        Cart cart = getCartByUserId(userId).data();
+        Cart cart = getCartByUserId(userId).data().getCart();
         CartItem item = cartItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
 
@@ -97,10 +133,10 @@ public class CartService {
     }
 
     @Transactional
-    public  ApiResponse<Void> removeCart(Long userId) {
-        Cart cart = getCartByUserId(userId).data();
+    public void removeCart(Long userId) {
+        Cart cart = getCartByUserId(userId).data().getCart();
         cartRepository.delete(cart);
-        return new ApiResponse<>(
+        new ApiResponse<>(
                 null,
                 "Xóa giỏ hàng thành công",
                 null,

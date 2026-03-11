@@ -4,26 +4,29 @@ import axios from "../../utils/axios.custom"
 
 const fetchAllProductsByAdminAPI = (page, size, searchText, categoryId, status) => {
     const URL_BACKEND = `/api/admin/products`;
-    
+
     return axios.get(URL_BACKEND, {
         params: {
             page: page,
             size: size,
             name: searchText || undefined,
             categoryId: categoryId || undefined,
-            status: status || undefined
+            productStatus: status || undefined,
         }
     });
 }
 
-const fetchAllProductsAPI = (page, size, status, categoryId) => {
+const fetchAllProductsAPI = (page, size, status, categoryId, name, minPrice, maxPrice) => {
     const URL_BACKEND = `/api/client/products`;
     return axios.get(URL_BACKEND, {
         params: {
             page: page,
             size: size,
-            status : status,
-            categoryId : categoryId,
+            status: status || undefined,
+            categoryId: categoryId || undefined,
+            name: name || undefined,
+            minPrice: minPrice || undefined,
+            maxPrice: maxPrice || undefined
         }
     });
 }

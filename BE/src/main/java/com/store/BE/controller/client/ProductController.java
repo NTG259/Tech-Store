@@ -40,12 +40,16 @@ public class ProductController {
     public ResponseEntity<PaginationResponse<Product>> getAllProductsByPagination(
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
-            @RequestParam(value = "status", required = false)ProductStatus status,
-            @RequestParam(value = "categoryId", required = false) Long categoryId) {
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "minPrice", required = false) Long minPrice,
+            @RequestParam(value = "maxPrice", required = false) Long maxPrice) {
         Pageable pageable = PageRequest.of(page - 1, size);
         ProductSearchRequest request = new ProductSearchRequest();
-        request.setProductStatus(status);
         request.setCategoryId(categoryId);
+        request.setName(name);
+        request.setMaxPrice(maxPrice);
+        request.setMinPrice(minPrice);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(this.productService.getAllProductIsPubLicPagination(request, pageable));

@@ -29,7 +29,7 @@ public class Product {
     private Long price;
 
     @Min(value = 0, message = "Stock quantity cannot be negative")
-    private int stockQuantity;
+    private long stockQuantity;
 
     @Size(max = 1000)
     private String description;

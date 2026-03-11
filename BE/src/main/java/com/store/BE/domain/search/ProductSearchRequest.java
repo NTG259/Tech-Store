@@ -13,6 +13,8 @@ import lombok.Setter;
 public class ProductSearchRequest {
     private String name;
     private Long categoryId;
-    private ProductStatus productStatus;
     private Long quantity;
+    private String productStatus;
+    private Long minPrice;
+    private Long maxPrice;
 }

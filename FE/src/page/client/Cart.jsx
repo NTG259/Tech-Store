@@ -1,16 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
 import { Link, useNavigate } from "react-router-dom";
 import { getCart, updateCart, deleteCart } from "../../service/cart/api";
-import { useRef } from "react";
+
 const imgFallback = "https://placehold.co/100x100/f5f5f5/333333/png?text=Product";
 
 function QtySpinner({ value, onChange }) {
     return (
         <div className="flex items-center border border-gray-400 rounded h-11 w-[120px]">
             <button
-                // THAY ĐỔI 1: Cho phép giảm về 0 (để xóa)
                 onClick={() => onChange(value - 1)}
                 className="w-10 h-full flex items-center justify-center hover:bg-[#db4444] hover:text-white transition-colors border-r border-gray-400 hover:border-[#db4444] rounded-l"
             >
@@ -74,7 +73,10 @@ function CartRow({ image, name, unitPrice, qty, onQtyChange, onRemove }) {
 
 export default function Cart() {
     const navigate = useNavigate();
+    
     const [items, setItems] = useState([]);
+    const [invalidItems, setInvalidItems] = useState([]);
+    
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -85,14 +87,14 @@ export default function Cart() {
         itemsRef.current = items;
     }, [items]);
 
+    // HÀM ĐỒNG BỘ: Chỉ gọi API updateCart khi có thao tác +/- số lượng
     const syncCartWithServer = async () => {
-        // Nếu không có thay đổi gì thì không gọi API cho đỡ tốn tài nguyên
         if (!isModifiedRef.current) return;
 
         const payloads = itemsRef.current
             .filter((it) => it.qty > 0)
             .map((it) => ({
-                productId: it.id,
+                productId: it.id, // Đảm bảo Backend cần productId ở đây
                 quantity: it.qty,
             }));
 
@@ -104,9 +106,8 @@ export default function Cart() {
         }
     };
 
-    // 3. XỬ LÝ SỰ KIỆN RỜI KHỎI TRANG HOẶC ĐÓNG TAB
+    // BẮT SỰ KIỆN CHUYỂN TAB / ĐÓNG TRANG
     useEffect(() => {
-        // Sự kiện khi người dùng đóng tab, f5 hoặc chuyển sang app khác
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden') {
                 syncCartWithServer();
@@ -114,20 +115,21 @@ export default function Cart() {
         };
         document.addEventListener("visibilitychange", handleVisibilityChange);
 
-        // Sự kiện Cleanup function: Chạy khi Component Unmount 
-        // (Ví dụ: bấm vào <Link to="/">Return to shop</Link>)
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
             syncCartWithServer(); 
         };
-    }, []); // Chạy 1 lần khi mount
+    }, []); 
 
-    // 4. XỬ LÝ KHI BẤM NÚT CHECKOUT
     const handleCheckout = async (e) => {
         e.preventDefault();
+        if (invalidItems.length > 0) return; 
+        
         await syncCartWithServer(); 
         navigate("/checkout");
     };
+
+    // FETCH GIỎ HÀNG TỪ SERVER
     useEffect(() => {
         let alive = true;
 
@@ -136,7 +138,9 @@ export default function Cart() {
                 setLoading(true);
                 setError(null);
                 const res = await getCart();
+                
                 const cartItems = res?.data?.cartItems ?? [];
+                const resInvalidItems = res?.data?.invalidItems ?? [];
 
                 const normalized = (Array.isArray(cartItems) ? cartItems : []).map((ci) => {
                     const product = ci?.product ?? {};
@@ -146,7 +150,8 @@ export default function Cart() {
                     const image = product?.productImg || product?.image || imgFallback;
 
                     return {
-                        id: ci?.id ?? product?.id ?? name,
+                        id: product?.id, // Lấy ID của Product để update/delete
+                        cartItemId: ci?.id, 
                         name,
                         unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
                         qty: Number.isFinite(qty) ? qty : 0,
@@ -156,44 +161,58 @@ export default function Cart() {
 
                 if (!alive) return;
                 setItems(normalized.filter((it) => it.qty > 0));
+                setInvalidItems(resInvalidItems);
+                
             } catch (e) {
                 if (!alive) return;
                 setError(e?.message || "Không thể lấy giỏ hàng. Vui lòng thử lại.");
                 setItems([]);
+                setInvalidItems([]);
             } finally {
-                // eslint-disable-next-line no-unsafe-finally
                 if (!alive) return;
                 setLoading(false);
             }
         };
 
         fetchCart();
-        return () => {
-            alive = false;
-        };
+        return () => { alive = false; };
     }, []);
 
-    const removeItem = async (id) => {
-        // Cập nhật state local trước (UX mượt hơn)
-        setItems((prev) => prev.filter((it) => it.id !== id));
-        // Đánh dấu giỏ hàng đã bị thay đổi
-        isModifiedRef.current = true;
+    // ---------------- LÔ-GIC XÓA VÀ CẬP NHẬT ----------------
 
+    // 1. Hàm xóa sản phẩm hợp lệ
+    const removeItem = async (productId) => {
+        setItems((prev) => prev.filter((it) => it.id !== productId));
         try {
-            await deleteCart(id);
+            await deleteCart(productId); // Gọi API xóa lập tức
         } catch (err) {
             console.error("Lỗi xóa item khỏi giỏ hàng", err);
         }
     };
 
-    // THAY ĐỔI 2: Xử lý logic xóa khi số lượng = 0
+    // 2. Hàm xóa sản phẩm KHÔNG hợp lệ (ngừng kinh doanh)
+    const removeInvalidItem = async (productId) => {
+        if (!productId) return;
+        
+        setInvalidItems((prev) => prev.filter((it) => {
+            const currentId = it.productResponse?.id || it.product?.id;
+            return currentId !== productId;
+        }));
+        
+        try {
+            await deleteCart(productId); // Gọi API xóa lập tức
+        } catch (err) {
+            console.error("Lỗi xóa sản phẩm ngừng kinh doanh", err);
+        }
+    }
+
+    // 3. Hàm cập nhật số lượng (+ / -)
     const updateQty = (id, qty) => {
         if (qty === 0) {
-            // Nếu người dùng giảm từ 1 xuống 0 -> Xóa khỏi giỏ hàng
-            removeItem(id);
+            removeItem(id); // Nếu giảm về 0 -> Gọi hàm xóa
         } else {
-            // Ngược lại thì cập nhật số lượng bình thường
             setItems((prev) => prev.map((it) => (it.id === id ? { ...it, qty } : it)));
+            // CHỈ ĐÁNH DẤU MODIFIED KHI THAY ĐỔI SỐ LƯỢNG (để auto-save khi chuyển tab)
             isModifiedRef.current = true;
         }
     };
@@ -224,26 +243,75 @@ export default function Cart() {
                             Thử lại
                         </button>
                     </div>
-                ) : items.length > 0 ? (
+                ) : (items.length > 0 || invalidItems.length > 0) ? (
                     <>
-                        <div className="hidden md:flex bg-white rounded shadow-[0px_1px_13px_0px_rgba(0,0,0,0.05)] h-[72px] items-center px-6 mb-4">
-                            <span className="text-base font-medium text-black w-[320px]">Product</span>
-                            <span className="text-base font-medium text-black w-[160px] ml-4">Price</span>
-                            <span className="text-base font-medium text-black w-[140px] ml-4">Quantity</span>
-                            <span className="text-base font-medium text-black ml-auto">Subtotal</span>
-                        </div>
+                        {/* DANH SÁCH SẢN PHẨM HỢP LỆ */}
+                        {items.length > 0 && (
+                            <>
+                                <div className="hidden md:flex bg-white rounded shadow-[0px_1px_13px_0px_rgba(0,0,0,0.05)] h-[72px] items-center px-6 mb-4">
+                                    <span className="text-base font-medium text-black w-[320px]">Product</span>
+                                    <span className="text-base font-medium text-black w-[160px] ml-4">Price</span>
+                                    <span className="text-base font-medium text-black w-[140px] ml-4">Quantity</span>
+                                    <span className="text-base font-medium text-black ml-auto">Subtotal</span>
+                                </div>
 
-                        <div className="flex flex-col gap-4 mb-6">
-                            {items.map((item) => (
-                                <CartRow
-                                    key={item.id}
-                                    {...item}
-                                    onQtyChange={(qty) => updateQty(item.id, qty)}
-                                    onRemove={() => removeItem(item.id)}
-                                />
-                            ))}
-                        </div>
+                                <div className="flex flex-col gap-4 mb-6">
+                                    {items.map((item) => (
+                                        <CartRow
+                                            key={item.id}
+                                            {...item}
+                                            onQtyChange={(qty) => updateQty(item.id, qty)}
+                                            onRemove={() => removeItem(item.id)}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        )}
 
+                        {/* CẢNH BÁO SẢN PHẨM NGỪNG KINH DOANH */}
+                        {invalidItems.length > 0 && (
+                            <div className="mb-10 p-5 bg-red-50 border border-red-200 rounded-md">
+                                <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center gap-2">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                    Sản phẩm không thể thanh toán
+                                </h3>
+                                
+                                <div className="flex flex-col gap-4">
+                                    {invalidItems.map((invalidItem, index) => {
+                                        const productData = invalidItem.productResponse || invalidItem.product || {};
+                                        const name = productData.name || "Unknown Product";
+                                        const image = productData.productImg || imgFallback;
+                                        
+                                        // ĐÃ CÓ ID TỪ BACKEND
+                                        const deleteId = productData.id; 
+
+                                        return (
+                                            <div key={index} className="flex flex-col md:flex-row items-center justify-between bg-white p-4 rounded shadow-sm opacity-70">
+                                                <div className="flex items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
+                                                    <img src={image} alt={name} className="w-16 h-16 object-cover rounded" />
+                                                    <div>
+                                                        <h4 className="font-medium text-gray-800 line-through">{name}</h4>
+                                                        <p className="text-sm text-red-600 font-medium">{invalidItem.reason}</p>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => removeInvalidItem(deleteId)}
+                                                    className="w-full md:w-auto px-6 py-2 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 transition-colors"
+                                                >
+                                                    Xóa khỏi giỏ hàng
+                                                </button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TỔNG TIỀN & NÚT CHECKOUT */}
                         <div className="flex justify-end">
                             <div className="border border-black border-opacity-50 rounded w-full md:w-[470px] p-6">
                                 <h3 className="text-xl font-medium text-black mb-6">Cart Total</h3>
@@ -261,12 +329,23 @@ export default function Cart() {
                                     <span className="text-base font-medium text-black">${subtotal.toLocaleString()}</span>
                                 </div>
 
+                                {invalidItems.length > 0 && (
+                                    <p className="text-red-500 text-sm mt-4 text-center italic">
+                                        * Vui lòng xóa các sản phẩm ngừng kinh doanh trước khi tiến hành thanh toán.
+                                    </p>
+                                )}
+
                                 <div className="flex justify-center mt-4">
                                     <button
                                         onClick={handleCheckout}
-                                        className="bg-[#db4444] text-white px-10 py-3 rounded font-medium hover:bg-[#c03c3c] transition-colors"
+                                        disabled={invalidItems.length > 0 || items.length === 0}
+                                        className={`px-10 py-3 rounded font-medium transition-colors ${
+                                            invalidItems.length > 0 || items.length === 0
+                                            ? "bg-gray-400 text-white cursor-not-allowed"
+                                            : "bg-[#db4444] text-white hover:bg-[#c03c3c]"
+                                        }`}
                                     >
-                                        Proceed to checkout
+                                        Thanh toán
                                     </button>
                                 </div>
                             </div>
@@ -280,7 +359,6 @@ export default function Cart() {
                             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                         </svg>
                         <p className="text-xl font-medium text-gray-500">Your cart is currently empty.</p>
-                        {/* THAY ĐỔI 3: Dùng Link thay cho button để điều hướng về trang chủ */}
                         <Link to="/" className="mt-4 bg-[#db4444] text-white px-8 py-3 rounded font-medium hover:bg-[#c03c3c] transition-colors">
                             Tiếp tục mua sắm
                         </Link>

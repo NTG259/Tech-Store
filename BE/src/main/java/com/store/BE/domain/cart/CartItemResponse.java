@@ -1,6 +1,5 @@
 package com.store.BE.domain.cart;
 
-import com.store.BE.domain.product.Product;
 import com.store.BE.domain.product.ProductResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

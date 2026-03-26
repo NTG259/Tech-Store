@@ -27,15 +27,15 @@ function OrderHeader({ orderNumber, datePlaced, total, status }) {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-4 border-b border-[#e5e7eb] bg-white">
             <div className="flex items-center gap-10 md:gap-16">
                 <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium text-[#111827]">Order number</p>
+                    <p className="text-sm font-medium text-[#111827]">Mã đơn hàng</p>
                     <p className="text-sm text-[#6b7280]">#{orderNumber}</p>
                 </div>
                 <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium text-[#111827]">Date placed</p>
+                    <p className="text-sm font-medium text-[#111827]">Ngày đặt </p>
                     <p className="text-sm text-[#6b7280]">{datePlaced}</p>
                 </div>
                 <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium text-[#111827]">Total amount</p>
+                    <p className="text-sm font-medium text-[#111827]">Tổng số tiền</p>
                     <p className="text-sm font-medium text-[#111827]">{total}</p>
                 </div>
             </div>
@@ -122,14 +122,14 @@ function OrderCard({ id, orderNumber, datePlaced, total, status, products, onUpd
                         disabled={isUpdating}
                         className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
                     >
-                        Decline
+                        Trả hàng
                     </button>
                     <button
                         onClick={() => handleUpdateStatus("CONFIRMED")}
                         disabled={isUpdating}
                         className="px-6 py-2 bg-[#22c55e] text-white rounded hover:bg-[#16a34a] transition-colors font-medium shadow-sm disabled:opacity-50"
                     >
-                        Approve
+                        Đã nhận hàng
                     </button>
                 </div>
             );

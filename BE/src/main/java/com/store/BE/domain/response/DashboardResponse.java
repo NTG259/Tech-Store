@@ -13,5 +13,5 @@ public class DashboardResponse {
     private Long userCount;
     private Long productCount;
     private Long orderSuccessCount;
-    private Long totalRevenue;
+    private Object totalRevenueMonthly;
 }

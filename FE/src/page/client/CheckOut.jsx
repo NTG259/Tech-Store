@@ -8,7 +8,8 @@ import { getCart, checkoutCart } from "../../service/cart/api";
 const imgMonitor = "https://placehold.co/100x100/f5f5f5/333333/png?text=Monitor";
 const imgGamepad = "https://placehold.co/100x100/f5f5f5/333333/png?text=Gamepad";
 
-function BillingField({ label, required, type = "text", multiline = false, value, onChange, name }) {
+// --- Component Text Input ---
+function BillingField({ label, required, type = "text", multiline = false, value, onChange, name, placeholder }) {
     return (
         <div className="flex flex-col gap-2">
             <label className="text-base text-black opacity-40">
@@ -21,6 +22,7 @@ function BillingField({ label, required, type = "text", multiline = false, value
                     rows={6}
                     value={value}
                     onChange={onChange}
+                    placeholder={placeholder}
                     className="w-full bg-[#f5f5f5] rounded px-4 py-3 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444] resize-none"
                 />
             ) : (
@@ -29,9 +31,35 @@ function BillingField({ label, required, type = "text", multiline = false, value
                     type={type}
                     value={value}
                     onChange={onChange}
+                    placeholder={placeholder}
                     className="w-full h-[50px] bg-[#f5f5f5] rounded px-4 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444]"
                 />
             )}
+        </div>
+    );
+}
+
+// --- Component Select Dropdown ---
+function SelectField({ label, required, options = [], value, onChange, name }) {
+    return (
+        <div className="flex flex-col gap-2">
+            <label className="text-base text-black opacity-40">
+                {label}
+                {required && <span className="text-[#db4444] ml-1">*</span>}
+            </label>
+            <select
+                name={name}
+                value={value}
+                onChange={onChange}
+                className="w-full h-[50px] bg-[#f5f5f5] rounded px-4 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444]"
+            >
+                <option value="" disabled>-- Chọn {label.toLowerCase()} --</option>
+                {options.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                        {opt.name}
+                    </option>
+                ))}
+            </select>
         </div>
     );
 }
@@ -52,17 +80,88 @@ function OrderItem({ image, name, price }) {
 
 export default function CheckOut() {
     const [payMethod, setPayMethod] = useState("cod");
+    
     const [form, setForm] = useState({
         fullName: "",
-        address: "",
+        specificAddress: "", // Đổi tên để tránh nhầm với địa chỉ tổng
         phone: "",
         notes: "",
     });
+
+    // --- State cho Dropdown API ---
+    const [cities, setCities] = useState([]);
+    const [wards, setWards] = useState([]);
+    
+    // Lưu lại cả ID (để fetch cấp dưới) và Name (để gộp chuỗi)
+    const [selectedCity, setSelectedCity] = useState({ id: "", name: "" });
+    const [selectedWard, setSelectedWard] = useState({ id: "", name: "" });
+
     const [cartItems, setCartItems] = useState([]);
     const [subTotal, setSubTotal] = useState(0);
-    const [isSubmitting, setIsSubmitting] = useState(false); // Thêm state loading khi submit
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     const navigate = useNavigate();
+
+    // 1. Fetch Danh sách Thành phố khi component mount
+    // 1. Fetch Danh sách Thành phố
+    useEffect(() => {
+        const fetchCities = async () => {
+            try {
+                const res = await fetch("http://localhost:8082/api/address/provinces");
+                const data = await res.json();
+                
+                // Trỏ đúng vào mảng 'provinces' và map lại thuộc tính 'code' thành 'id'
+                if (data && data.provinces) {
+                    const mappedCities = data.provinces.map((p) => ({
+                        id: p.code, 
+                        name: p.name
+                    }));
+                    setCities(mappedCities);
+                } else {
+                    setCities([]);
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách thành phố:", error);
+            }
+        };
+        fetchCities();
+    }, []);
+
+    // 2. Fetch Danh sách Xã/Phường
+    // 2. Fetch Danh sách Xã/Phường
+    useEffect(() => {
+        const fetchWards = async () => {
+            if (!selectedCity.id) {
+                setWards([]);
+                return;
+            }
+            try {
+                const res = await fetch(`http://localhost:8082/api/address/wards?provinceId=${selectedCity.id}`);
+                const data = await res.json();
+                
+                let mappedWards = [];
+                
+                // Trỏ đúng vào mảng 'communes' dựa trên response mới
+                if (data && data.communes) {
+                    mappedWards = data.communes.map((w) => ({
+                        id: w.code,
+                        name: w.name
+                    }));
+                } else if (Array.isArray(data)) {
+                    // Dự phòng trường hợp API trả thẳng về mảng
+                    mappedWards = data.map((w) => ({
+                        id: w.code || w.id,
+                        name: w.name
+                    }));
+                }
+                
+                setWards(mappedWards);
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách xã/phường:", error);
+            }
+        };
+        fetchWards();
+    }, [selectedCity.id]);
 
     useEffect(() => {
         const fetchCart = async () => {
@@ -91,10 +190,25 @@ export default function CheckOut() {
             currency: "VND",
         }).format(value || 0);
 
-    // Hàm xử lý khi nhấn Place Order
+    // --- Hàm xử lý thay đổi Dropdown ---
+    const handleCityChange = (e) => {
+        const cityId = e.target.value;
+        const cityObj = cities.find(c => c.id.toString() === cityId);
+        setSelectedCity({ id: cityId, name: cityObj?.name || "" });
+        // Reset Ward khi đổi City
+        setSelectedWard({ id: "", name: "" });
+    };
+
+    const handleWardChange = (e) => {
+        const wardId = e.target.value;
+        const wardObj = wards.find(w => w.id.toString() === wardId);
+        setSelectedWard({ id: wardId, name: wardObj?.name || "" });
+    };
+
+    // --- Hàm xử lý khi nhấn Place Order ---
     const handlePlaceOrder = async () => {
-        if (!form.fullName || !form.address || !form.phone) {
-            message.error("Vui lòng nhập đầy đủ Họ tên, Địa chỉ và Số điện thoại");
+        if (!form.fullName || !form.phone || !selectedCity.name || !selectedWard.name || !form.specificAddress) {
+            message.error("Vui lòng nhập đầy đủ thông tin giao hàng (Họ tên, Thành phố, Xã, Địa chỉ cụ thể, SĐT)");
             return;
         }
 
@@ -103,12 +217,14 @@ export default function CheckOut() {
             return;
         }
 
-        // Bổ sung field note vào payload
+        // Gộp chuỗi theo yêu cầu: Thành phố - Xã - Địa chỉ cụ thể nơi nhận
+        const fullShippingAddress = `${selectedCity.name} - ${selectedWard.name} - ${form.specificAddress}`;
+
         const payload = {
-            shippingAddress: form.address,
+            shippingAddress: fullShippingAddress,
             receiverName: form.fullName,
             phone: form.phone,
-            note: form.notes, // <--- THÊM FIELD NÀY (hoặc 'notes' tùy thuộc vào BE của bạn yêu cầu)
+            note: form.notes,
             paymentMethod: payMethod === "cod" ? "COD" : payMethod.toUpperCase(),
             items: cartItems.map((item) => ({
                 productId: item?.product?.id ?? item?.productId,
@@ -143,12 +259,13 @@ export default function CheckOut() {
                     <span className="text-black font-medium">CheckOut</span>
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-medium text-black tracking-wide mb-10">Billing Details</h1>
+                <h1 className="text-3xl md:text-4xl font-medium text-black tracking-wide mb-10">Hóa đơn</h1>
 
                 <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-start">
+                    {/* KHU VỰC ĐIỀN THÔNG TIN */}
                     <div className="flex flex-col gap-6 w-full lg:flex-1">
                         <BillingField
-                            label="Full Name"
+                            label="Họ và tên người nhận"
                             required
                             name="fullName"
                             value={form.fullName}
@@ -156,17 +273,9 @@ export default function CheckOut() {
                                 setForm((prev) => ({ ...prev, fullName: e.target.value }))
                             }
                         />
+
                         <BillingField
-                            label="Address"
-                            required
-                            name="address"
-                            value={form.address}
-                            onChange={(e) =>
-                                setForm((prev) => ({ ...prev, address: e.target.value }))
-                            }
-                        />
-                        <BillingField
-                            label="Phone Number"
+                            label="Số điện thoại"
                             required
                             type="tel"
                             name="phone"
@@ -175,8 +284,41 @@ export default function CheckOut() {
                                 setForm((prev) => ({ ...prev, phone: e.target.value }))
                             }
                         />
+
+                        {/* Dropdown Tỉnh/Thành phố */}
+                        <SelectField 
+                            label="Tỉnh/Thành phố"
+                            required
+                            name="city"
+                            options={cities}
+                            value={selectedCity.id}
+                            onChange={handleCityChange}
+                        />
+
+                        {/* Dropdown Xã/Phường */}
+                        <SelectField 
+                            label="Xã/Phường"
+                            required
+                            name="ward"
+                            options={wards}
+                            value={selectedWard.id}
+                            onChange={handleWardChange}
+                        />
+
+                        {/* Địa chỉ cụ thể */}
                         <BillingField
-                            label="Order Notes"
+                            label="Địa chỉ cụ thể nơi nhận (Số nhà, đường...)"
+                            required
+                            name="specificAddress"
+                            placeholder="Ví dụ: Số 123, Đường Lê Lợi"
+                            value={form.specificAddress}
+                            onChange={(e) =>
+                                setForm((prev) => ({ ...prev, specificAddress: e.target.value }))
+                            }
+                        />
+                        
+                        <BillingField
+                            label="Ghi chú"
                             multiline
                             name="notes"
                             value={form.notes}
@@ -186,6 +328,7 @@ export default function CheckOut() {
                         />
                     </div>
 
+                    {/* KHU VỰC TỔNG KẾT ĐƠN HÀNG */}
                     <div className="w-full lg:w-[470px] shrink-0 lg:mt-6">
                         <div className="flex flex-col mb-6">
                             {cartItems.map((item) => {
@@ -208,17 +351,17 @@ export default function CheckOut() {
 
                         <div className="flex flex-col gap-0 border-b border-black border-opacity-40 pb-4 mb-4">
                             <div className="flex items-center justify-between py-4 border-b border-black border-opacity-20">
-                                <span className="text-base text-black">Subtotal:</span>
+                                <span className="text-base text-black">Tạm tính:</span>
                                 <span className="text-base font-medium text-black">
                                     {formatCurrency(subTotal)}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-4 border-b border-black border-opacity-20">
-                                <span className="text-base text-black">Shipping:</span>
-                                <span className="text-base font-medium text-[#db4444]">Free</span>
+                                <span className="text-base text-black">Phí vận chuyển:</span>
+                                <span className="text-base font-medium text-[#db4444]">Miễn phí</span>
                             </div>
                             <div className="flex items-center justify-between py-4">
-                                <span className="text-base text-black">Total:</span>
+                                <span className="text-base text-black">Tổng tiền:</span>
                                 <span className="text-base font-medium text-black">
                                     {formatCurrency(subTotal)}
                                 </span>
@@ -235,17 +378,16 @@ export default function CheckOut() {
                                     onChange={() => setPayMethod("cod")}
                                     className="w-5 h-5 accent-black"
                                 />
-                                <span className="text-base text-black">Cash on delivery</span>
+                                <span className="text-base text-black">Thanh toán khi nhận hàng</span>
                             </label>
                         </div>
 
-                        {/* Thêm xử lý disabled khi đang submit */}
                         <button
                             onClick={handlePlaceOrder}
                             disabled={isSubmitting}
                             className="bg-[#db4444] text-white px-10 py-4 rounded font-medium hover:bg-[#c03c3c] transition-colors w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isSubmitting ? "Placing Order..." : "Place Order"}
+                            {isSubmitting ? "Đang xử lý..." : "Đặt hàng"}
                         </button>
                     </div>
                 </div>

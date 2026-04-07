@@ -87,14 +87,14 @@ const Orders = () => {
 
   const columns = [
     {
-      title: 'ORDER ID',
+      title: 'Mã đơn hàng',
       dataIndex: 'id',
       key: 'id',
       width: 120,
       render: (text) => <span style={{ fontWeight: 600, color: '#1890ff' }}>#{text}</span>
     },
     {
-      title: 'CREATED',
+      title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (text) => {
@@ -113,19 +113,19 @@ const Orders = () => {
       }
     },
     {
-      title: 'ACCOUNT',
+      title: 'Tài khoản',
       dataIndex: 'email',
       key: 'email',
       render: (text) => <span style={{ fontWeight: 500 }}>{text || 'Khách vãng lai'}</span>
     },
     {
-      title: 'CUSTOMER',
+      title: 'Người nhận',
       dataIndex: 'receiverName',
       key: 'receiverName',
       render: (text) => <span style={{ fontWeight: 500 }}>{text || 'Khách vãng lai'}</span>
     },
     {
-      title: 'TOTAL',
+      title: 'Tổng giá',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
       render: (text, record) => {
@@ -137,7 +137,7 @@ const Orders = () => {
       }
     },
     {
-      title: 'STATUS',
+      title: 'Trạng thái',
       key: 'status',
       dataIndex: 'status',
       align: 'center',
@@ -153,7 +153,7 @@ const Orders = () => {
       }
     },
     {
-      title: 'ACTION',
+      title: 'Thao tác',
       key: 'action',
       align: 'center',
       width: 120,
@@ -200,11 +200,11 @@ const Orders = () => {
                 onChange={handleStatusChange}
               >
                 <Option value="ALL">Tất cả trạng thái</Option>
-                <Option value="PENDING">PENDING</Option>
-                <Option value="CONFIRMED">CONFIRMED</Option>
-                <Option value="SHIPPING">SHIPPING</Option>
-                <Option value="DELIVERED">DELIVERED</Option>
-                <Option value="CANCELLED">CANCELLED</Option>
+                <Option value="PENDING">Đang chờ xử lý</Option>
+                <Option value="SHIPPING">Đang giao</Option>
+                <Option value="DELIVERED">Đã giao thành công</Option>
+                <Option value="CANCELLED">Đã hủy</Option>
+                <Option value="CONFIRMED">Thành công</Option>
               </Select>
             </Col>
           </Row>

@@ -178,18 +178,18 @@ const Profile = () => {
 
             <main className="max-w-[1170px] mx-auto px-4 py-10">
                 <div className="bg-white rounded shadow-[0px_1px_13px_0px_rgba(0,0,0,0.05)] max-w-[870px] mx-auto px-10 py-10">
-                    <h2 className="text-xl text-[#db4444] mb-8">Edit Your Profile</h2>
+                    <h2 className="text-xl text-[#db4444] mb-8">Cập nhật tài khoản</h2>
 
                     <div className="flex gap-12 mb-8">
                         {/* 3. Truyền prop required và sửa lỗi cú pháp */}
                         <FormField
-                            label="Full Name"
+                            label="Họ và tên"
                             value={form.fullName}
                             onChange={setField("fullName")}
                             required
                         />
                         <FormField
-                            label="Phone number"
+                            label="Số điện thoại"
                             value={form.phoneNumber}
                             onChange={setField("phoneNumber")}
                             required
@@ -203,7 +203,7 @@ const Profile = () => {
                             disabled
                         />
                         <FormField
-                            label="Address"
+                            label="Địa chỉ"
                             value={form.address}
                             onChange={setField("address")}
                             
@@ -211,7 +211,7 @@ const Profile = () => {
                     </div>
 
                     <div className="mb-8">
-                        <p className="text-base text-black mb-3">Avatar</p>
+                        <p className="text-base text-black mb-3">Ảnh đại diện</p>
                         <div className="flex items-start gap-10">
                             {/* Hiển thị Avatar hiện tại */}
                             <div className="w-[298px] h-[166px] overflow-hidden rounded border border-gray-200 bg-gray-50 flex items-center justify-center">
@@ -239,7 +239,7 @@ const Profile = () => {
                                 >
                                     <div className="flex flex-col items-center justify-center gap-2">
                                         <PlusOutlined style={{ fontSize: '24px' }} />
-                                        <span className="text-sm text-black opacity-50">Upload new photo</span>
+                                        <span className="text-sm text-black opacity-50">Tải mới</span>
                                     </div>
                                 </Upload>
                             </div>
@@ -265,13 +265,13 @@ const Profile = () => {
                             disabled={loading} // Vô hiệu hóa nút khi đang loading nếu cần
                             className="bg-[#db4444] text-white px-12 py-4 rounded hover:bg-[#c03c3c] transition-colors"
                         >
-                            Save Changes
+                            Xác nhận cập nhật
                         </button>
                         <button
                             onClick={handleCancel}
                             className="text-base text-black hover:opacity-70 transition-opacity"
                         >
-                            Cancel
+                            Hủy bỏ
                         </button>
                     </div>
                 </div>

@@ -8,29 +8,48 @@ import ProductCard from "./ProductCard";
 import SectionTag from "../../layout/client/SectionTag";
 import ViewAllButton from "../../layout/client/ViewAllButton";
 
-// Nhớ đổi lại đường dẫn import file API cho đúng
-import { get8LatestProductAPI } from "../../service/product/api";
+// Đổi tên hàm cho đúng với file api của bạn
+import { get8LatestProductAPI, getHotProductsAPI } from "../../service/product/api";
 
 export default function ECommerceHomePage() {
+    // ==============================================================
+    // 1. STATE & REF CHO "SẢN PHẨM MỚI" 
+    // ==============================================================
     const [newProducts, setNewProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    
-    // State lưu lại thời gian bấm nút cuối cùng để reset bộ đếm 5s
     const [lastInteraction, setLastInteraction] = useState(Date.now());
-    
     const scrollContainerRef = useRef(null);
+
+    // ==============================================================
+    // 2. STATE & REF CHO "SẢN PHẨM HOT" 
+    // ==============================================================
+    const [hotProducts, setHotProducts] = useState([]);
+    const [isLoadingHot, setIsLoadingHot] = useState(false);
+    const [lastInteractionHot, setLastInteractionHot] = useState(Date.now());
+    const scrollContainerHotRef = useRef(null);
+
+    const itemWidth = 300; 
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
 
+    // ==============================================================
+    // 3. FETCH DỮ LIỆU TỪ API
+    // ==============================================================
     useEffect(() => {
+        // --- Fetch API Sản Phẩm Mới ---
         const fetchLatestProducts = async () => {
             setIsLoading(true);
             try {
                 const response = await get8LatestProductAPI();
                 if (response && Array.isArray(response.data)) {
-                    setNewProducts(response.data);
+                    // Đảm bảo có productImg
+                    const mappedNewProducts = response.data.map(item => ({
+                        ...item,
+                        productImg: item.productImg || item.image 
+                    }));
+                    setNewProducts(mappedNewProducts);
                 } else {
                     setNewProducts([]);
                 }
@@ -41,22 +60,67 @@ export default function ECommerceHomePage() {
             }
         };
 
+        // --- Fetch API Sản Phẩm Bán Chạy (Hot) ---
+        const fetchHotProducts = async () => {
+            setIsLoadingHot(true);
+            try {
+                const response = await getHotProductsAPI();
+                
+                let rawData = [];
+                if (response?.data?.data && Array.isArray(response.data.data)) {
+                    rawData = response.data.data;
+                } else if (response?.data && Array.isArray(response.data)) {
+                    rawData = response.data;
+                }
+
+                // Xử lý gộp các sản phẩm bị trùng lặp
+                const uniqueProductsMap = {};
+                rawData.forEach(item => {
+                    const productData = item.product || item;
+                    const productId = productData.id;
+                    
+                    if (!uniqueProductsMap[productId]) {
+                        uniqueProductsMap[productId] = {
+                            ...productData, 
+                            id: productId,
+                            name: productData.name || item.name,
+                            price: productData.price || item.price,
+                            category: productData.category || item.category,
+                            stockQuantity: productData.stockQuantity || item.stockQuantity || 0,
+                            // Đảm bảo truyền đúng biến productImg cho thẻ ProductCard
+                            productImg: productData.productImg || item.productImg, 
+                            soldQuantity: 0
+                        };
+                    }
+                    uniqueProductsMap[productId].soldQuantity += (item.quantity || 0);
+                });
+
+                const finalHotProducts = Object.values(uniqueProductsMap);
+                setHotProducts(finalHotProducts);
+
+            } catch (error) {
+                console.error("Lỗi khi tải sản phẩm bán chạy:", error);
+            } finally {
+                setIsLoadingHot(false);
+            }
+        };
+
         fetchLatestProducts();
+        fetchHotProducts();
     }, []);
 
-    // 1. NHÂN 3 MẢNG ĐỂ TẠO ẢO GIÁC XOAY VÒNG VÔ TẬN
+    // ==============================================================
+    // 4. LOGIC SCROLL CHO "SẢN PHẨM MỚI" 
+    // ==============================================================
     const displayProducts = useMemo(() => {
         if (newProducts.length === 0) return [];
         return [...newProducts, ...newProducts, ...newProducts];
     }, [newProducts]);
 
-    const itemWidth = 300; // 270px chiều rộng card + 30px khoảng cách gap
-    const originalWidth = newProducts.length * itemWidth; // Chiều rộng của 1 mảng gốc
+    const originalWidth = newProducts.length * itemWidth;
 
-    // 2. KHỞI TẠO VỊ TRÍ CUỘN Ở MẢNG GIỮA
     useEffect(() => {
         if (newProducts.length > 0 && scrollContainerRef.current) {
-            // Đợi một chút để DOM render xong mảng nhân 3, sau đó đẩy thanh cuộn vào giữa
             setTimeout(() => {
                 if (scrollContainerRef.current) {
                     scrollContainerRef.current.scrollLeft = originalWidth;
@@ -65,7 +129,6 @@ export default function ECommerceHomePage() {
         }
     }, [newProducts, originalWidth]);
 
-    // 3. HÀM XỬ LÝ KHI BẤM NÚT HOẶC AUTO SCROLL
     const handleScrollButton = useCallback((direction) => {
         const container = scrollContainerRef.current;
         if (!container) return;
@@ -75,42 +138,90 @@ export default function ECommerceHomePage() {
         } else {
             container.scrollBy({ left: itemWidth, behavior: "smooth" });
         }
-
         setLastInteraction(Date.now());
     }, [itemWidth]);
 
-    // 4. "BÍ THUẬT" ÂM THẦM DỊCH CHUYỂN KHI CUỘN CHẠM BIÊN
     const handleOnScroll = () => {
         const container = scrollContainerRef.current;
         if (!container || newProducts.length === 0) return;
 
-        // Nếu cuộn lấn sang mảng thứ 3 -> giật ngay lập tức về mảng thứ 2
         if (container.scrollLeft >= originalWidth * 2) {
             container.scrollLeft -= originalWidth;
-        } 
-        // Nếu cuộn lùi lấn sang mảng thứ 1 -> giật ngay lập tức lên mảng thứ 2
-        else if (container.scrollLeft <= 0) {
+        } else if (container.scrollLeft <= 0) {
             container.scrollLeft += originalWidth;
         }
     };
 
-    // 5. AUTO SCROLL 5 GIÂY
     useEffect(() => {
         if (!isLoading && newProducts.length > 0) {
             const timer = setInterval(() => {
                 handleScrollButton("right");
             }, 5000); 
-
-            // Hủy đếm ngược cũ nếu người dùng vừa chủ động bấm nút
             return () => clearInterval(timer);
         }
     }, [isLoading, newProducts, lastInteraction, handleScrollButton]);
 
+    // ==============================================================
+    // 5. LOGIC SCROLL CHO "SẢN PHẨM HOT" 
+    // ==============================================================
+    const displayHotProducts = useMemo(() => {
+        if (hotProducts.length === 0) return [];
+        return [...hotProducts, ...hotProducts, ...hotProducts];
+    }, [hotProducts]);
+
+    const originalWidthHot = hotProducts.length * itemWidth;
+
+    useEffect(() => {
+        if (hotProducts.length > 0 && scrollContainerHotRef.current) {
+            setTimeout(() => {
+                if (scrollContainerHotRef.current) {
+                    scrollContainerHotRef.current.scrollLeft = originalWidthHot;
+                }
+            }, 100);
+        }
+    }, [hotProducts, originalWidthHot]);
+
+    const handleScrollButtonHot = useCallback((direction) => {
+        const container = scrollContainerHotRef.current;
+        if (!container) return;
+
+        if (direction === "left") {
+            container.scrollBy({ left: -itemWidth, behavior: "smooth" });
+        } else {
+            container.scrollBy({ left: itemWidth, behavior: "smooth" });
+        }
+        setLastInteractionHot(Date.now());
+    }, [itemWidth]);
+
+    const handleOnScrollHot = () => {
+        const container = scrollContainerHotRef.current;
+        if (!container || hotProducts.length === 0) return;
+
+        if (container.scrollLeft >= originalWidthHot * 2) {
+            container.scrollLeft -= originalWidthHot;
+        } else if (container.scrollLeft <= 0) {
+            container.scrollLeft += originalWidthHot;
+        }
+    };
+
+    useEffect(() => {
+        if (!isLoadingHot && hotProducts.length > 0) {
+            const timer = setInterval(() => {
+                handleScrollButtonHot("right");
+            }, 6000); 
+            return () => clearInterval(timer);
+        }
+    }, [isLoadingHot, hotProducts, lastInteractionHot, handleScrollButtonHot]);
+
+    // ==============================================================
+    // 6. RENDER GIAO DIỆN
+    // ==============================================================
     return (
         <div className="min-h-screen bg-white font-sans">
             <Header />
 
             <main className="max-w-[1170px] mx-auto px-4 mb-20">
+                {/* --- PHẦN 1: SẢN PHẨM MỚI --- */}
                 <section className="mt-20">
                     <div className="flex justify-between items-end mb-10">
                         <div className="flex flex-col gap-6">
@@ -120,7 +231,6 @@ export default function ECommerceHomePage() {
                             </h2>
                         </div>
                         
-                        {/* NÚT BẤM CHỦ ĐỘNG */}
                         <div className="flex gap-2">
                             <button 
                                 onClick={() => handleScrollButton("left")}
@@ -149,18 +259,12 @@ export default function ECommerceHomePage() {
                         <div 
                             ref={scrollContainerRef}
                             onScroll={handleOnScroll}
-                            // BỎ class 'scroll-smooth' đi để việc giật về giữa không bị khựng hình
                             className="flex gap-[30px] mb-10 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
-                            {/* Chạy map() trên mảng x3 đã tạo */}
                             {displayProducts.map((p, index) => (
-                                // Thêm index vào key vì các ID đang bị lặp lại 3 lần
-                                <div key={`${p.id}-${index}`} className="flex-none min-w-[270px] snap-start">
-                                    <ProductCard
-                                        {...p}
-                                        showAddToCart={true}
-                                    />
+                                <div key={`new-${p.id}-${index}`} className="flex-none min-w-[270px] snap-start">
+                                    <ProductCard {...p} showAddToCart={true} />
                                 </div>
                             ))}
                         </div>
@@ -168,6 +272,62 @@ export default function ECommerceHomePage() {
 
                     <div className="flex justify-center mt-6">
                         <Link to="/products">
+                            <ViewAllButton />
+                        </Link>
+                    </div>
+                </section>
+
+                {/* --- PHẦN 2: SẢN PHẨM BÁN CHẠY --- */}
+                <section className="mt-28">
+                    <div className="flex justify-between items-end mb-10">
+                        <div className="flex flex-col gap-6">
+                            <SectionTag label="Đang thịnh hành" />
+                            <h2 className="text-[36px] font-semibold tracking-wide text-black leading-[1.2]">
+                                Sản phẩm bán chạy
+                            </h2>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => handleScrollButtonHot("left")}
+                                className="w-[46px] h-[46px] rounded-full bg-[#f5f5f5] flex items-center justify-center hover:bg-gray-200 transition-colors"
+                            >
+                                <LeftOutlined className="text-black" />
+                            </button>
+                            <button 
+                                onClick={() => handleScrollButtonHot("right")}
+                                className="w-[46px] h-[46px] rounded-full bg-[#f5f5f5] flex items-center justify-center hover:bg-gray-200 transition-colors"
+                            >
+                                <RightOutlined className="text-black" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {isLoadingHot ? (
+                        <div className="flex justify-center items-center py-20 text-gray-500">
+                            Đang tải sản phẩm bán chạy...
+                        </div>
+                    ) : hotProducts.length === 0 ? (
+                        <div className="flex justify-center items-center py-20 text-gray-500">
+                            Không có sản phẩm bán chạy nào.
+                        </div>
+                    ) : (
+                        <div 
+                            ref={scrollContainerHotRef}
+                            onScroll={handleOnScrollHot}
+                            className="flex gap-[30px] mb-10 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        >
+                            {displayHotProducts.map((p, index) => (
+                                <div key={`hot-${p.id}-${index}`} className="flex-none min-w-[270px] snap-start">
+                                    <ProductCard {...p} showAddToCart={true} />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="flex justify-center mt-6">
+                        <Link to="/products?sort=best_selling">
                             <ViewAllButton />
                         </Link>
                     </div>

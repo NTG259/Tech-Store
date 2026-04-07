@@ -36,6 +36,11 @@ const get8LatestProductAPI = () => {
     return axios.get(URL_BACKEND);
 }
 
+const getHotProductsAPI = () => {
+    const URL_BACKEND = `/api/client/products/hot`;
+    return axios.get(URL_BACKEND);
+}
+
 const createProductAPI = (data) => {
     const URL_BACKEND = `/api/admin/products`;
     return axios.post(URL_BACKEND, data);
@@ -65,5 +70,6 @@ export {
     updateProductAPI,
     fetchAllProductsByAdminAPI,
     fetchProductDetailAPI,
-    get8LatestProductAPI
+    get8LatestProductAPI,
+    getHotProductsAPI
 }

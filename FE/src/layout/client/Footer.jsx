@@ -1,55 +1,67 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+
 export default function Footer() {
     return (
-        <footer className="bg-black text-[#fafafa] mt-20">
-            <div className="max-w-[1170px] mx-auto px-4 py-20">
-                <div className="grid grid-cols-5 gap-16">
-                    {/* Col 1 – Brand */}
-                    <div className="flex flex-col gap-6">
-                        <div>
-                            <p className="text-2xl font-bold tracking-wider mb-6">Exclusive</p>
-                            <p className="text-xl mb-4">Subscribe</p>
-                            <p className="text-base opacity-80">Get 10% off your first order</p>
+        <footer className="bg-[#111827] text-white pt-16 pb-8 mt-20">
+            <div className="max-w-[1170px] mx-auto px-4">
+                
+                {/* --- KHU VỰC NỘI DUNG CHÍNH --- */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                    
+                    {/* Cột 1: Thông tin thương hiệu & Liên hệ */}
+                    <div className="flex flex-col gap-4">
+                        <h2 className="text-2xl font-bold tracking-wider mb-2">Exclusive</h2>
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                            Đăng ký nhận bản tin để cập nhật những sản phẩm mới nhất và nhận ngay mã giảm giá 10% cho đơn hàng đầu tiên.
+                        </p>
+                        <div className="text-gray-400 text-sm mt-2 flex flex-col gap-2">
+                            <p><strong className="text-gray-300">Email:</strong> exclusive@gmail.com</p>
+                            <p><strong className="text-gray-300">Hotline:</strong> +88015-88888-9999</p>
                         </div>
                     </div>
 
-                    {/* Col 2 – Support */}
-                    <div className="flex flex-col gap-6">
-                        <p className="text-xl font-medium">Support</p>
-                        <div className="flex flex-col gap-4 text-base opacity-80">
-                            <p>111 Bijoy sarani, Dhaka, DH 1515, Bangladesh.</p>
-                            <p>exclusive@gmail.com</p>
-                            <p>+88015-88888-9999</p>
-                        </div>
+                    {/* Cột 2: Tài khoản */}
+                    <div className="flex flex-col gap-4">
+                        <h3 className="text-lg font-semibold tracking-wide mb-2 text-gray-100">Tài khoản</h3>
+                        <ul className="flex flex-col gap-3 text-gray-400 text-sm">
+                            <li><Link to="/profile" className="hover:text-white hover:underline underline-offset-4 transition-all">Tài khoản của tôi</Link></li>
+                            <li><Link to="/login" className="hover:text-white hover:underline underline-offset-4 transition-all">Đăng nhập / Đăng ký</Link></li>
+                            <li><Link to="/cart" className="hover:text-white hover:underline underline-offset-4 transition-all">Giỏ hàng</Link></li>
+                            <li><Link to="/wishlist" className="hover:text-white hover:underline underline-offset-4 transition-all">Danh sách yêu thích</Link></li>
+                        </ul>
                     </div>
 
-                    {/* Col 3 – Account */}
-                    <div className="flex flex-col gap-6">
-                        <p className="text-xl font-medium">Account</p>
-                        <div className="flex flex-col gap-4 text-base opacity-80">
-                            {["My Account", "Login / Register", "Cart", "Wishlist", "Shop"].map((item) => (
-                                <a key={item} href="#" className="hover:opacity-100 transition-opacity">{item}</a>
-                            ))}
-                        </div>
+                    {/* Cột 3: Hỗ trợ khách hàng */}
+                    <div className="flex flex-col gap-4">
+                        <h3 className="text-lg font-semibold tracking-wide mb-2 text-gray-100">Hỗ trợ khách hàng</h3>
+                        <ul className="flex flex-col gap-3 text-gray-400 text-sm">
+                            <li><Link to="/privacy" className="hover:text-white hover:underline underline-offset-4 transition-all">Chính sách bảo mật</Link></li>
+                            <li><Link to="/terms" className="hover:text-white hover:underline underline-offset-4 transition-all">Điều khoản sử dụng</Link></li>
+                            <li><Link to="/faq" className="hover:text-white hover:underline underline-offset-4 transition-all">Câu hỏi thường gặp</Link></li>
+                            <li><Link to="/contact" className="hover:text-white hover:underline underline-offset-4 transition-all">Liên hệ với chúng tôi</Link></li>
+                        </ul>
                     </div>
 
-                    {/* Col 4 – Quick Link */}
-                    <div className="flex flex-col gap-6">
-                        <p className="text-xl font-medium">Quick Link</p>
-                        <div className="flex flex-col gap-4 text-base opacity-80">
-                            {["Privacy Policy", "Terms Of Use", "FAQ", "Contact"].map((item) => (
-                                <a key={item} href="#" className="hover:opacity-100 transition-opacity">{item}</a>
-                            ))}
-                        </div>
+                    {/* Cột 4: Địa chỉ */}
+                    <div className="flex flex-col gap-4">
+                        <h3 className="text-lg font-semibold tracking-wide mb-2 text-gray-100">Văn phòng</h3>
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                            111 Bijoy Sarani, <br />
+                            Dhaka, DH 1515, <br />
+                            Bangladesh.
+                        </p>
                     </div>
+                    
                 </div>
 
-                {/* Divider + Copyright */}
-                <div className="mt-16 border-t border-white border-opacity-20 pt-6 flex justify-center">
-                    <div className="flex items-center gap-2 opacity-60">
-                        <span className="text-base text-white">© Copyright Rimel 2022. All right reserved</span>
-                    </div>
+                {/* --- KHU VỰC BẢN QUYỀN --- */}
+                <div className="border-t border-gray-800 pt-8 mt-8 flex flex-col md:flex-row items-center justify-center text-center">
+                    <p className="text-gray-500 text-sm">
+                        © {new Date().getFullYear()} Exclusive. All rights reserved.
+                    </p>
                 </div>
+                
             </div>
         </footer>
     );

@@ -9,6 +9,12 @@ const getSummaryAPI = (year) => {
         }});
 }
 
+const getTop10Products = (year) => {
+    const URL_BACKEND = `/api/admin/dashboard/hot-products`;
+    return axios.get(URL_BACKEND);
+}
+
 export {
-    getSummaryAPI
+    getSummaryAPI,
+    getTop10Products
 }

@@ -1,5 +1,6 @@
 package com.store.BE.controller.admin;
 
+import com.store.BE.domain.order.OrderItem;
 import com.store.BE.domain.product.Product;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.DashboardResponse;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.time.Year;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -34,6 +36,12 @@ public class AdminDashboardController {
                 HttpStatus.OK.value()
         );
 
+        return ResponseEntity.ok().body(rs);
+    }
+
+    @GetMapping("/dashboard/hot-products")
+    public ResponseEntity<ApiResponse<List<OrderItem>>> getTop10HotProduct() {
+        ApiResponse<List<OrderItem>> rs = dashboardService.getTop10HotProduct();
         return ResponseEntity.ok().body(rs);
     }
 }

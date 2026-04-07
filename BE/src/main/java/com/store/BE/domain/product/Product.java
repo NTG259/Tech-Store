@@ -52,6 +52,5 @@ public class Product {
     @PrePersist
     private void handleBeforeCreate() {
         createdAt = Instant.now();
-        Optional<String> currentUser =  SecurityUtils.getCurrentUserLogin();
     }
 }

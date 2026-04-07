@@ -124,13 +124,13 @@ const Product = () => {
             align: 'center',
         },
         {
-            title: 'Name product',
+            title: 'Tên sản phẩm',
             dataIndex: 'name',
             key: 'name',
             render: (text) => <span style={{ fontWeight: 500, color: '#1890ff' }}>{text}</span>
         },
         {
-            title: 'Category',
+            title: 'Danh mục',
             dataIndex: 'category',
             key: 'category',
             render: (categoryData) => {
@@ -144,24 +144,24 @@ const Product = () => {
             }
         },
         {
-            title: 'Brand',
+            title: 'Hãng',
             dataIndex: 'brand',
             key: 'brand',
         },
         {
-            title: 'Price',
+            title: 'Giá bán',
             dataIndex: 'price',
             key: 'price',
             render: (value) => value ? `${value.toLocaleString()} VNĐ` : '0 VNĐ',
         },
         {
-            title: 'Quantity',
+            title: 'Số lượng tồn kho',
             dataIndex: 'stockQuantity',
             key: 'stockQuantity',
             align: 'center',
         },
         {
-            title: 'Status',
+            title: 'Trạng thái',
             dataIndex: 'productStatus',
             key: 'productStatus',
             align: 'center',
@@ -172,7 +172,7 @@ const Product = () => {
             ),
         },
         {
-            title: 'Action',
+            title: 'Thao tác',
             key: 'action',
             align: 'center',
             width: 180,

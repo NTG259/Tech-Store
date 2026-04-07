@@ -16,7 +16,7 @@ function SidebarFilter({ appliedStatus, onApplyFilter }) {
 
   return (
     <div className="w-full">
-      <h3 className="font-semibold text-sm text-[#111827] mb-5 uppercase tracking-wider">Status</h3>
+      <h3 className="font-semibold text-sm text-[#111827] mb-5 uppercase tracking-wider">Trạng thái</h3>
       <div className="flex flex-col gap-4 pb-6 border-b border-gray-200 border-dashed">
         {statuses.map((s) => (
           <label key={s.value} className="flex items-center gap-3 cursor-pointer group">

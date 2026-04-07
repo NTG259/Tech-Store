@@ -249,10 +249,10 @@ export default function Cart() {
                         {items.length > 0 && (
                             <>
                                 <div className="hidden md:flex bg-white rounded shadow-[0px_1px_13px_0px_rgba(0,0,0,0.05)] h-[72px] items-center px-6 mb-4">
-                                    <span className="text-base font-medium text-black w-[320px]">Product</span>
-                                    <span className="text-base font-medium text-black w-[160px] ml-4">Price</span>
-                                    <span className="text-base font-medium text-black w-[140px] ml-4">Quantity</span>
-                                    <span className="text-base font-medium text-black ml-auto">Subtotal</span>
+                                    <span className="text-base font-medium text-black w-[320px]">Sản phẩm</span>
+                                    <span className="text-base font-medium text-black w-[160px] ml-4">Giá</span>
+                                    <span className="text-base font-medium text-black w-[140px] ml-4">Số lượng mua</span>
+                                    <span className="text-base font-medium text-black ml-auto">Tạm tính</span>
                                 </div>
 
                                 <div className="flex flex-col gap-4 mb-6">
@@ -314,18 +314,18 @@ export default function Cart() {
                         {/* TỔNG TIỀN & NÚT CHECKOUT */}
                         <div className="flex justify-end">
                             <div className="border border-black border-opacity-50 rounded w-full md:w-[470px] p-6">
-                                <h3 className="text-xl font-medium text-black mb-6">Cart Total</h3>
+                                <h3 className="text-xl font-medium text-black mb-6">Tổng tiền đơn hàng</h3>
 
                                 <div className="flex items-center justify-between py-4 border-b border-black border-opacity-20">
-                                    <span className="text-base text-black">Subtotal:</span>
+                                    <span className="text-base text-black">Tạm tính:</span>
                                     <span className="text-base font-medium text-black">${subtotal.toLocaleString()}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-black border-opacity-20">
-                                    <span className="text-base text-black">Shipping:</span>
-                                    <span className="text-base font-medium text-[#db4444]">Free</span>
+                                    <span className="text-base text-black">Phí vận chuyển:</span>
+                                    <span className="text-base font-medium text-[#db4444]">Miễn phí</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4">
-                                    <span className="text-base text-black">Total:</span>
+                                    <span className="text-base text-black">Tổng tiền:</span>
                                     <span className="text-base font-medium text-black">${subtotal.toLocaleString()}</span>
                                 </div>
 

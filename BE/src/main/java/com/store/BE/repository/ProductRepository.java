@@ -1,5 +1,6 @@
 package com.store.BE.repository;
 
+import com.store.BE.domain.order.OrderItem;
 import com.store.BE.domain.product.Product;
 import com.store.BE.domain.product.ProductStatus;
 import org.springframework.data.domain.Page;
@@ -39,4 +40,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     void updateCategory(Long id, Long uncategorizedId);
 
     List<Product> findTop8ByProductStatusOrderByCreatedAtDesc(ProductStatus status);
+
+    @Query("""
+        SELECT o
+        FROM Product p JOIN OrderItem o ON p.id = o.product.id
+        ORDER BY (o.quantity * o.price) DESC
+        LIMIT 10
+    """)
+    List<OrderItem> findTop10HotProduct();
 }

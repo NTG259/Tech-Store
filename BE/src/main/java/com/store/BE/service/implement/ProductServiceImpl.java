@@ -96,4 +96,5 @@ public class ProductServiceImpl implements ProductService {
     public Long productCount() {
         return productRepository.count();
     }
+
 }

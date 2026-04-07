@@ -1,10 +1,12 @@
 package com.store.BE.controller.client;
 
+import com.store.BE.domain.order.OrderItem;
 import com.store.BE.domain.product.Product;
 import com.store.BE.domain.product.ProductStatus;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.ProductSearchRequest;
+import com.store.BE.service.DashboardService;
 import com.store.BE.service.ProductService;
 import com.store.BE.utils.specification.ProductSpecification;
 import lombok.AllArgsConstructor;
@@ -22,7 +24,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductController {
     private final ProductService productService;
-
+    private final DashboardService dashboardService;
 //    @GetMapping("")
 //    public ResponseEntity<ApiResponse<List<Product>>> getAllProduct() {
 //        return ResponseEntity.ok().body(this.productService.getAllProductIsPublishing());
@@ -59,6 +61,13 @@ public class ProductController {
     public ResponseEntity<ApiResponse<List<Product>>> getLatestProducts() {
         return ResponseEntity.ok().body(
                 this.productService.getLatestProducts(ProductStatus.PUBLISHED)
+        );
+    }
+
+    @GetMapping("/hot")
+    public ResponseEntity<ApiResponse<List<OrderItem>>> getHotProducts() {
+        return ResponseEntity.ok().body(
+                this.dashboardService.getTop10HotProduct()
         );
     }
 }

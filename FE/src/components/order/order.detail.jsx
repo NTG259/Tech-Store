@@ -97,28 +97,28 @@ const OrderDetailModal = (props) => {
                 <Row gutter={40}>
                     {/* CỘT TRÁI */}
                     <Col xs={24} md={12}>
-                        <Form.Item label="Full Name" name="fullName" style={{ marginBottom: '16px' }}>
+                        <Form.Item label="Người nhận" name="fullName" style={{ marginBottom: '16px' }}>
                             <Input readOnly style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} />
                         </Form.Item>
 
-                        <Form.Item label="Address" name="address" style={{ marginBottom: '16px' }}>
+                        <Form.Item label="Địa chỉ nhận hàng" name="address" style={{ marginBottom: '16px' }}>
                             <Input readOnly style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} />
                         </Form.Item>
 
-                        <Form.Item label="Phone Number" name="phone" style={{ marginBottom: '16px' }}>
+                        <Form.Item label="Số điện thoại" name="phone" style={{ marginBottom: '16px' }}>
                             <Input readOnly style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} />
                         </Form.Item>
 
-                        <Form.Item label="Note" name="note" style={{ marginBottom: '16px' }}>
+                        <Form.Item label="Ghi chú" name="note" style={{ marginBottom: '16px' }}>
                             <TextArea rows={3} readOnly style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} />
                         </Form.Item>
 
-                        <Form.Item label="Order Status" name="status" style={{ marginBottom: '0' }}>
+                        <Form.Item label="Trạng thái đơn hàng" name="status" style={{ marginBottom: '0' }}>
                             <Select style={{ width: '100%' }}>
-                                <Option value="PENDING">Pending (Chờ xử lý)</Option>
-                                <Option value="SHIPPING">Shipping (Đang giao)</Option>
-                                <Option value="DELIVERED">Delivered (Đã giao thành công)</Option>
-                                <Option value="CANCELLED">Cancelled (Đã hủy)</Option>
+                                <Option value="PENDING">Đang chờ xử lý</Option>
+                                <Option value="SHIPPING">Đang giao</Option>
+                                <Option value="DELIVERED">Đã giao thành công</Option>
+                                <Option value="CANCELLED">Đã hủy</Option>
                             </Select>
                         </Form.Item>
                     </Col>
@@ -171,18 +171,18 @@ const OrderDetailModal = (props) => {
 
                         <div>
                             <Row justify="space-between" style={{ marginBottom: '12px' }}>
-                                <Text>Subtotal:</Text>
+                                <Text>Tạm tính:</Text>
                                 <Text>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(subtotal)}</Text>
                             </Row>
                             <Row justify="space-between" style={{ marginBottom: '16px' }}>
-                                <Text>Shipping:</Text>
-                                <Text>{shippingFee === 0 ? 'Free' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(shippingFee)}</Text>
+                                <Text>Phí vận chuyển:</Text>
+                                <Text>{shippingFee === 0 ? 'Miễn phí' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(shippingFee)}</Text>
                             </Row>
 
                             <Divider style={{ margin: '12px 0' }} />
 
                             <Row justify="space-between" style={{ marginBottom: '24px' }}>
-                                <Text>Total:</Text>
+                                <Text>Tổng giá:</Text>
                                 <Text strong style={{ fontSize: '16px', color: '#db4444' }}>
                                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}
                                 </Text>

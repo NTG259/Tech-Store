@@ -1,23 +1,26 @@
 import React, { useState } from "react";
-import { message } from "antd"; // Thay 'antd' bằng thư viện bạn đang dùng nếu khác
+import { message } from "antd"; 
 import { updateOrdersAPI } from "../../service/order/api";
 
-const BADGE_COLORS = {
-    CONFIRMED: { bg: "#22c55e", text: "#ffffff" },
-    CANCELLED: { bg: "#ef4444", text: "#ffffff" },
-    PENDING: { bg: "#f59e0b", text: "#ffffff" },
-    SHIPPING: { bg: "#3b82f6", text: "#ffffff" },
-    DELIVERED: { bg: "#8b5cf6", text: "#ffffff" },
+// 1. Cập nhật cấu hình: Thêm trường label tiếng Việt vào map
+const STATUS_CONFIG = {
+    PENDING: { label: "Đang chờ", bg: "#f59e0b", text: "#ffffff" },
+    SHIPPING: { label: "Đang giao", bg: "#3b82f6", text: "#ffffff" },
+    DELIVERED: { label: "Đã giao", bg: "#8b5cf6", text: "#ffffff" },
+    CONFIRMED: { label: "Đã xác nhận", bg: "#22c55e", text: "#ffffff" },
+    CANCELLED: { label: "Đã hủy", bg: "#ef4444", text: "#ffffff" },
 };
 
 function StatusBadge({ status }) {
-    const c = BADGE_COLORS[status] || BADGE_COLORS.PENDING;
+    // Nếu status truyền vào không khớp, mặc định lấy PENDING
+    const config = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
     return (
         <span
             className="inline-flex items-center px-4 py-1.5 rounded text-sm font-medium tracking-wide"
-            style={{ backgroundColor: c.bg, color: c.text }}
+            style={{ backgroundColor: config.bg, color: config.text }}
         >
-            {status}
+            {/* 2. Hiển thị text tiếng Việt thay vì key tiếng Anh */}
+            {config.label}
         </span>
     );
 }
@@ -74,19 +77,15 @@ function OrderCard({ id, orderNumber, datePlaced, total, status, products, onUpd
         try {
             setIsUpdating(true);
 
-            // Giả định API của bạn nhận tham số như thế này. Hãy điều chỉnh nếu cần thiết.
             await updateOrdersAPI(orderId, { status: newStatus });
 
-            // Dùng message thay vì alert
-            message.success(`Cập nhật đơn hàng thành ${newStatus} thành công!`);
+            message.success(`Cập nhật đơn hàng thành công!`);
 
-            // Gọi hàm này để báo cho component cha biết cần fetch lại dữ liệu
             if (onUpdateSuccess) {
                 onUpdateSuccess();
             }
         } catch (error) {
             console.error("Lỗi khi cập nhật đơn hàng:", error);
-            // Thông báo lỗi bằng message
             message.error("Cập nhật thất bại. Vui lòng thử lại!");
         } finally {
             setIsUpdating(false);

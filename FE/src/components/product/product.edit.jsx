@@ -216,7 +216,7 @@ const ProductEdit = (props) => {
                             <Col span={8}>
                                 <Form.Item label="Trạng thái kinh doanh" name="productStatus" rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}>
                                     <Select>
-                                        <Option value="PUBLISHED">Đang bán</Option>
+                                        <Option value="PUBLISHED">Đang kinh doanh</Option>
                                         <Option value="DISCONTINUED">Ngừng kinh doanh</Option>
                                     </Select>
                                 </Form.Item>

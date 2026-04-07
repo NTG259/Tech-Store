@@ -53,7 +53,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/client/products/**", "/api/client/categories/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/client/products/**", "/api/client/categories/**", "/api/address/**").permitAll()
 
                         // Admin API
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

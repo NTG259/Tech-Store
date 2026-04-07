@@ -43,11 +43,10 @@ const Category = () => {
                     .filter(item => item.name !== "Chưa xác định") 
                     .map(item => ({
                         ...item,
-                        key: item.id 
+                        key: item.id
                     }));
 
                 setData(formattedData);
-                
                 if (metaData && metaData.totalItems !== undefined) {
                     // Nếu "Chưa xác định" luôn tồn tại trong DB, bạn có thể cân nhắc 
                     // setTotal(metaData.totalItems - 1) để con số tổng hiển thị chính xác hơn

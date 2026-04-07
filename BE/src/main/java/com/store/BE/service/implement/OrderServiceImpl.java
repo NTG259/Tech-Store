@@ -109,6 +109,7 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setQuantity(itemReq.getQuantity());
             orderItem.setPrice(product.getPrice()); // Lưu lại giá tại thời điểm mua
             orderItem.setDescription(product.getDescription());
+            orderItem.setProduct(product);
             orderItems.add(orderItem);
 
             product.setStockQuantity(product.getStockQuantity() - itemReq.getQuantity());

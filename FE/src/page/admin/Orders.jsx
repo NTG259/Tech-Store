@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Tag, Card, Typography, Tooltip, Button, Row, Col, Input, Select } from 'antd';
-import { EyeOutlined } from '@ant-design/icons';
+import { EditOutlined} from '@ant-design/icons';
 
 import { fetchAllOrdersByAdminAPI } from '../../service/order/api';
 import OrderDetailModal from '../../components/order/order.detail';
@@ -161,7 +161,7 @@ const Orders = () => {
         <Tooltip title="Xem chi tiết">
           <Button
             shape="circle"
-            icon={<EyeOutlined />}
+            icon={<EditOutlined />}
             onClick={() => {
               setSelectedOrder(record);
               setIsOpenOrderDetail(true);

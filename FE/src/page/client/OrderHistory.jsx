@@ -6,12 +6,12 @@ import OrderCard from "./OrderCard";
 
 function SidebarFilter({ appliedStatus, onApplyFilter }) {
   const statuses = [
-    { label: "All", value: "" },
-    { label: "Pending", value: "PENDING" },
-    { label: "Shipping", value: "SHIPPING" },
-    { label: "Delivered", value: "DELIVERED" },
-    { label: "Confirmed", value: "CONFIRMED" },
-    { label: "Canceled", value: "CANCELLED" }
+    { label: "Tất cả", value: "" },
+    { label: "Đang chờ", value: "PENDING" },
+    { label: "Đang giao", value: "SHIPPING" },
+    { label: "Đã giao", value: "DELIVERED" },
+    { label: "Đã xác nhận", value: "CONFIRMED" },
+    { label: "Đã hủy", value: "CANCELLED" }
   ];
 
   return (
@@ -46,7 +46,7 @@ const OrderHistory = () => {
 
   // State quản lý status đang được lọc để gọi API
   const [currentStatus, setCurrentStatus] = useState("");
-  const pageSize = 2;
+  const pageSize = 5;
 
   // Tự động fetch lại khi currentPage hoặc currentStatus thay đổi
   useEffect(() => {
@@ -127,7 +127,7 @@ const OrderHistory = () => {
 
           <div className="w-full md:w-[220px] shrink-0">
             <h1 className="text-[28px] md:text-[32px] font-bold text-[#111827] mb-8 leading-none">
-              Order history
+              Đơn hàng
             </h1>
             <SidebarFilter appliedStatus={currentStatus} onApplyFilter={handleApplyFilter} />
           </div>

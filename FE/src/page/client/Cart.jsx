@@ -358,7 +358,7 @@ export default function Cart() {
                             <circle cx="20" cy="21" r="1"></circle>
                             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                         </svg>
-                        <p className="text-xl font-medium text-gray-500">Your cart is currently empty.</p>
+                        <p className="text-xl font-medium text-gray-500">Giỏ hàng của bạn đang trống.</p>
                         <Link to="/" className="mt-4 bg-[#db4444] text-white px-8 py-3 rounded font-medium hover:bg-[#c03c3c] transition-colors">
                             Tiếp tục mua sắm
                         </Link>

@@ -40,6 +40,11 @@ const deleteUserAPI = (id) => {
     return axios.delete(URL_BACKEND);
 }
 
+const fetchTop5UserVip = () => {
+    const URL_BACKEND = `api/admin/users/vip`;
+    return axios.get(URL_BACKEND);
+}
+
 const lockUserByAdminAPI = (id) => {
     const URL_BACKEND = `/api/admin/users/lock/${id}`;
     return axios.put(URL_BACKEND);
@@ -70,5 +75,6 @@ export {
     fetchProfileAPI,
     updateProfileAPI,
     lockedAccountAPI,
-    lockUserByAdminAPI
+    lockUserByAdminAPI,
+    fetchTop5UserVip,
 }

@@ -2,6 +2,7 @@ package com.store.BE.controller.admin;
 
 import com.store.BE.domain.dto.CreateUserByAdminDTO;
 import com.store.BE.domain.dto.UpdateUserByAdminDTO;
+import com.store.BE.domain.dto.UserVipDTO;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.response.UserResponseDTO;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/admin/users")
@@ -82,5 +85,12 @@ public class AdminUserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @GetMapping("/vip")
+    public ResponseEntity<ApiResponse<List<UserVipDTO>>> getTop5UserVip() {
+        return ResponseEntity.ok().body(
+                this.userService.getTop5UserVip()
+        );
     }
 }

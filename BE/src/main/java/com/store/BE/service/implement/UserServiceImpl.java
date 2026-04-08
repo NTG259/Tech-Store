@@ -1,12 +1,9 @@
 package com.store.BE.service.implement;
 
-import com.store.BE.domain.dto.CreateUserByAdminDTO;
-import com.store.BE.domain.dto.UpdateUserByAdminDTO;
+import com.store.BE.domain.dto.*;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.UserSearchRequest;
 import com.store.BE.domain.user.User;
-import com.store.BE.domain.dto.CreateUserDTO;
-import com.store.BE.domain.dto.UpdateUserDTO;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.UserResponseDTO;
 import com.store.BE.repository.UserRepository;
@@ -151,5 +148,14 @@ public class UserServiceImpl implements UserService {
 
     public Long totalUser() {
         return this.userRepository.count();
+    }
+
+    public ApiResponse<List<UserVipDTO>> getTop5UserVip() {
+        return new ApiResponse<>(
+                this.userRepository.getTop5UserVip(),
+                "Lấy top 5 người dùng chi tiêu nhiều nhất",
+                null,
+                HttpStatus.OK.value()
+        );
     }
 }

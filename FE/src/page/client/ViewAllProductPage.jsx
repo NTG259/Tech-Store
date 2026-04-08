@@ -119,7 +119,7 @@ export default function AllProductList() {
             <Header />
 
             <div className="max-w-[1170px] mx-auto px-4 mt-10 mb-5 text-sm text-gray-500">
-                <Link to="/" className="hover:text-black">Home</Link> <span className="mx-2">/</span> <span className="text-black">Products</span>
+                <Link to="/" className="hover:text-black">Trang chủ</Link> <span className="mx-2">/</span> <span className="text-black">Sản phẩm</span>
             </div>
 
             <main className="max-w-[1170px] mx-auto px-4 py-6">

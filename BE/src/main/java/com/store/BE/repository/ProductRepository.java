@@ -1,51 +1,57 @@
 package com.store.BE.repository;
 
-import com.store.BE.domain.order.OrderItem;
+import com.store.BE.domain.dto.HotProductProjection;
 import com.store.BE.domain.product.Product;
 import com.store.BE.domain.product.ProductStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
-    @Query(value = """
-        SELECT COUNT(p) > 0
-        FROM Product p
-        WHERE p.name = :name
-        """)
-    Boolean existByName(String name);
 
     @Query(value = """
-        SELECT p
-        FROM Product p
-        WHERE p.productStatus = :productStatus
-        """)
-    List<Product> findAllProductsIsPublishing(ProductStatus productStatus);
-
-    Page<Product> findByProductStatus(ProductStatus status, Pageable pageable);
+        SELECT EXISTS(SELECT 1 FROM products WHERE name = :name)
+        """, nativeQuery = true)
+    Boolean existByName(@Param("name") String name);
 
     @Modifying
-    @Query("""
-        UPDATE Product p
-        SET p.category.id = :uncategorizedId
-        WHERE p.category.id = :id
-    """)
-    void updateCategory(Long id, Long uncategorizedId);
+    @Query(value = """
+        UPDATE products 
+        SET category_id = :uncategorizedId 
+        WHERE category_id = :id
+        """, nativeQuery = true)
+    void updateCategory(@Param("id") Long id, @Param("uncategorizedId") Long uncategorizedId);
 
     List<Product> findTop8ByProductStatusOrderByCreatedAtDesc(ProductStatus status);
 
-    @Query("""
-        SELECT o
-        FROM Product p JOIN OrderItem o ON p.id = o.product.id
-        ORDER BY (o.quantity * o.price) DESC
-        LIMIT 10
-    """)
-    List<OrderItem> findTop10HotProduct();
+    @Query(value = """
+
+            SELECT
+                    p.id as productId,
+                    p.name as productName,
+                    p.product_img as productImg,
+                    p.stock_quantity as stockQuantity,
+                    SUM(o.quantity) as totalSold,
+                    SUM(o.quantity * o.price) as totalRevenue
+                FROM products p
+                JOIN order_items o ON p.id = o.product_id
+                GROUP BY p.id, p.name, p.product_img, p.stock_quantity
+                ORDER BY totalRevenue DESC
+                LIMIT 5
+        """, nativeQuery = true)
+    List<HotProductProjection> findTop10TopSoldProduct();
+
+    @Query(value = """
+            SELECT
+                    *
+                FROM products p
+                WHERE p.is_hot = 1
+        """, nativeQuery = true)
+    List<Product> findHotProduct();
 }

@@ -1,9 +1,6 @@
 package com.store.BE.service;
 
-import com.store.BE.domain.dto.CreateUserByAdminDTO;
-import com.store.BE.domain.dto.CreateUserDTO;
-import com.store.BE.domain.dto.UpdateUserByAdminDTO;
-import com.store.BE.domain.dto.UpdateUserDTO;
+import com.store.BE.domain.dto.*;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.response.UserResponseDTO;
@@ -29,4 +26,5 @@ public interface UserService {
     public User getUserByEmailAndRefreshToken(String email, String token);
     public ApiResponse<UserResponseDTO> getUserById(Long id);
     public Long totalUser();
+    public ApiResponse<List<UserVipDTO>> getTop5UserVip();
 }

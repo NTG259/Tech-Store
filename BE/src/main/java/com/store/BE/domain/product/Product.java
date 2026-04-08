@@ -39,6 +39,8 @@ public class Product {
 
     private String productImg;
 
+    private Boolean isHot = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private ProductStatus productStatus = ProductStatus.PUBLISHED;

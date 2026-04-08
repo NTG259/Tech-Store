@@ -68,6 +68,16 @@ public class AdminProductController {
                 .body(response);
     }
 
+    @PatchMapping("/{id}/hot")
+    public ResponseEntity<ApiResponse<Product>> updateHotProduct(
+            @PathVariable Long id,
+            @RequestParam("isHot") Boolean isHot) {
+        ApiResponse<Product> response = this.productService.updateHotProduct(id, isHot);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
     // 5. Xóa sản phẩm
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long id) {

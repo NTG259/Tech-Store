@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Typography, Spin, message, DatePicker, Button, Space, Table, Tag, Avatar } from 'antd';
+import { Card, Col, Row, Typography, Spin, DatePicker, Button, Space, Table, Tag, Avatar } from 'antd';
 import { 
     UserOutlined, ProductOutlined, ShoppingOutlined, FilterOutlined, 
-    TrophyOutlined, CrownOutlined 
+    TrophyOutlined, CrownOutlined, BoxPlotOutlined
 } from '@ant-design/icons';
-// Đảm bảo bạn đã export các hàm API này đúng đường dẫn nhé
 import { getSummaryAPI, getTop10Products } from '../../service/dashboard/api';
-// import { getTopUsersAPI } from '../../service/dashboard/api'; // Thêm API lấy top user tại đây
+import { fetchTop5UserVip } from '../../service/user/api';
 import dayjs from 'dayjs';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend
@@ -14,30 +13,27 @@ import {
 
 const { Text, Title } = Typography;
 
-// Component thẻ thống kê (StatCard)
-const StatCard = ({ title, value, icon, iconBg, iconColor }) => {
-    return (
-        <Card
-            bordered={false}
-            style={{ borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', height: '100%' }}
-            bodyStyle={{ padding: '24px' }}
-        >
-            <Text strong style={{ fontSize: '16px', color: '#374151', display: 'block', marginBottom: '16px' }}>{title}</Text>
-            <div style={{ backgroundColor: iconBg, color: iconColor, width: '48px', height: '48px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', marginBottom: '16px' }}>
-                {icon}
-            </div>
-            <Title level={2} style={{ margin: 0, color: '#111827', fontWeight: 600 }}>{value}</Title>
-        </Card>
-    );
-};
+// Component thẻ thống kê tổng quan
+const StatCard = ({ title, value, icon, iconBg, iconColor }) => (
+    <Card
+        bordered={false}
+        style={{ borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', height: '100%' }}
+        bodyStyle={{ padding: '24px' }}
+    >
+        <Text strong style={{ fontSize: '15px', color: '#64748b', display: 'block', marginBottom: '12px' }}>{title}</Text>
+        <div style={{ backgroundColor: iconBg, color: iconColor, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', marginBottom: '16px' }}>
+            {icon}
+        </div>
+        <Title level={2} style={{ margin: 0, color: '#1e293b', fontWeight: 700 }}>{value}</Title>
+    </Card>
+);
 
 const Dashboard = () => {
     const [summaryStats, setSummaryStats] = useState({ userCount: 0, productCount: 0, orderCount: 0 });
     const [revenueData, setRevenueData] = useState([]); 
     const [topProducts, setTopProducts] = useState([]); 
-    const [topUsers, setTopUsers] = useState([]); // State mới cho Top Người dùng
+    const [topUsers, setTopUsers] = useState([]); 
     const [isLoading, setIsLoading] = useState(true);
-    
     const [selectedYear, setSelectedYear] = useState(dayjs().year());
 
     useEffect(() => {
@@ -46,320 +42,196 @@ const Dashboard = () => {
 
     const fetchSummaryData = async (year) => {
         setIsLoading(true);
-
-        // --- 1. Gọi API Thống kê tổng quan ---
         try {
-            const summaryResponse = await getSummaryAPI(year);
-            if (summaryResponse && summaryResponse.status === 200) {
-                const apiData = summaryResponse.data;
-
+            // 1. Fetch Tổng quan
+            const resSum = await getSummaryAPI(year);
+            if (resSum?.status === 200 && resSum.data) {
                 setSummaryStats({
-                    userCount: apiData.userCount || 0,
-                    productCount: apiData.productCount || 0,
-                    orderCount: apiData.orderSuccessCount || 0
+                    userCount: resSum.data.userCount || 0,
+                    productCount: resSum.data.productCount || 0,
+                    orderCount: resSum.data.orderSuccessCount || 0
                 });
-
-                if (apiData.totalRevenueMonthly) {
-                    const formattedChartData = [...apiData.totalRevenueMonthly]
-                        .sort((a, b) => a.month - b.month)
-                        .map(item => ({
-                            month: `T${item.month}`,
-                            revenue: item.totalRevenue
-                        }));
-                    setRevenueData(formattedChartData);
-                } else {
-                    setRevenueData([]);
+                if (resSum.data.totalRevenueMonthly) {
+                    setRevenueData(resSum.data.totalRevenueMonthly.map(item => ({
+                        month: `T${item.month}`,
+                        revenue: item.totalRevenue
+                    })));
                 }
             }
-        } catch (error) {
-            console.error("Lỗi khi gọi API Dashboard (Summary): ", error);
-        }
 
-        // --- 2. Gọi API Top 10 sản phẩm ---
-        try {
-            const topProductsResponse = await getTop10Products(year);
-            
-            let rawData = [];
-            if (topProductsResponse?.data?.data && Array.isArray(topProductsResponse.data.data)) {
-                rawData = topProductsResponse.data.data;
-            } else if (topProductsResponse?.data && Array.isArray(topProductsResponse.data)) {
-                rawData = topProductsResponse.data;
+            // 2. Fetch Top Sản phẩm (Khớp JSON: productId, productName, stockQuantity, totalSold, totalRevenue)
+            const resProd = await getTop10Products(year);
+            const rawProd = resProd?.data || [];
+            setTopProducts(rawProd.map(item => ({
+                id: item.productId,
+                name: item.productName,
+                img: item.productImg,
+                stock: item.stockQuantity,
+                sold: item.totalSold,
+                revenue: item.totalRevenue
+            })));
+
+            // 3. Fetch Top Khách hàng
+            const resUser = await fetchTop5UserVip();
+            if (resUser?.status === 200) {
+                setTopUsers((resUser.data || []).map((u, i) => ({
+                    id: u.id,
+                    name: u.fullName,
+                    email: u.email,
+                    orders: u.totalOrder,
+                    spent: u.totalSpend,
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id || i}`
+                })));
             }
-
-            const aggregatedMap = {};
-            
-            rawData.forEach(item => {
-                const productId = item.product?.id || item.id; 
-                
-                if (!aggregatedMap[productId]) {
-                    aggregatedMap[productId] = {
-                        id: productId,
-                        name: item.name,
-                        productImg: item.productImg,
-                        brand: item.product?.brand || 'N/A',
-                        stockQuantity: item.product?.stockQuantity || 0,
-                        quantity: 0, 
-                        revenue: 0   
-                    };
-                }
-                
-                const qty = item.quantity || 0;
-                const price = item.price || 0;
-                
-                aggregatedMap[productId].quantity += qty;
-                aggregatedMap[productId].revenue += (qty * price);
-            });
-
-            const finalTopProducts = Object.values(aggregatedMap)
-                .sort((a, b) => b.quantity - a.quantity)
-                .slice(0, 10);
-
-            setTopProducts(finalTopProducts);
-
-        } catch (error) {
-            console.error("Lỗi khi gọi API Top 10 sản phẩm: ", error);
+        } catch (e) {
+            console.error("Dashboard Error:", e);
         }
-
-        // --- 3. Gọi API Top Người dùng mua nhiều ---
-        try {
-            // TẠM THỜI COMMENT GỌI API THỰC TẾ
-            // const topUsersResponse = await getTopUsersAPI(year);
-            // let rawUsersData = topUsersResponse?.data?.data || topUsersResponse?.data || [];
-            
-            // SỬ DỤNG MOCK DATA ĐỂ HIỂN THỊ TRƯỚC
-            const mockTopUsers = [
-                { id: 1, name: 'Nguyễn Văn Anh', email: 'nva@gmail.com', totalOrders: 25, totalSpent: 156000000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix' },
-                { id: 2, name: 'Trần Thị Bé', email: 'ttb@gmail.com', totalOrders: 18, totalSpent: 98000000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka' },
-                { id: 3, name: 'Lê Hữu Cường', email: 'lhc@gmail.com', totalOrders: 14, totalSpent: 75500000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jude' },
-                { id: 4, name: 'Phạm Minh Đức', email: 'pmd@gmail.com', totalOrders: 10, totalSpent: 54000000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Max' },
-                { id: 5, name: 'Hoàng Kim Én', email: 'hke@gmail.com', totalOrders: 8, totalSpent: 32000000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lola' },
-            ];
-
-            // Nếu có API thật thì thay mockTopUsers bằng rawUsersData
-            setTopUsers(mockTopUsers);
-
-        } catch (error) {
-            console.error("Lỗi khi gọi API Top người dùng: ", error);
-        }
-
         setIsLoading(false);
     };
 
-    const handleFilter = () => {
-        fetchSummaryData(selectedYear);
+    const formatCurrency = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
+
+    // Cột Rank dùng chung cho cả 2 bảng, đồng bộ tông màu vàng
+    const renderRank = (index) => {
+        // Màu vàng kim loại (Vàng, Bạc, Đồng)
+        const colors = ['#f59e0b', '#9ca3af', '#d97706'];
+        return (
+            <div style={{ 
+                backgroundColor: colors[index] || '#f1f5f9', 
+                color: index < 3 ? '#fff' : '#64748b',
+                width: 26, height: 26, borderRadius: '50%', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 'bold', fontSize: '12px'
+            }}>
+                {index + 1}
+            </div>
+        );
     };
 
-    const formatNumber = (num) => {
-        if (!num) return 0;
-        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-        return new Intl.NumberFormat('vi-VN').format(num);
-    };
-
-    const formatCurrency = (value) => {
-        if (!value) return "0 đ";
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-    };
-
-    // --- CẤU HÌNH CỘT BẢNG SẢN PHẨM ---
+    // Định nghĩa cột cho bảng Sản phẩm
     const productColumns = [
-        {
-            title: 'Top',
-            key: 'rank',
-            width: 60,
-            align: 'center',
-            render: (text, record, index) => {
-                let color = index === 0 ? '#f59e0b' : index === 1 ? '#9ca3af' : index === 2 ? '#d97706' : '#f3f4f6';
-                let textColor = index < 3 ? '#fff' : '#374151';
-                return (
-                    <div style={{ backgroundColor: color, color: textColor, width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 'bold' }}>
-                        {index + 1}
-                    </div>
-                );
-            }
-        },
-        {
-            title: 'Sản phẩm',
-            key: 'product',
-            render: (text, record) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img 
-                        src={record.productImg || 'https://via.placeholder.com/50'} 
-                        alt="product" 
-                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e5e7eb' }} 
-                    />
+        { title: 'Top', align: 'center', width: 50, render: (_, __, i) => renderRank(i) },
+        { 
+            title: 'Sản phẩm', 
+            render: (_, r) => (
+                <Space size="middle">
+                    <Avatar shape="square" size={42} src={r.img} style={{ border: '1px solid #f1f5f9' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <Text strong style={{ color: '#111827', fontSize: '14px', lineHeight: '1.2' }}>{record.name}</Text>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.brand}</Text>
+                        <Text strong style={{ maxWidth: 160, fontSize: '13px' }} ellipsis>{r.name}</Text>
+                        <Text type="secondary" style={{ fontSize: '11px' }}>
+                            <Text style={{ marginRight: 4 }} />Tồn kho: {r.stock}
+                        </Text>
                     </div>
-                </div>
+                </Space>
             )
         },
-        {
-            title: 'Đã bán',
-            dataIndex: 'quantity',
-            key: 'quantity',
-            align: 'center',
-            render: (val) => <Tag color="blue" style={{ fontWeight: 600 }}>{formatNumber(val)}</Tag>
-        },
-        {
-            title: 'Doanh thu',
-            dataIndex: 'revenue',
-            key: 'revenue',
-            align: 'right',
-            render: (val) => <Text type="success" strong>{formatCurrency(val)}</Text>
-        }
+        { title: 'Đã bán', dataIndex: 'sold', align: 'center', width: 80, render: (v) => <Tag color="blue" style={{ borderRadius: '4px', margin: 0 }}>{v}</Tag> },
+        { title: 'Doanh thu', dataIndex: 'revenue', align: 'right', render: (v) => <Text type="success" strong style={{ fontSize: '13px' }}>{formatCurrency(v)}</Text> }
     ];
 
-    // --- CẤU HÌNH CỘT BẢNG NGƯỜI DÙNG ---
+    // Định nghĩa cột cho bảng Khách hàng
     const userColumns = [
-        {
-            title: 'Top',
-            key: 'rank',
-            width: 60,
-            align: 'center',
-            render: (text, record, index) => {
-                let color = index === 0 ? '#10b981' : index === 1 ? '#9ca3af' : index === 2 ? '#d97706' : '#f3f4f6';
-                let textColor = index < 3 ? '#fff' : '#374151';
-                return (
-                    <div style={{ backgroundColor: color, color: textColor, width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 'bold' }}>
-                        {index + 1}
-                    </div>
-                );
-            }
-        },
-        {
-            title: 'Khách hàng',
-            key: 'user',
-            render: (text, record) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Avatar src={record.avatar} size="large" icon={<UserOutlined />} />
+        { title: 'Top', align: 'center', width: 50, render: (_, __, i) => renderRank(i) },
+        { 
+            title: 'Khách hàng', 
+            render: (_, r) => (
+                <Space size="middle">
+                    <Avatar size={42} src={r.avatar} style={{ backgroundColor: '#f8fafc' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <Text strong style={{ color: '#111827', fontSize: '14px', lineHeight: '1.2' }}>{record.name}</Text>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.email}</Text>
+                        <Text strong style={{ fontSize: '13px' }}>{r.name}</Text>
+                        <Text type="secondary" style={{ fontSize: '11px' }} ellipsis>{r.email}</Text>
                     </div>
-                </div>
+                </Space>
             )
         },
-        {
-            title: 'Số đơn',
-            dataIndex: 'totalOrders',
-            key: 'totalOrders',
-            align: 'center',
-            render: (val) => <Tag color="purple" style={{ fontWeight: 600 }}>{val} đơn</Tag>
-        },
-        {
-            title: 'Đã chi tiêu',
-            dataIndex: 'totalSpent',
-            key: 'totalSpent',
-            align: 'right',
-            render: (val) => <Text type="danger" strong>{formatCurrency(val)}</Text>
-        }
+        { title: 'Số đơn', dataIndex: 'orders', align: 'center', width: 80, render: (v) => <Tag color="purple" style={{ borderRadius: '4px', margin: 0 }}>{v}</Tag> },
+        { title: 'Chi tiêu', dataIndex: 'spent', align: 'right', render: (v) => <Text type="danger" strong style={{ fontSize: '13px' }}>{formatCurrency(v)}</Text> }
     ];
 
     return (
-        <div style={{ padding: '24px', background: '#f3f4f6', minHeight: '100vh' }}>
-            <Spin spinning={isLoading} tip="Đang tải dữ liệu...">
+        <div style={{ padding: '24px', background: '#f8fafc', minHeight: '100vh' }}>
+            <Spin spinning={isLoading} tip="Đang cập nhật dữ liệu...">
                 
-                {/* HÀNG 1: THỐNG KÊ TỔNG QUAN */}
-                <Row gutter={[24, 24]}>
-                    <Col xs={24} sm={8}><StatCard title="Người dùng" value={formatNumber(summaryStats.userCount)} icon={<UserOutlined />} iconBg="#e0f2fe" iconColor="#0284c7" /></Col>
-                    <Col xs={24} sm={8}><StatCard title="Sản phẩm" value={formatNumber(summaryStats.productCount)} icon={<ProductOutlined />} iconBg="#dcfce7" iconColor="#16a34a" /></Col>
-                    <Col xs={24} sm={8}><StatCard title="Đơn hàng" value={formatNumber(summaryStats.orderCount)} icon={<ShoppingOutlined/>} iconBg="#ffedd5" iconColor="#ea580c" /></Col>
+                {/* THỐNG KÊ TỔNG QUAN */}
+                <Row gutter={[20, 20]}>
+                    <Col xs={24} sm={8}><StatCard title="Tổng Người Dùng" value={summaryStats.userCount} icon={<UserOutlined />} iconBg="#eff6ff" iconColor="#3b82f6" /></Col>
+                    <Col xs={24} sm={8}><StatCard title="Tổng Sản Phẩm" value={summaryStats.productCount} icon={<ProductOutlined />} iconBg="#ecfdf5" iconColor="#10b981" /></Col>
+                    <Col xs={24} sm={8}><StatCard title="Đơn Hàng Thành Công" value={summaryStats.orderCount} icon={<ShoppingOutlined/>} iconBg="#fff7ed" iconColor="#f59e0b" /></Col>
                 </Row>
 
-                {/* HÀNG 2: BIỂU ĐỒ DOANH THU */}
-                <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
-                    <Col xs={24} lg={24}>
-                        <Card
-                            title={<Text strong style={{ fontSize: '18px' }}>Doanh thu theo tháng</Text>}
-                            bordered={false}
-                            style={{ borderRadius: '12px', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-                            extra={
-                                <Space>
-                                    <DatePicker 
-                                        picker="year" 
-                                        value={dayjs().year(selectedYear)}
-                                        format="YYYY"
-                                        allowClear={false}
-                                        onChange={(date) => {
-                                            if(date) setSelectedYear(date.year());
-                                        }} 
-                                    />
-                                    <Button type="primary" icon={<FilterOutlined />} onClick={handleFilter}>
-                                        Lọc
-                                    </Button>
-                                </Space>
-                            }
-                        >
-                            <div style={{ width: '100%', height: 350 }}>
-                                <ResponsiveContainer>
-                                    <LineChart data={revenueData} margin={{ top: 20, right: 30, left: 10, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280' }} dy={10} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280' }} tickFormatter={(value) => `${value / 1000000}Tr`} />
-                                        <RechartsTooltip formatter={(value) => formatCurrency(value)} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                        <Legend verticalAlign="top" align="right" iconType="plainline" wrapperStyle={{ paddingBottom: '20px' }} />
-                                        <Line type="monotone" dataKey="revenue" name={`Doanh thu ${selectedYear}`} stroke="#5b8ff9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </Card>
-                    </Col>
-                </Row>
+                {/* BIỂU ĐỒ DOANH THU */}
+                <Card 
+                    title={<Text strong style={{ fontSize: '16px' }}>Biến Động Doanh Thu</Text>} 
+                    style={{ marginTop: 20, borderRadius: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: 'none' }} 
+                    extra={
+                        <Space>
+                            <DatePicker picker="year" value={dayjs().year(selectedYear)} allowClear={false} onChange={(d) => d && setSelectedYear(d.year())} />
+                            <Button type="primary" icon={<FilterOutlined />} onClick={() => fetchSummaryData(selectedYear)}>Lọc</Button>
+                        </Space>
+                    }
+                >
+                    <div style={{ width: '100%', height: 320 }}>
+                        <ResponsiveContainer>
+                            <LineChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(v) => `${v/1e6}Tr`} />
+                                <RechartsTooltip 
+                                    formatter={(v) => formatCurrency(v)} 
+                                    contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
+                                />
+                                <Line type="monotone" dataKey="revenue" name="Doanh thu" stroke="#3b82f6" strokeWidth={4} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
 
-                {/* HÀNG 3: TOP SẢN PHẨM & TOP NGƯỜI DÙNG */}
-                <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
-                    
-                    {/* Cột 1: Top 10 Sản phẩm */}
-                    <Col xs={24} xl={12}>
+                {/* HAI BẢNG TOP (SẢN PHẨM & NGƯỜI DÙNG) */}
+                <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
+                    {/* Bảng Top Sản Phẩm */}
+                    <Col xs={24} lg={12} style={{ display: 'flex' }}>
                         <Card 
-                            title={
-                                <Space>
-                                    <TrophyOutlined style={{ color: '#f59e0b', fontSize: '20px' }} />
-                                    <Text strong style={{ fontSize: '18px' }}>Top Sản phẩm bán chạy</Text>
-                                </Space>
-                            } 
-                            bordered={false} 
-                            style={{ borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', height: '100%' }}
+                            title={<Space><TrophyOutlined style={{color: '#f59e0b', fontSize: '18px'}}/><Text strong>Top Sản Phẩm Bán Chạy</Text></Space>} 
+                            style={{ borderRadius: '16px', width: '100%', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                            bodyStyle={{ padding: '0 8px 8px 8px' }}
                         >
                             <Table 
                                 columns={productColumns} 
                                 dataSource={topProducts} 
-                                pagination={false}
-                                rowKey={(record) => record.id}
-                                bordered={false}
-                                size="middle"
+                                pagination={false} 
+                                rowKey="id" 
+                                size="middle" 
+                                className="custom-table"
                             />
                         </Card>
                     </Col>
 
-                    {/* Cột 2: Top Người dùng */}
-                    <Col xs={24} xl={12}>
+                    {/* Bảng Top Người Dùng */}
+                    <Col xs={24} lg={12} style={{ display: 'flex' }}>
                         <Card 
-                            title={
-                                <Space>
-                                    <CrownOutlined style={{ color: '#10b981', fontSize: '22px' }} />
-                                    <Text strong style={{ fontSize: '18px' }}>Top Khách hàng thân thiết</Text>
-                                </Space>
-                            } 
-                            bordered={false} 
-                            style={{ borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', height: '100%' }}
+                            title={<Space><CrownOutlined style={{color: '#f59e0b', fontSize: '20px'}}/><Text strong>Top Khách Hàng Thân Thiết</Text></Space>} 
+                            style={{ borderRadius: '16px', width: '100%', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                            bodyStyle={{ padding: '0 8px 8px 8px' }}
                         >
                             <Table 
                                 columns={userColumns} 
                                 dataSource={topUsers} 
-                                pagination={false}
-                                rowKey={(record) => record.id}
-                                bordered={false}
-                                size="middle"
+                                pagination={false} 
+                                rowKey="id" 
+                                size="middle" 
+                                className="custom-table"
                             />
                         </Card>
                     </Col>
-
                 </Row>
-
             </Spin>
+
+            {/* CSS Tùy chỉnh để bảng mượt hơn */}
+            <style>{`
+                .custom-table .ant-table { background: transparent; }
+                .custom-table .ant-table-thead > tr > th { background: transparent; border-bottom: 1px solid #f1f5f9; color: #64748b; font-weight: 600; }
+                .custom-table .ant-table-tbody > tr > td { border-bottom: 1px solid #f1f5f9; padding: 12px 8px !important; }
+                .custom-table .ant-table-tbody > tr:hover > td { background: #f8fafc !important; }
+            `}</style>
         </div>
     );
 };

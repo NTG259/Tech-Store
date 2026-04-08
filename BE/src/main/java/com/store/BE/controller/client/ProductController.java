@@ -1,5 +1,6 @@
 package com.store.BE.controller.client;
 
+import com.store.BE.domain.dto.HotProductProjection;
 import com.store.BE.domain.order.OrderItem;
 import com.store.BE.domain.product.Product;
 import com.store.BE.domain.product.ProductStatus;
@@ -65,9 +66,9 @@ public class ProductController {
     }
 
     @GetMapping("/hot")
-    public ResponseEntity<ApiResponse<List<OrderItem>>> getHotProducts() {
+    public ResponseEntity<ApiResponse<List<Product>>> getHotProducts() {
         return ResponseEntity.ok().body(
-                this.dashboardService.getTop10HotProduct()
+                this.productService.getHotProduct()
         );
     }
 }

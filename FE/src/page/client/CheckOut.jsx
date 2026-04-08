@@ -254,9 +254,9 @@ export default function CheckOut() {
 
             <main className="max-w-[1170px] mx-auto px-4 py-10">
                 <div className="text-sm text-gray-500 mb-10 flex flex-wrap gap-2">
-                    <span className="hover:text-black cursor-pointer">Home</span>
+                    <span className="hover:text-black cursor-pointer">Trang chủ</span>
                     <span>/</span>
-                    <span className="text-black font-medium">CheckOut</span>
+                    <span className="text-black font-medium">Đặt hàng</span>
                 </div>
 
                 <h1 className="text-3xl md:text-4xl font-medium text-black tracking-wide mb-10">Hóa đơn</h1>

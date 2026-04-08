@@ -36,4 +36,6 @@ public class ProductRequestDTO {
     private Long categoryId;
 
     private Category category;
+
+    private Boolean isHot;
 }

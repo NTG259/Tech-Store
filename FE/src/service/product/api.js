@@ -62,6 +62,15 @@ const fetchProductDetailAPI = (id) => {
     return axios.get(URL_BACKEND);
 }
 
+const updateProductIsHotAPI = (id, isHot) => {
+    return axios.patch(
+        `/api/admin/products/${id}/hot`,
+        null,
+        {
+            params: { isHot: isHot }
+        }
+    );
+}
 
 export {
     fetchAllProductsAPI,
@@ -71,5 +80,6 @@ export {
     fetchAllProductsByAdminAPI,
     fetchProductDetailAPI,
     get8LatestProductAPI,
-    getHotProductsAPI
+    getHotProductsAPI,
+    updateProductIsHotAPI
 }

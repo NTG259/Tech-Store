@@ -49,7 +49,7 @@ const Error = ({ message }) => {
                         to="/"
                         className="border border-gray-300 text-black text-base px-10 py-3 rounded hover:bg-gray-50 transition-colors"
                     >
-                        Back to home
+                        Quay về trang chủ
                     </Link>
                     <Link
                         to="/products"

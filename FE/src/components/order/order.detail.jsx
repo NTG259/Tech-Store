@@ -71,7 +71,7 @@ const OrderDetailModal = (props) => {
 
     return (
         <Modal
-            title={<Title level={3} style={{ margin: '0 0 20px 0' }}>Order Details</Title>}
+            title={<Title level={3} style={{ margin: '0 0 20px 0' }}>Hóa đơn</Title>}
             open={isOpenOrderDetail}
             onCancel={handleClose}
             width={850}

@@ -1,5 +1,6 @@
 package com.store.BE.controller.admin;
 
+import com.store.BE.domain.dto.HotProductProjection;
 import com.store.BE.domain.order.OrderItem;
 import com.store.BE.domain.product.Product;
 import com.store.BE.domain.response.ApiResponse;
@@ -40,8 +41,8 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/dashboard/hot-products")
-    public ResponseEntity<ApiResponse<List<OrderItem>>> getTop10HotProduct() {
-        ApiResponse<List<OrderItem>> rs = dashboardService.getTop10HotProduct();
+    public ResponseEntity<ApiResponse<List<HotProductProjection>>> getTop10HotProduct() {
+        ApiResponse<List<HotProductProjection>> rs = dashboardService.getTop10HotProduct();
         return ResponseEntity.ok().body(rs);
     }
 }

@@ -228,7 +228,7 @@ export default function Cart() {
 
             <main className="max-w-[1170px] mx-auto px-4 py-10">
                 <div className="text-sm text-gray-500 mb-10">
-                    <span className="hover:text-black cursor-pointer">Home</span> <span className="mx-2">/</span> <span className="text-black font-medium">Cart</span>
+                    <span className="hover:text-black cursor-pointer">Trang chủ</span> <span className="mx-2">/</span> <span className="text-black font-medium">Giỏ hàng</span>
                 </div>
 
                 {loading ? (

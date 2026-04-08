@@ -97,4 +97,24 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.count();
     }
 
+    @Override
+    public ApiResponse<Product> updateHotProduct(Long id, Boolean isHot) {
+        Product product = productRepository.findById(id).orElseThrow(
+                () ->  new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
+        );
+        product.setIsHot(isHot);
+        Product updatedProduct = this.productRepository.save(product);
+        return new ApiResponse<>(updatedProduct, "Cập nhật sản phẩm hot thành công", null, HttpStatus.OK.value());
+    }
+
+    @Override
+    public ApiResponse<List<Product>> getHotProduct() {
+        return new ApiResponse<>(
+                this.productRepository.findHotProduct(),
+                "Lấy sản phẩm hot thành công",
+                null,
+                HttpStatus.OK.value()
+        );
+    }
+
 }

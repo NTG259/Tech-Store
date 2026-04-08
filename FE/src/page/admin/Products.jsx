@@ -5,9 +5,13 @@ import {
     EditOutlined,
     EyeOutlined,
     PlusOutlined,
-    ReloadOutlined
+    ReloadOutlined,
+    FireOutlined, // Icon ngọn lửa viền (Chưa Hot)
+    FireFilled    // Icon ngọn lửa đặc (Đã Hot)
 } from '@ant-design/icons';
-import { deleteProductAPI, fetchAllProductsByAdminAPI } from '../../service/product/api';
+
+// LƯU Ý: Nhớ thêm hàm updateProductIsHotAPI (hoặc tên tương ứng) vào file api của bạn nhé!
+import { deleteProductAPI, fetchAllProductsByAdminAPI, updateProductIsHotAPI } from '../../service/product/api';
 import { fetchAllCategoriesAPI } from '../../service/category/api'; 
 import DetailProductModal from '../../components/product/product.detail';
 import ProductEdit from '../../components/product/product.edit';
@@ -62,7 +66,6 @@ const Product = () => {
     const loadProducts = async () => {
         setLoading(true);
         try {
-            // Đã truyền đầy đủ 5 tham số theo đúng API của bạn: page, size, searchText, categoryId, status
             const res = await fetchAllProductsByAdminAPI(current, pageSize, searchText, categoryFilter, statusFilter);
 
             if (res && res.data) {
@@ -90,6 +93,27 @@ const Product = () => {
     const onSearch = (value) => {
         setSearchText(value);
         setCurrent(1);
+    };
+
+    // ==========================================
+    // HÀM XỬ LÝ SET IS_HOT CHO SẢN PHẨM
+    // ==========================================
+    const handleToggleHot = async (record) => {
+        try {
+            // Giả sử API nhận vào id và giá trị boolean isHot cần update
+            const newIsHotStatus = !record.isHot;
+            
+            // BẠN CẦN THÊM HÀM NÀY VÀO FILE API
+            const res = await updateProductIsHotAPI(record.id, newIsHotStatus); 
+            
+            if (res) {
+                message.success(`Đã ${newIsHotStatus ? 'thêm' : 'gỡ'} mác Hot cho sản phẩm!`);
+                await loadProducts(); // Load lại bảng để cập nhật UI
+            }
+        } catch (error) {
+            message.error("Có lỗi xảy ra khi cập nhật trạng thái Hot");
+            console.error(error);
+        }
     };
 
     const handleDelete = async (id) => {
@@ -127,7 +151,13 @@ const Product = () => {
             title: 'Tên sản phẩm',
             dataIndex: 'name',
             key: 'name',
-            render: (text) => <span style={{ fontWeight: 500, color: '#1890ff' }}>{text}</span>
+            render: (text, record) => (
+                <Space>
+                    <span style={{ fontWeight: 500, color: '#1890ff' }}>{text}</span>
+                    {/* Hiển thị thêm icon nhỏ xíu cạnh tên nếu đang Hot (Tùy chọn) */}
+                    {record.isHot && <FireFilled style={{ color: '#fa8c16' }} />}
+                </Space>
+            )
         },
         {
             title: 'Danh mục',
@@ -175,9 +205,30 @@ const Product = () => {
             title: 'Thao tác',
             key: 'action',
             align: 'center',
-            width: 180,
+            width: 220, // Tăng nhẹ width để đủ chỗ cho 4 nút
             render: (_, record) => (
                 <Space size="small">
+                    {/* NÚT THIẾT LẬP HOT */}
+                    <Tooltip title={record.isHot ? "Bỏ trạng thái Hot" : "Đặt làm sản phẩm Hot"}>
+                        <Popconfirm
+                            title={record.isHot ? "Bỏ Hot sản phẩm này?" : "Cập nhật thành sản phẩm Hot?"}
+                            onConfirm={() => handleToggleHot(record)}
+                            okText="Đồng ý"
+                            cancelText="Hủy"
+                        >
+                            <Button
+                                shape="circle"
+                                // Đổi icon và màu cam rực rỡ nếu đang isHot
+                                icon={record.isHot ? <FireFilled /> : <FireOutlined />}
+                                style={{
+                                    color: record.isHot ? '#fff' : '#fa8c16',
+                                    backgroundColor: record.isHot ? '#fa8c16' : 'transparent',
+                                    borderColor: '#fa8c16'
+                                }}
+                            />
+                        </Popconfirm>
+                    </Tooltip>
+
                     <Tooltip title="Xem chi tiết">
                         <Button
                             shape="circle"
@@ -237,7 +288,6 @@ const Product = () => {
                                 <Button
                                     icon={<ReloadOutlined />}
                                     onClick={() => {
-                                        // Reset toàn bộ
                                         setCurrent(1);
                                         setSearchText('');
                                         setInputValue('');

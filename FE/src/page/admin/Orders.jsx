@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Tag, Card, Typography, Tooltip, Button, Row, Col, Input, Select } from 'antd';
-import { EditOutlined} from '@ant-design/icons';
+import { EditOutlined } from '@ant-design/icons';
 
 import { fetchAllOrdersByAdminAPI } from '../../service/order/api';
 import OrderDetailModal from '../../components/order/order.detail';
@@ -8,6 +8,14 @@ import OrderDetailModal from '../../components/order/order.detail';
 const { Title } = Typography;
 const { Search } = Input;
 const { Option } = Select;
+
+const statusMap = {
+  PENDING: 'Đang chờ xử lý',
+  SHIPPING: 'Đang giao',
+  DELIVERED: 'Đã giao thành công',
+  CANCELLED: 'Đã hủy',
+  CONFIRMED: 'Thành công'
+};
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -26,7 +34,6 @@ const Orders = () => {
 
   useEffect(() => {
     fetchOrders(pagination.current, pagination.pageSize, searchText, statusFilter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.current, pagination.pageSize, searchText, statusFilter]);
 
   const fetchOrders = async (page, size, search, status) => {
@@ -149,7 +156,7 @@ const Orders = () => {
         else if (currentStatus === 'SHIPPING') color = 'processing';
         else if (currentStatus === 'CANCELLED') color = 'error';
 
-        return <Tag color={color}>{currentStatus}</Tag>;
+        return <Tag color={color}>{statusMap[currentStatus] || currentStatus}</Tag>;
       }
     },
     {
@@ -230,7 +237,6 @@ const Orders = () => {
         isOpenOrderDetail={isOpenOrderDetail}
         setIsOpenOrderDetail={setIsOpenOrderDetail}
         orderData={selectedOrder}
-        // THÊM DÒNG NÀY ĐỂ TRUYỀN HÀM XUỐNG MODAL
         onRefresh={() => fetchOrders(pagination.current, pagination.pageSize, searchText, statusFilter)}
       />
     </>

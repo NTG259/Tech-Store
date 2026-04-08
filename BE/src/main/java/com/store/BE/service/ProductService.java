@@ -7,7 +7,6 @@ import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.ProductSearchRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,4 +22,6 @@ public interface ProductService {
 //    public ApiResponse<List<Product>> getAllProductIsPublishing();
     public ApiResponse<List<Product>> getLatestProducts(ProductStatus productStatus);
     public Long productCount();
+    public ApiResponse<Product> updateHotProduct(Long id, Boolean isHot);
+    public ApiResponse<List<Product>> getHotProduct();
 }

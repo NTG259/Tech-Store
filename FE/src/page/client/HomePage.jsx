@@ -8,21 +8,14 @@ import ProductCard from "./ProductCard";
 import SectionTag from "../../layout/client/SectionTag";
 import ViewAllButton from "../../layout/client/ViewAllButton";
 
-// Đổi tên hàm cho đúng với file api của bạn
 import { get8LatestProductAPI, getHotProductsAPI } from "../../service/product/api";
 
 export default function ECommerceHomePage() {
-    // ==============================================================
-    // 1. STATE & REF CHO "SẢN PHẨM MỚI" 
-    // ==============================================================
     const [newProducts, setNewProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [lastInteraction, setLastInteraction] = useState(Date.now());
     const scrollContainerRef = useRef(null);
 
-    // ==============================================================
-    // 2. STATE & REF CHO "SẢN PHẨM HOT" 
-    // ==============================================================
     const [hotProducts, setHotProducts] = useState([]);
     const [isLoadingHot, setIsLoadingHot] = useState(false);
     const [lastInteractionHot, setLastInteractionHot] = useState(Date.now());
@@ -34,72 +27,26 @@ export default function ECommerceHomePage() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
 
-    // ==============================================================
-    // 3. FETCH DỮ LIỆU TỪ API
-    // ==============================================================
     useEffect(() => {
-        // --- Fetch API Sản Phẩm Mới ---
         const fetchLatestProducts = async () => {
             setIsLoading(true);
             try {
                 const response = await get8LatestProductAPI();
-                if (response && Array.isArray(response.data)) {
-                    // Đảm bảo có productImg
-                    const mappedNewProducts = response.data.map(item => ({
-                        ...item,
-                        productImg: item.productImg || item.image 
-                    }));
-                    setNewProducts(mappedNewProducts);
-                } else {
-                    setNewProducts([]);
-                }
+                setNewProducts(response);
             } catch (error) {
-                console.error("Lỗi khi tải sản phẩm mới nhất:", error);
+                console.error(error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        // --- Fetch API Sản Phẩm Bán Chạy (Hot) ---
         const fetchHotProducts = async () => {
             setIsLoadingHot(true);
             try {
                 const response = await getHotProductsAPI();
-                
-                let rawData = [];
-                if (response?.data?.data && Array.isArray(response.data.data)) {
-                    rawData = response.data.data;
-                } else if (response?.data && Array.isArray(response.data)) {
-                    rawData = response.data;
-                }
-
-                // Xử lý gộp các sản phẩm bị trùng lặp
-                const uniqueProductsMap = {};
-                rawData.forEach(item => {
-                    const productData = item.product || item;
-                    const productId = productData.id;
-                    
-                    if (!uniqueProductsMap[productId]) {
-                        uniqueProductsMap[productId] = {
-                            ...productData, 
-                            id: productId,
-                            name: productData.name || item.name,
-                            price: productData.price || item.price,
-                            category: productData.category || item.category,
-                            stockQuantity: productData.stockQuantity || item.stockQuantity || 0,
-                            // Đảm bảo truyền đúng biến productImg cho thẻ ProductCard
-                            productImg: productData.productImg || item.productImg, 
-                            soldQuantity: 0
-                        };
-                    }
-                    uniqueProductsMap[productId].soldQuantity += (item.quantity || 0);
-                });
-
-                const finalHotProducts = Object.values(uniqueProductsMap);
-                setHotProducts(finalHotProducts);
-
+                setHotProducts(response);
             } catch (error) {
-                console.error("Lỗi khi tải sản phẩm bán chạy:", error);
+                console.error(error);
             } finally {
                 setIsLoadingHot(false);
             }
@@ -109,25 +56,25 @@ export default function ECommerceHomePage() {
         fetchHotProducts();
     }, []);
 
-    // ==============================================================
-    // 4. LOGIC SCROLL CHO "SẢN PHẨM MỚI" 
-    // ==============================================================
-    const displayProducts = useMemo(() => {
-        if (newProducts.length === 0) return [];
-        return [...newProducts, ...newProducts, ...newProducts];
-    }, [newProducts]);
+    const actualNewProducts = Array.isArray(newProducts) ? newProducts : (newProducts?.data || []);
+    const actualHotProducts = Array.isArray(hotProducts) ? hotProducts : (hotProducts?.data || []);
 
-    const originalWidth = newProducts.length * itemWidth;
+    const displayProducts = useMemo(() => {
+        if (actualNewProducts.length === 0) return [];
+        return [...actualNewProducts, ...actualNewProducts, ...actualNewProducts];
+    }, [actualNewProducts]);
+
+    const originalWidth = actualNewProducts.length * itemWidth;
 
     useEffect(() => {
-        if (newProducts.length > 0 && scrollContainerRef.current) {
+        if (actualNewProducts.length > 0 && scrollContainerRef.current) {
             setTimeout(() => {
                 if (scrollContainerRef.current) {
                     scrollContainerRef.current.scrollLeft = originalWidth;
                 }
             }, 100);
         }
-    }, [newProducts, originalWidth]);
+    }, [actualNewProducts, originalWidth]);
 
     const handleScrollButton = useCallback((direction) => {
         const container = scrollContainerRef.current;
@@ -143,7 +90,7 @@ export default function ECommerceHomePage() {
 
     const handleOnScroll = () => {
         const container = scrollContainerRef.current;
-        if (!container || newProducts.length === 0) return;
+        if (!container || actualNewProducts.length === 0) return;
 
         if (container.scrollLeft >= originalWidth * 2) {
             container.scrollLeft -= originalWidth;
@@ -153,33 +100,30 @@ export default function ECommerceHomePage() {
     };
 
     useEffect(() => {
-        if (!isLoading && newProducts.length > 0) {
+        if (!isLoading && actualNewProducts.length > 0) {
             const timer = setInterval(() => {
                 handleScrollButton("right");
             }, 5000); 
             return () => clearInterval(timer);
         }
-    }, [isLoading, newProducts, lastInteraction, handleScrollButton]);
+    }, [isLoading, actualNewProducts, lastInteraction, handleScrollButton]);
 
-    // ==============================================================
-    // 5. LOGIC SCROLL CHO "SẢN PHẨM HOT" 
-    // ==============================================================
     const displayHotProducts = useMemo(() => {
-        if (hotProducts.length === 0) return [];
-        return [...hotProducts, ...hotProducts, ...hotProducts];
-    }, [hotProducts]);
+        if (actualHotProducts.length === 0) return [];
+        return [...actualHotProducts, ...actualHotProducts, ...actualHotProducts];
+    }, [actualHotProducts]);
 
-    const originalWidthHot = hotProducts.length * itemWidth;
+    const originalWidthHot = actualHotProducts.length * itemWidth;
 
     useEffect(() => {
-        if (hotProducts.length > 0 && scrollContainerHotRef.current) {
+        if (actualHotProducts.length > 0 && scrollContainerHotRef.current) {
             setTimeout(() => {
                 if (scrollContainerHotRef.current) {
                     scrollContainerHotRef.current.scrollLeft = originalWidthHot;
                 }
             }, 100);
         }
-    }, [hotProducts, originalWidthHot]);
+    }, [actualHotProducts, originalWidthHot]);
 
     const handleScrollButtonHot = useCallback((direction) => {
         const container = scrollContainerHotRef.current;
@@ -195,7 +139,7 @@ export default function ECommerceHomePage() {
 
     const handleOnScrollHot = () => {
         const container = scrollContainerHotRef.current;
-        if (!container || hotProducts.length === 0) return;
+        if (!container || actualHotProducts.length === 0) return;
 
         if (container.scrollLeft >= originalWidthHot * 2) {
             container.scrollLeft -= originalWidthHot;
@@ -205,23 +149,19 @@ export default function ECommerceHomePage() {
     };
 
     useEffect(() => {
-        if (!isLoadingHot && hotProducts.length > 0) {
+        if (!isLoadingHot && actualHotProducts.length > 0) {
             const timer = setInterval(() => {
                 handleScrollButtonHot("right");
             }, 6000); 
             return () => clearInterval(timer);
         }
-    }, [isLoadingHot, hotProducts, lastInteractionHot, handleScrollButtonHot]);
+    }, [isLoadingHot, actualHotProducts, lastInteractionHot, handleScrollButtonHot]);
 
-    // ==============================================================
-    // 6. RENDER GIAO DIỆN
-    // ==============================================================
     return (
         <div className="min-h-screen bg-white font-sans">
             <Header />
 
             <main className="max-w-[1170px] mx-auto px-4 mb-20">
-                {/* --- PHẦN 1: SẢN PHẨM MỚI --- */}
                 <section className="mt-20">
                     <div className="flex justify-between items-end mb-10">
                         <div className="flex flex-col gap-6">
@@ -251,7 +191,7 @@ export default function ECommerceHomePage() {
                         <div className="flex justify-center items-center py-20 text-gray-500">
                             Đang tải sản phẩm...
                         </div>
-                    ) : newProducts.length === 0 ? (
+                    ) : actualNewProducts.length === 0 ? (
                         <div className="flex justify-center items-center py-20 text-gray-500">
                             Không có sản phẩm nào.
                         </div>
@@ -263,7 +203,7 @@ export default function ECommerceHomePage() {
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
                             {displayProducts.map((p, index) => (
-                                <div key={`new-${p.id}-${index}`} className="flex-none min-w-[270px] snap-start">
+                                <div key={`new-${p.id || index}-${index}`} className="flex-none min-w-[270px] snap-start">
                                     <ProductCard {...p} showAddToCart={true} />
                                 </div>
                             ))}
@@ -277,7 +217,6 @@ export default function ECommerceHomePage() {
                     </div>
                 </section>
 
-                {/* --- PHẦN 2: SẢN PHẨM BÁN CHẠY --- */}
                 <section className="mt-28">
                     <div className="flex justify-between items-end mb-10">
                         <div className="flex flex-col gap-6">
@@ -307,7 +246,7 @@ export default function ECommerceHomePage() {
                         <div className="flex justify-center items-center py-20 text-gray-500">
                             Đang tải sản phẩm bán chạy...
                         </div>
-                    ) : hotProducts.length === 0 ? (
+                    ) : actualHotProducts.length === 0 ? (
                         <div className="flex justify-center items-center py-20 text-gray-500">
                             Không có sản phẩm bán chạy nào.
                         </div>
@@ -319,7 +258,7 @@ export default function ECommerceHomePage() {
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
                             {displayHotProducts.map((p, index) => (
-                                <div key={`hot-${p.id}-${index}`} className="flex-none min-w-[270px] snap-start">
+                                <div key={`hot-${p.id || index}-${index}`} className="flex-none min-w-[270px] snap-start">
                                     <ProductCard {...p} showAddToCart={true} />
                                 </div>
                             ))}

@@ -29,6 +29,10 @@ public class User {
 
     private String address;
 
+    private String cityId;
+
+    private String wardId;
+
     private String phoneNumber;
 
     private boolean enabled = true;

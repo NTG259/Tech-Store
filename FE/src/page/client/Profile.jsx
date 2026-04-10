@@ -5,9 +5,8 @@ import { Upload, message, Image } from 'antd';
 import { useNavigate } from "react-router-dom";
 import { PlusOutlined } from '@ant-design/icons';
 import { uploadToCloudinary } from "../../service/img/api";
-import { fetchProfileAPI, updateProfileAPI, lockedAccountAPI } from "../../service/user/api";
+import { fetchProfileAPI, updateProfileAPI } from "../../service/user/api";
 
-// Hàm chuyển đổi file sang base64 để preview
 const getBase64 = (file) =>
     new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -16,7 +15,6 @@ const getBase64 = (file) =>
         reader.onerror = (error) => reject(error);
     });
 
-// 1. Thêm prop "required" vào FormField
 function FormField({ label, value, onChange, disabled, placeholder, required }) {
     return (
         <div className="flex flex-col gap-2">
@@ -29,24 +27,32 @@ function FormField({ label, value, onChange, disabled, placeholder, required }) 
                 onChange={(e) => onChange && onChange(e.target.value)}
                 placeholder={placeholder}
                 disabled={disabled}
-                className={`h-[50px] w-[330px] rounded px-4 text-base text-black placeholder-black placeholder-opacity-50 outline-none focus:ring-2 focus:ring-[#db4444] ${disabled ? "bg-[#c2c2c2] cursor-not-allowed" : "bg-[#f5f5f5]"}`}
+                className={`h-[50px] w-[330px] rounded px-4 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444] placeholder:italic placeholder:text-gray-400 ${disabled ? "bg-[#c2c2c2] cursor-not-allowed" : "bg-[#f5f5f5]"}`}
             />
         </div>
     );
 }
 
-function UploadIcon() {
+function SelectField({ label, required, options = [], value, onChange, name }) {
     return (
-        <svg width="64" height="50" viewBox="0 0 78.5 60.5" fill="none">
-            <path
-                d="M10 40L30 20L45 35L55 25L70 40"
-                stroke="#1E1E1E"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3.5"
-            />
-            <circle cx="25" cy="15" r="3" stroke="#1E1E1E" strokeWidth="3.5" />
-        </svg>
+        <div className="flex flex-col gap-2">
+            <label className="text-base text-black">
+                {label} {required && <span className="text-[#db4444] ml-1">*</span>}
+            </label>
+            <select
+                name={name}
+                value={value}
+                onChange={onChange}
+                className="h-[50px] w-[330px] bg-[#f5f5f5] rounded px-4 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444]"
+            >
+                <option value="" disabled>-- Chọn {label.toLowerCase()} --</option>
+                {options.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                        {opt.name}
+                    </option>
+                ))}
+            </select>
+        </div>
     );
 }
 
@@ -56,25 +62,31 @@ const Profile = () => {
         fullName: "",
         phoneNumber: "",
         email: "",
-        address: "",
-        avatar: "https://via.placeholder.com/298x166" // Ảnh mặc định
+        address: "", 
+        avatar: "https://via.placeholder.com/298x166" 
     });
     const [loading, setLoading] = useState(false);
 
-    // Các state phục vụ việc upload và preview
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState("");
     const [fileList, setFileList] = useState([]);
 
+    const [cities, setCities] = useState([]);
+    const [wards, setWards] = useState([]);
+    
+    const [selectedCity, setSelectedCity] = useState({ id: "", name: "" });
+    const [selectedWard, setSelectedWard] = useState({ id: "", name: "" });
+
     const setField = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
-    // Load profile từ API khi mở trang
     useEffect(() => {
         const loadProfile = async () => {
             try {
                 setLoading(true);
                 const res = await fetchProfileAPI();
-                const user = res?.data || res;
+                
+                // Lấy đúng object chứa dữ liệu user từ cấu trúc JSON backend trả về
+                const user = res?.data?.data || res?.data || res;
 
                 if (!user) return;
 
@@ -83,9 +95,18 @@ const Profile = () => {
                     fullName: user.fullName || "",
                     phoneNumber: user.phoneNumber || "",
                     email: user.email || "",
-                    address: user.address || "",
+                    address: user.address || "", 
                     avatar: user.avatar || prev.avatar,
                 }));
+
+                // Gán cityId và wardId vào state để Dropdown hiển thị
+                if (user.cityId) {
+                    setSelectedCity(prev => ({ ...prev, id: user.cityId.toString() }));
+                }
+                if (user.wardId) {
+                    setSelectedWard(prev => ({ ...prev, id: user.wardId.toString() }));
+                }
+
             } catch (error) {
                 message.error("Không thể tải thông tin hồ sơ");
             } finally {
@@ -96,7 +117,72 @@ const Profile = () => {
         loadProfile();
     }, []);
 
-    // Logic xử lý Preview
+    useEffect(() => {
+        const fetchCities = async () => {
+            try {
+                const res = await fetch("http://localhost:8082/api/address/provinces");
+                const data = await res.json();
+                
+                if (data && data.provinces) {
+                    const mappedCities = data.provinces.map((p) => ({
+                        id: p.code, 
+                        name: p.name
+                    }));
+                    setCities(mappedCities);
+                } else {
+                    setCities([]);
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách thành phố:", error);
+            }
+        };
+        fetchCities();
+    }, []);
+
+    useEffect(() => {
+        const fetchWards = async () => {
+            if (!selectedCity.id) {
+                setWards([]);
+                return;
+            }
+            try {
+                const res = await fetch(`http://localhost:8082/api/address/wards?provinceId=${selectedCity.id}`);
+                const data = await res.json();
+                
+                let mappedWards = [];
+                if (data && data.communes) {
+                    mappedWards = data.communes.map((w) => ({
+                        id: w.code,
+                        name: w.name
+                    }));
+                } else if (Array.isArray(data)) {
+                    mappedWards = data.map((w) => ({
+                        id: w.code || w.id,
+                        name: w.name
+                    }));
+                }
+                
+                setWards(mappedWards);
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách xã/phường:", error);
+            }
+        };
+        fetchWards();
+    }, [selectedCity.id]);
+
+    const handleCityChange = (e) => {
+        const cityId = e.target.value;
+        const cityObj = cities.find(c => c.id.toString() === cityId);
+        setSelectedCity({ id: cityId, name: cityObj?.name || "" });
+        setSelectedWard({ id: "", name: "" }); 
+    };
+
+    const handleWardChange = (e) => {
+        const wardId = e.target.value;
+        const wardObj = wards.find(w => w.id.toString() === wardId);
+        setSelectedWard({ id: wardId, name: wardObj?.name || "" });
+    };
+
     const handlePreview = async (file) => {
         if (!file.url && !file.preview) {
             file.preview = await getBase64(file.originFileObj);
@@ -105,10 +191,8 @@ const Profile = () => {
         setPreviewOpen(true);
     };
 
-    // Logic xử lý thay đổi file
     const handleChange = ({ fileList: newFileList }) => setFileList(newFileList);
 
-    // Logic Upload lên Cloudinary
     const handleCustomUpload = async (options) => {
         try {
             await uploadToCloudinary({
@@ -129,7 +213,6 @@ const Profile = () => {
     };
 
     const handleSaveChanges = async () => {
-        // 2. Thêm logic Validate kiểm tra không null / khoảng trắng
         if (!form.fullName || !form.fullName.trim()) {
             return message.error("Vui lòng nhập họ và tên!");
         }
@@ -138,14 +221,21 @@ const Profile = () => {
         }
 
         try {
+            setLoading(true);
+            
             const payload = {
                 fullName: form.fullName,
                 phoneNumber: form.phoneNumber,
-                address: form.address,
+                address: form.address, 
+                cityId: selectedCity.id, 
+                wardId: selectedWard.id, 
                 avatar: form.avatar,
             };
+
             const res = await updateProfileAPI(payload);
-            const updated = res?.data || res;
+            
+            // Xử lý object phản hồi tương tự như lúc loadProfile
+            const updated = res?.data?.data || res?.data || res;
 
             if (updated) {
                 setForm((prev) => ({
@@ -164,13 +254,14 @@ const Profile = () => {
                 error?.message ||
                 "Cập nhật hồ sơ thất bại"
             );
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleCancel = () => {
         navigate(-1);
     };
-
 
     return (
         <div className="min-h-screen bg-white font-sans">
@@ -181,7 +272,6 @@ const Profile = () => {
                     <h2 className="text-xl text-[#db4444] mb-8">Cập nhật tài khoản</h2>
 
                     <div className="flex gap-12 mb-8">
-                        {/* 3. Truyền prop required và sửa lỗi cú pháp */}
                         <FormField
                             label="Họ và tên"
                             value={form.fullName}
@@ -202,18 +292,34 @@ const Profile = () => {
                             value={form.email}
                             disabled
                         />
+                        <SelectField 
+                            label="Tỉnh/Thành phố"
+                            name="city"
+                            options={cities}
+                            value={selectedCity.id}
+                            onChange={handleCityChange}
+                        />
+                    </div>
+
+                    <div className="flex gap-12 mb-8">
+                        <SelectField 
+                            label="Xã/Phường"
+                            name="ward"
+                            options={wards}
+                            value={selectedWard.id}
+                            onChange={handleWardChange}
+                        />
                         <FormField
-                            label="Địa chỉ"
+                            label="Địa chỉ cụ thể / Số nhà"
                             value={form.address}
                             onChange={setField("address")}
-                            
+                            placeholder="Ví dụ: Số 123, Đường Lê Lợi"
                         />
                     </div>
 
                     <div className="mb-8">
                         <p className="text-base text-black mb-3">Ảnh đại diện</p>
                         <div className="flex items-start gap-10">
-                            {/* Hiển thị Avatar hiện tại */}
                             <div className="w-[298px] h-[166px] overflow-hidden rounded border border-gray-200 bg-gray-50 flex items-center justify-center">
                                 <img
                                     src={form.avatar}
@@ -226,7 +332,6 @@ const Profile = () => {
                                 />
                             </div>
 
-                            {/* Nút Upload dùng Ant Design */}
                             <div className="mt-4">
                                 <Upload
                                     customRequest={handleCustomUpload}
@@ -246,7 +351,6 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    {/* Component Preview ảnh của Ant Design */}
                     {previewImage && (
                         <Image
                             wrapperStyle={{ display: 'none' }}
@@ -262,10 +366,10 @@ const Profile = () => {
                     <div className="flex items-center justify-end gap-8 mt-4">
                         <button
                             onClick={handleSaveChanges}
-                            disabled={loading} // Vô hiệu hóa nút khi đang loading nếu cần
-                            className="bg-[#db4444] text-white px-12 py-4 rounded hover:bg-[#c03c3c] transition-colors"
+                            disabled={loading}
+                            className="bg-[#db4444] text-white px-12 py-4 rounded hover:bg-[#c03c3c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Xác nhận cập nhật
+                            {loading ? "Đang xử lý..." : "Xác nhận cập nhật"}
                         </button>
                         <button
                             onClick={handleCancel}

@@ -70,7 +70,8 @@ public class UserServiceImpl implements UserService {
         user.setFullName(dto.getFullName());
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setAvatar(dto.getAvatar());
-
+        user.setCityId(dto.getCityId());
+        user.setWardId(dto.getWardId());
         User updatedUser = this.userRepository.saveAndFlush(user);
         return new ApiResponse<>(UserConvert.convertToUserResponseDTO(updatedUser), "Cập nhật thành công", null, HttpStatus.OK.value());
     }

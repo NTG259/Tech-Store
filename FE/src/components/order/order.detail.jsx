@@ -101,8 +101,13 @@ const OrderDetailModal = (props) => {
                             <Input readOnly style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} />
                         </Form.Item>
 
+                        {/* Đã đổi Input thành TextArea và thêm autoSize */}
                         <Form.Item label="Địa chỉ nhận hàng" name="address" style={{ marginBottom: '16px' }}>
-                            <Input readOnly style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} />
+                            <TextArea 
+                                readOnly 
+                                autoSize={{ minRows: 1, maxRows: 4 }} 
+                                style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} 
+                            />
                         </Form.Item>
 
                         <Form.Item label="Số điện thoại" name="phone" style={{ marginBottom: '16px' }}>

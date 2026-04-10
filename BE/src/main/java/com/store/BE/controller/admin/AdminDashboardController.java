@@ -3,8 +3,7 @@ package com.store.BE.controller.admin;
 import com.store.BE.domain.dto.HotProductProjection;
 import com.store.BE.domain.order.OrderItem;
 import com.store.BE.domain.product.Product;
-import com.store.BE.domain.response.ApiResponse;
-import com.store.BE.domain.response.DashboardResponse;
+import com.store.BE.domain.response.*;
 import com.store.BE.service.DashboardService;
 import com.store.BE.service.OrderService;
 import com.store.BE.service.ProductService;
@@ -28,8 +27,8 @@ public class AdminDashboardController {
     private final DashboardService dashboardService;
 
     @GetMapping("/dashboard/summary")
-    public ResponseEntity<ApiResponse<DashboardResponse>> getSummary(@RequestParam Integer year) {
-        DashboardResponse dashboardResponse = dashboardService.getSummary(year);
+    public ResponseEntity<ApiResponse<DashboardResponse>> getSummary() {
+        DashboardResponse dashboardResponse = dashboardService.getSummary();
         ApiResponse<DashboardResponse> rs = new ApiResponse<>(
                 dashboardResponse,
                 "Thống kê thành công",
@@ -37,6 +36,45 @@ public class AdminDashboardController {
                 HttpStatus.OK.value()
         );
 
+        return ResponseEntity.ok().body(rs);
+    }
+
+    @GetMapping("/dashboard/year-revenue")
+    public ResponseEntity<ApiResponse<SummaryYearResponse>> getSummaryYear(
+            @RequestParam Integer year) {
+            ApiResponse<SummaryYearResponse> rs = new ApiResponse<>(
+                this.dashboardService.getYearRevenue(year),
+                "Thống kê trong năm theo 12 tháng",
+                null,
+                HttpStatus.OK.value()
+                );
+            return ResponseEntity.ok().body(rs);
+    }
+
+    @GetMapping("/dashboard/month-revenue")
+    public ResponseEntity<ApiResponse<SummaryMonthlyResponse>> getSummaryMonth(
+            @RequestParam Integer year,
+            @RequestParam Integer month) {
+        ApiResponse<SummaryMonthlyResponse> rs = new ApiResponse<>(
+                this.dashboardService.getMonthRevenue(year, month),
+                "Thống kê trong tháng theo 4 tuần",
+                null,
+                HttpStatus.OK.value()
+        );
+        return ResponseEntity.ok().body(rs);
+    }
+
+    @GetMapping("/dashboard/week-revenue")
+    public ResponseEntity<ApiResponse<SummaryWeekResponse>> getSummaryWeekly(
+            @RequestParam Integer year,
+            @RequestParam Integer month,
+            @RequestParam Integer week) {
+        ApiResponse<SummaryWeekResponse> rs = new ApiResponse<>(
+                this.dashboardService.getWeekRevenue(year, month, week),
+                "Thống kê trong tuần theo 7 ngày",
+                null,
+                HttpStatus.OK.value()
+        );
         return ResponseEntity.ok().body(rs);
     }
 

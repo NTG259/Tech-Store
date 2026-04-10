@@ -20,6 +20,10 @@ public class UserResponseDTO {
 
     private String address;
 
+    private String cityId;
+
+    private String wardId;
+
     private String avatar;
 
     private Role role;

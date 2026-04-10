@@ -36,6 +36,7 @@ public class OrderItem {
     // Giá tại thời điểm mua
     private Long price;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
 

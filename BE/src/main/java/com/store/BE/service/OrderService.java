@@ -17,4 +17,5 @@ public interface OrderService {
     public ApiResponse<OrderResponse> updateOrder(Long orderId, OrderStatus status);
     public Long totalRevenue();
     public Long totalSuccessOrder();
+    boolean updatePaymentStatus(String orderId, long vnpAmount, String responseCode);
 }

@@ -51,8 +51,9 @@ const User = () => {
                     address: user.address,
                     avatar: user.avatar,
                     role: user.role,
-                    // SỬA: Lấy chính xác trường isEnabled từ API
-                    isEnabled: user.isEnabled 
+                    isEnabled: user.isEnabled,
+                    cityId: user.cityId,
+                    wardId: user.wardId
                 }));
 
                 setData(formattedData);
@@ -91,7 +92,7 @@ const User = () => {
     // SỬA: Gọi API lockUserByAdmin
     const handleToggleLock = async (id, currentStatus) => {
         try {
-            await lockUserByAdminAPI(id); 
+            await lockUserByAdminAPI(id);
             message.success(`Đã ${currentStatus ? 'khóa' : 'mở khóa'} tài khoản thành công`);
             await loadUsers(); // Load lại danh sách để cập nhật UI
         } catch (error) {
@@ -202,7 +203,7 @@ const User = () => {
                             <Button
                                 type="default"
                                 shape="circle"
-                                danger={record.isEnabled} 
+                                danger={record.isEnabled}
                                 icon={record.isEnabled ? <LockOutlined /> : <UnlockOutlined style={{ color: '#52c41a' }} />}
                             />
                         </Tooltip>

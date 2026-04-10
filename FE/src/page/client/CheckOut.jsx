@@ -4,6 +4,7 @@ import Footer from "../../layout/client/Footer";
 import { Link, useNavigate } from "react-router-dom"; 
 import { message } from "antd";
 import { getCart, checkoutCart } from "../../service/cart/api";
+import { fetchProfileAPI } from "../../service/user/api";
 
 const imgMonitor = "https://placehold.co/100x100/f5f5f5/333333/png?text=Monitor";
 const imgGamepad = "https://placehold.co/100x100/f5f5f5/333333/png?text=Gamepad";
@@ -12,7 +13,8 @@ const imgGamepad = "https://placehold.co/100x100/f5f5f5/333333/png?text=Gamepad"
 function BillingField({ label, required, type = "text", multiline = false, value, onChange, name, placeholder }) {
     return (
         <div className="flex flex-col gap-2">
-            <label className="text-base text-black opacity-40">
+            {/* Đã gỡ opacity-40 và thêm font-medium để chữ đậm lên */}
+            <label className="text-base font-medium text-black">
                 {label}
                 {required && <span className="text-[#db4444] ml-1">*</span>}
             </label>
@@ -23,7 +25,7 @@ function BillingField({ label, required, type = "text", multiline = false, value
                     value={value}
                     onChange={onChange}
                     placeholder={placeholder}
-                    className="w-full bg-[#f5f5f5] rounded px-4 py-3 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444] resize-none"
+                    className="w-full bg-[#f5f5f5] rounded px-4 py-3 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444] resize-none placeholder:italic placeholder:text-gray-400"
                 />
             ) : (
                 <input
@@ -32,7 +34,7 @@ function BillingField({ label, required, type = "text", multiline = false, value
                     value={value}
                     onChange={onChange}
                     placeholder={placeholder}
-                    className="w-full h-[50px] bg-[#f5f5f5] rounded px-4 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444]"
+                    className="w-full h-[50px] bg-[#f5f5f5] rounded px-4 text-base text-black outline-none focus:ring-2 focus:ring-[#db4444] placeholder:italic placeholder:text-gray-400"
                 />
             )}
         </div>
@@ -43,7 +45,8 @@ function BillingField({ label, required, type = "text", multiline = false, value
 function SelectField({ label, required, options = [], value, onChange, name }) {
     return (
         <div className="flex flex-col gap-2">
-            <label className="text-base text-black opacity-40">
+            {/* Đã gỡ opacity-40 và thêm font-medium */}
+            <label className="text-base font-medium text-black">
                 {label}
                 {required && <span className="text-[#db4444] ml-1">*</span>}
             </label>
@@ -83,16 +86,14 @@ export default function CheckOut() {
     
     const [form, setForm] = useState({
         fullName: "",
-        specificAddress: "", // Đổi tên để tránh nhầm với địa chỉ tổng
+        specificAddress: "",
         phone: "",
         notes: "",
     });
 
-    // --- State cho Dropdown API ---
     const [cities, setCities] = useState([]);
     const [wards, setWards] = useState([]);
     
-    // Lưu lại cả ID (để fetch cấp dưới) và Name (để gộp chuỗi)
     const [selectedCity, setSelectedCity] = useState({ id: "", name: "" });
     const [selectedWard, setSelectedWard] = useState({ id: "", name: "" });
 
@@ -100,17 +101,18 @@ export default function CheckOut() {
     const [subTotal, setSubTotal] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
+    const [isFetchingProfile, setIsFetchingProfile] = useState(false);
+    // State để theo dõi xem đã dùng chức năng fill data chưa
+    const [isProfileUsed, setIsProfileUsed] = useState(false); 
+    
     const navigate = useNavigate();
 
-    // 1. Fetch Danh sách Thành phố khi component mount
-    // 1. Fetch Danh sách Thành phố
     useEffect(() => {
         const fetchCities = async () => {
             try {
                 const res = await fetch("http://localhost:8082/api/address/provinces");
                 const data = await res.json();
                 
-                // Trỏ đúng vào mảng 'provinces' và map lại thuộc tính 'code' thành 'id'
                 if (data && data.provinces) {
                     const mappedCities = data.provinces.map((p) => ({
                         id: p.code, 
@@ -127,8 +129,6 @@ export default function CheckOut() {
         fetchCities();
     }, []);
 
-    // 2. Fetch Danh sách Xã/Phường
-    // 2. Fetch Danh sách Xã/Phường
     useEffect(() => {
         const fetchWards = async () => {
             if (!selectedCity.id) {
@@ -140,15 +140,12 @@ export default function CheckOut() {
                 const data = await res.json();
                 
                 let mappedWards = [];
-                
-                // Trỏ đúng vào mảng 'communes' dựa trên response mới
                 if (data && data.communes) {
                     mappedWards = data.communes.map((w) => ({
                         id: w.code,
                         name: w.name
                     }));
                 } else if (Array.isArray(data)) {
-                    // Dự phòng trường hợp API trả thẳng về mảng
                     mappedWards = data.map((w) => ({
                         id: w.code || w.id,
                         name: w.name
@@ -190,12 +187,10 @@ export default function CheckOut() {
             currency: "VND",
         }).format(value || 0);
 
-    // --- Hàm xử lý thay đổi Dropdown ---
     const handleCityChange = (e) => {
         const cityId = e.target.value;
         const cityObj = cities.find(c => c.id.toString() === cityId);
         setSelectedCity({ id: cityId, name: cityObj?.name || "" });
-        // Reset Ward khi đổi City
         setSelectedWard({ id: "", name: "" });
     };
 
@@ -205,7 +200,62 @@ export default function CheckOut() {
         setSelectedWard({ id: wardId, name: wardObj?.name || "" });
     };
 
-    // --- Hàm xử lý khi nhấn Place Order ---
+    const handleFillProfile = async () => {
+        try {
+            setIsFetchingProfile(true);
+            const res = await fetchProfileAPI();
+            const user = res?.data?.data || res?.data || res;
+
+            if (!user) {
+                message.warning("Không tìm thấy thông tin cá nhân");
+                return;
+            }
+
+            setForm(prev => ({
+                ...prev,
+                fullName: user.fullName || prev.fullName,
+                phone: user.phoneNumber || prev.phone, 
+                specificAddress: user.address || prev.specificAddress,
+            }));
+
+            if (user.cityId) {
+                const cityIdStr = user.cityId.toString();
+                const cityObj = cities.find(c => c.id.toString() === cityIdStr);
+                setSelectedCity({ id: cityIdStr, name: cityObj?.name || "" });
+
+                try {
+                    const resWards = await fetch(`http://localhost:8082/api/address/wards?provinceId=${cityIdStr}`);
+                    const dataWards = await resWards.json();
+
+                    let mappedWards = [];
+                    if (dataWards && dataWards.communes) {
+                        mappedWards = dataWards.communes.map((w) => ({ id: w.code, name: w.name }));
+                    } else if (Array.isArray(dataWards)) {
+                        mappedWards = dataWards.map((w) => ({ id: w.code || w.id, name: w.name }));
+                    }
+
+                    setWards(mappedWards);
+
+                    if (user.wardId) {
+                        const wardIdStr = user.wardId.toString();
+                        const wardObj = mappedWards.find(w => w.id.toString() === wardIdStr);
+                        setSelectedWard({ id: wardIdStr, name: wardObj?.name || "" });
+                    }
+                } catch (err) {
+                    console.error("Lỗi khi fetch xã/phường cho auto-fill:", err);
+                }
+            }
+
+            message.success("Đã tự động điền thông tin cá nhân!");
+            // Đánh dấu đã dùng chức năng này để ẩn cục màu xám đi
+            setIsProfileUsed(true);
+        } catch (error) {
+            message.error("Lỗi khi tải thông tin cá nhân");
+        } finally {
+            setIsFetchingProfile(false);
+        }
+    };
+
     const handlePlaceOrder = async () => {
         if (!form.fullName || !form.phone || !selectedCity.name || !selectedWard.name || !form.specificAddress) {
             message.error("Vui lòng nhập đầy đủ thông tin giao hàng (Họ tên, Thành phố, Xã, Địa chỉ cụ thể, SĐT)");
@@ -217,7 +267,6 @@ export default function CheckOut() {
             return;
         }
 
-        // Gộp chuỗi theo yêu cầu: Thành phố - Xã - Địa chỉ cụ thể nơi nhận
         const fullShippingAddress = `${selectedCity.name} - ${selectedWard.name} - ${form.specificAddress}`;
 
         const payload = {
@@ -259,11 +308,30 @@ export default function CheckOut() {
                     <span className="text-black font-medium">Đặt hàng</span>
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-medium text-black tracking-wide mb-10">Hóa đơn</h1>
+                <div className="flex items-center justify-between mb-10">
+                    <h1 className="text-3xl md:text-4xl font-medium text-black tracking-wide">Hóa đơn</h1>
+                </div>
 
                 <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-start">
+                    
                     {/* KHU VỰC ĐIỀN THÔNG TIN */}
                     <div className="flex flex-col gap-6 w-full lg:flex-1">
+                        
+                        {/* NÚT FILL THÔNG TIN CÁ NHÂN - Đã thu nhỏ và thêm logic ẩn */}
+                        {!isProfileUsed && (
+                            <div className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded border border-gray-200">
+                                <span className="text-sm text-gray-600">Bạn muốn sử dụng thông tin đã lưu?</span>
+                                <button 
+                                    onClick={handleFillProfile}
+                                    disabled={isFetchingProfile}
+                                    type="button"
+                                    className="bg-black text-white px-3 py-1.5 rounded text-xs hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                >
+                                    {isFetchingProfile ? "Đang tải..." : "Dùng thông tin"}
+                                </button>
+                            </div>
+                        )}
+
                         <BillingField
                             label="Họ và tên người nhận"
                             required
@@ -285,7 +353,6 @@ export default function CheckOut() {
                             }
                         />
 
-                        {/* Dropdown Tỉnh/Thành phố */}
                         <SelectField 
                             label="Tỉnh/Thành phố"
                             required
@@ -295,7 +362,6 @@ export default function CheckOut() {
                             onChange={handleCityChange}
                         />
 
-                        {/* Dropdown Xã/Phường */}
                         <SelectField 
                             label="Xã/Phường"
                             required
@@ -305,7 +371,6 @@ export default function CheckOut() {
                             onChange={handleWardChange}
                         />
 
-                        {/* Địa chỉ cụ thể */}
                         <BillingField
                             label="Địa chỉ cụ thể nơi nhận (Số nhà, đường...)"
                             required
@@ -328,8 +393,8 @@ export default function CheckOut() {
                         />
                     </div>
 
-                    {/* KHU VỰC TỔNG KẾT ĐƠN HÀNG */}
-                    <div className="w-full lg:w-[470px] shrink-0 lg:mt-6">
+                    {/* KHU VỰC TỔNG KẾT ĐƠN HÀNG - Đã bỏ class lg:mt-6 để 2 cột ngang hàng nhau */}
+                    <div className="w-full lg:w-[470px] shrink-0">
                         <div className="flex flex-col mb-6">
                             {cartItems.map((item) => {
                                 const product = item?.product ?? {};

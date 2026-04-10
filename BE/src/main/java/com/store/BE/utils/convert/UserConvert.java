@@ -14,6 +14,8 @@ public class UserConvert {
         rs.setAvatar(user.getAvatar());
         rs.setRole(user.getRole());
         rs.setIsEnabled(user.isEnabled());
+        rs.setCityId(user.getCityId());
+        rs.setWardId(user.getWardId());
         return rs;
     }
 }

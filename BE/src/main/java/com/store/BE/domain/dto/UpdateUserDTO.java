@@ -8,6 +8,10 @@ import lombok.Setter;
 public class UpdateUserDTO {
     private String fullName;
 
+    private String cityId;
+
+    private String wardId;
+
     private String address;
 
     private String phoneNumber;

@@ -164,4 +164,33 @@ public class OrderServiceImpl implements OrderService {
 
         return rs;
     }
+
+    @Transactional
+    public boolean updatePaymentStatus(String orderId, long vnpAmount, String responseCode) {
+        // 1. Tìm đơn hàng trong Database
+        // (Giả sử orderId lưu trong DB là kiểu Long, bạn có thể ép kiểu nếu cần)
+        Order order = orderRepository.findById(Long.parseLong(orderId)).orElse(null);
+
+        if (order == null) {
+            return false; // Không tìm thấy đơn hàng
+        }
+
+        // 2. Kiểm tra số tiền (VNPAY gửi về số tiền đã nhân 100)
+        // Nếu số tiền không khớp với đơn hàng trong DB -> Cảnh báo gian lận
+        long orderAmount = (long) order.getTotalAmount() * 100;
+        if (orderAmount != vnpAmount) {
+            System.out.println("Cảnh báo: Số tiền không khớp!");
+            return false;
+        }
+
+//        // 3. Cập nhật trạng thái dựa vào ResponseCode
+//        if ("00".equals(responseCode)) {
+//            order.setPaymentMethod("VNPAY");
+//        } else {
+//            order.setStatus("PAYMENT_FAILED");
+//        }
+
+        orderRepository.save(order);
+        return true;
+    }
 }

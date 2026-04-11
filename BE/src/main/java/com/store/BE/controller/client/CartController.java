@@ -72,7 +72,9 @@ public class CartController {
     @PostMapping("/checkout")
     public  ResponseEntity<ApiResponse<OrderResponse>> checkOut(@RequestBody CheckoutRequest checkoutRequest) {
             ApiResponse<OrderResponse> response = this.orderService.checkout(checkoutRequest);
-            cartService.removeCart(getCurrentUserId());
+            if (response.data().getPaymentMethod().equals("COD")) {
+                cartService.removeCart(getCurrentUserId());
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

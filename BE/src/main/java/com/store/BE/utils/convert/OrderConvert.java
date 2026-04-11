@@ -23,7 +23,7 @@ public class OrderConvert {
         response.setPaymentMethod(order.getPaymentMethod());
         response.setStatus(String.valueOf(order.getStatus()));
         response.setReceiverPhone(order.getReceiverPhone());
-
+        response.setPaymentStatus(String.valueOf(order.getPaymentStatus()));
         List<OrderItem> orderItems = order.getOrderItems();
         List<OrderItemResponse> itemResponses = getOrderItemResponses(orderItems);
         response.setItems(itemResponses);

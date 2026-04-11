@@ -13,7 +13,6 @@ const imgGamepad = "https://placehold.co/100x100/f5f5f5/333333/png?text=Gamepad"
 function BillingField({ label, required, type = "text", multiline = false, value, onChange, name, placeholder }) {
     return (
         <div className="flex flex-col gap-2">
-            {/* Đã gỡ opacity-40 và thêm font-medium để chữ đậm lên */}
             <label className="text-base font-medium text-black">
                 {label}
                 {required && <span className="text-[#db4444] ml-1">*</span>}
@@ -45,7 +44,6 @@ function BillingField({ label, required, type = "text", multiline = false, value
 function SelectField({ label, required, options = [], value, onChange, name }) {
     return (
         <div className="flex flex-col gap-2">
-            {/* Đã gỡ opacity-40 và thêm font-medium */}
             <label className="text-base font-medium text-black">
                 {label}
                 {required && <span className="text-[#db4444] ml-1">*</span>}
@@ -102,7 +100,6 @@ export default function CheckOut() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     const [isFetchingProfile, setIsFetchingProfile] = useState(false);
-    // State để theo dõi xem đã dùng chức năng fill data chưa
     const [isProfileUsed, setIsProfileUsed] = useState(false); 
     
     const navigate = useNavigate();
@@ -247,7 +244,6 @@ export default function CheckOut() {
             }
 
             message.success("Đã tự động điền thông tin cá nhân!");
-            // Đánh dấu đã dùng chức năng này để ẩn cục màu xám đi
             setIsProfileUsed(true);
         } catch (error) {
             message.error("Lỗi khi tải thông tin cá nhân");
@@ -256,6 +252,7 @@ export default function CheckOut() {
         }
     };
 
+    // ====== HÀM XỬ LÝ THANH TOÁN (CẬP NHẬT) ======
     const handlePlaceOrder = async () => {
         if (!form.fullName || !form.phone || !selectedCity.name || !selectedWard.name || !form.specificAddress) {
             message.error("Vui lòng nhập đầy đủ thông tin giao hàng (Họ tên, Thành phố, Xã, Địa chỉ cụ thể, SĐT)");
@@ -274,7 +271,7 @@ export default function CheckOut() {
             receiverName: form.fullName,
             phone: form.phone,
             note: form.notes,
-            paymentMethod: payMethod === "cod" ? "COD" : payMethod.toUpperCase(),
+            paymentMethod: payMethod === "cod" ? "COD" : "VNPAY",
             items: cartItems.map((item) => ({
                 productId: item?.product?.id ?? item?.productId,
                 quantity: item?.quantity ?? item?.qty ?? 1,
@@ -283,16 +280,52 @@ export default function CheckOut() {
 
         try {
             setIsSubmitting(true);
-            await checkoutCart(payload);
-            message.success("Đặt hàng thành công!");
-            navigate("/success");
+            
+            // 1. Luôn tiến hành Đặt Hàng trước để backend tạo Order trong Database
+            const checkoutRes = await checkoutCart(payload);
+            
+            // Lấy orderId từ response (Vui lòng điều chỉnh '.id' hoặc '.orderId' tùy theo cấu trúc API của bạn trả về)
+            const createdOrderId = checkoutRes?.data?.id || checkoutRes?.data?.orderId || checkoutRes?.id;
+
+            // 2. Nếu thanh toán VNPAY, gọi API lấy link VNPay
+            if (payMethod === "vnpay") {
+                if (!createdOrderId) {
+                    message.error("Lỗi: Không tìm thấy mã đơn hàng vừa tạo để thanh toán.");
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                const token = localStorage.getItem("access_token");
+
+                // Gọi API backend Spring Boot mà bạn vừa xây dựng
+                const vnpayRes = await fetch(`http://localhost:8082/api/payment/vnpay/create-payment?amount=${subTotal}&paymentRef=${createdOrderId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const vnpayData = await vnpayRes.json();
+
+                if (vnpayData && vnpayData.paymentUrl) {
+                    // Chuyển hướng người dùng thẳng sang trang thanh toán của VNPay
+                    window.location.href = vnpayData.paymentUrl;
+                } else {
+                    message.error("Lỗi: Không thể khởi tạo link thanh toán VNPay");
+                    setIsSubmitting(false);
+                }
+            } else {
+                // Nếu thanh toán COD
+                message.success("Đặt hàng thành công!");
+                navigate("/success");
+            }
         } catch (error) {
             message.error(
                 error?.response?.data?.message ||
                 error?.message ||
                 "Đặt hàng thất bại, vui lòng thử lại"
             );
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -317,7 +350,6 @@ export default function CheckOut() {
                     {/* KHU VỰC ĐIỀN THÔNG TIN */}
                     <div className="flex flex-col gap-6 w-full lg:flex-1">
                         
-                        {/* NÚT FILL THÔNG TIN CÁ NHÂN - Đã thu nhỏ và thêm logic ẩn */}
                         {!isProfileUsed && (
                             <div className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded border border-gray-200">
                                 <span className="text-sm text-gray-600">Bạn muốn sử dụng thông tin đã lưu?</span>
@@ -337,9 +369,7 @@ export default function CheckOut() {
                             required
                             name="fullName"
                             value={form.fullName}
-                            onChange={(e) =>
-                                setForm((prev) => ({ ...prev, fullName: e.target.value }))
-                            }
+                            onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
                         />
 
                         <BillingField
@@ -348,9 +378,7 @@ export default function CheckOut() {
                             type="tel"
                             name="phone"
                             value={form.phone}
-                            onChange={(e) =>
-                                setForm((prev) => ({ ...prev, phone: e.target.value }))
-                            }
+                            onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
                         />
 
                         <SelectField 
@@ -377,9 +405,7 @@ export default function CheckOut() {
                             name="specificAddress"
                             placeholder="Ví dụ: Số 123, Đường Lê Lợi"
                             value={form.specificAddress}
-                            onChange={(e) =>
-                                setForm((prev) => ({ ...prev, specificAddress: e.target.value }))
-                            }
+                            onChange={(e) => setForm((prev) => ({ ...prev, specificAddress: e.target.value }))}
                         />
                         
                         <BillingField
@@ -387,13 +413,11 @@ export default function CheckOut() {
                             multiline
                             name="notes"
                             value={form.notes}
-                            onChange={(e) =>
-                                setForm((prev) => ({ ...prev, notes: e.target.value }))
-                            }
+                            onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
                         />
                     </div>
 
-                    {/* KHU VỰC TỔNG KẾT ĐƠN HÀNG - Đã bỏ class lg:mt-6 để 2 cột ngang hàng nhau */}
+                    {/* KHU VỰC TỔNG KẾT ĐƠN HÀNG */}
                     <div className="w-full lg:w-[470px] shrink-0">
                         <div className="flex flex-col mb-6">
                             {cartItems.map((item) => {
@@ -433,6 +457,7 @@ export default function CheckOut() {
                             </div>
                         </div>
 
+                        {/* --- BỔ SUNG LỰA CHỌN THANH TOÁN --- */}
                         <div className="flex flex-col gap-4 mt-2 mb-6">
                             <label className="flex items-center gap-3 cursor-pointer">
                                 <input
@@ -443,7 +468,21 @@ export default function CheckOut() {
                                     onChange={() => setPayMethod("cod")}
                                     className="w-5 h-5 accent-black"
                                 />
-                                <span className="text-base text-black">Thanh toán khi nhận hàng</span>
+                                <span className="text-base text-black">Thanh toán khi nhận hàng (COD)</span>
+                            </label>
+
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    value="vnpay"
+                                    checked={payMethod === "vnpay"}
+                                    onChange={() => setPayMethod("vnpay")}
+                                    className="w-5 h-5 accent-[#db4444]"
+                                />
+                                <span className="text-base text-black flex items-center gap-2">
+                                    Thanh toán online (VNPay)
+                                </span>
                             </label>
                         </div>
 

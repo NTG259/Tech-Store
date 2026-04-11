@@ -89,7 +89,7 @@ public class OrderServiceImpl implements OrderService {
         order.setNote(request.getNote());
         order.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "COD");
         order.setStatus(OrderStatus.PENDING); // Đặt trạng thái mặc định là chờ xử lý
-
+        order.setPaymentStatus(PaymentStatus.UNPAID);
         // 3. Xử lý Order Items và tính toán tổng tiền (Total Amount)
         long totalAmount = 0L;
 
@@ -137,10 +137,26 @@ public class OrderServiceImpl implements OrderService {
         Order updateOrder = this.orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
         updateOrder.setStatus(orderStatus);
+        if (updateOrder.getStatus() == OrderStatus.CONFIRMED) {
+            updateOrder.setPaymentStatus(PaymentStatus.PAID);
+        }
         updateOrder = this.orderRepository.save(updateOrder);
         return new ApiResponse<>(
                 OrderConvert.convertToOrderResponse(updateOrder),
                 "Cập nhật đơn hàng thành công",
+                null,
+                HttpStatus.OK.value()
+        );
+    }
+
+    public ApiResponse<OrderResponse> updatePayment(Long orderId, PaymentStatus paymentStatus) {
+        Order updateOrder = this.orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
+        updateOrder.setPaymentStatus(paymentStatus);
+        updateOrder = this.orderRepository.save(updateOrder);
+        return new ApiResponse<>(
+                OrderConvert.convertToOrderResponse(updateOrder),
+                "Cập nhật trạng thái thanh toán đơn hàng thành công",
                 null,
                 HttpStatus.OK.value()
         );
@@ -165,32 +181,9 @@ public class OrderServiceImpl implements OrderService {
         return rs;
     }
 
-    @Transactional
-    public boolean updatePaymentStatus(String orderId, long vnpAmount, String responseCode) {
-        // 1. Tìm đơn hàng trong Database
-        // (Giả sử orderId lưu trong DB là kiểu Long, bạn có thể ép kiểu nếu cần)
-        Order order = orderRepository.findById(Long.parseLong(orderId)).orElse(null);
-
-        if (order == null) {
-            return false; // Không tìm thấy đơn hàng
-        }
-
-        // 2. Kiểm tra số tiền (VNPAY gửi về số tiền đã nhân 100)
-        // Nếu số tiền không khớp với đơn hàng trong DB -> Cảnh báo gian lận
-        long orderAmount = (long) order.getTotalAmount() * 100;
-        if (orderAmount != vnpAmount) {
-            System.out.println("Cảnh báo: Số tiền không khớp!");
-            return false;
-        }
-
-//        // 3. Cập nhật trạng thái dựa vào ResponseCode
-//        if ("00".equals(responseCode)) {
-//            order.setPaymentMethod("VNPAY");
-//        } else {
-//            order.setStatus("PAYMENT_FAILED");
-//        }
-
-        orderRepository.save(order);
-        return true;
+    public Order getOrderById(Long orderId) {
+        return this.orderRepository.findById(orderId).orElseThrow(
+                () -> new BusinessException(ErrorCode.DATA_NOT_FOUND)
+        );
     }
 }

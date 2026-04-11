@@ -2,6 +2,7 @@ package com.store.BE.utils.specification;
 
 import com.store.BE.domain.order.Order;
 import com.store.BE.domain.order.OrderStatus;
+import com.store.BE.domain.order.PaymentStatus;
 import com.store.BE.domain.search.OrderSearchRequest;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,6 +37,12 @@ public class OrderSpecification {
                         )
                 );
             }
+
+            predicates.add(
+                    cb.notEqual(
+                            root.get("paymentStatus"), PaymentStatus.FAILED
+                    )
+            );
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

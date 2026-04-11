@@ -78,32 +78,32 @@ const DashboardCharts = ({
     // --- 1. Xử lý click Biểu đồ NĂM (Tiến vào Tháng) ---
     const handleYearClick = async (monthName) => {
         if (!monthName) return;
-        const monthNumber = parseInt(monthName.replace(/\D/g, ''));
+        // const monthNumber = parseInt(monthName.replace(/\D/g, ''));
 
-        setActiveMonth(monthName);
-        setActiveMonthNumber(monthNumber);
-        setActiveWeek(null);
-        setActiveWeekRange(null);
-        setIsLoading(true);
+        // setActiveMonth(monthName);
+        // setActiveMonthNumber(monthNumber);
+        // setActiveWeek(null);
+        // setActiveWeekRange(null);
+        // setIsLoading(true);
 
-        try {
-            const res = await getMonthRevenueAPI(selectedYear, monthNumber);
-            if (res?.status === 200 && res.data?.totalRevenueWeek) {
-                const mappedMonthData = res.data.totalRevenueWeek.map(item => ({
-                    name: `Tuần ${item.week}`,
-                    revenue: item.totalRevenue,
-                    rawWeek: item.week,
-                    startDate: item.startDate,
-                    endDate: item.endDate
-                }));
-                setMonthData(mappedMonthData);
-            } else {
-                setMonthData([]);
-            }
-        } catch (error) {
-            console.error("Lỗi khi lấy dữ liệu tháng:", error);
-        }
-        setIsLoading(false);
+        // try {
+        //     const res = await getMonthRevenueAPI(selectedYear, monthNumber);
+        //     if (res?.status === 200 && res.data?.totalRevenueWeek) {
+        //         const mappedMonthData = res.data.totalRevenueWeek.map(item => ({
+        //             name: `Tuần ${item.week}`,
+        //             revenue: item.totalRevenue,
+        //             rawWeek: item.week,
+        //             startDate: item.startDate,
+        //             endDate: item.endDate
+        //         }));
+        //         setMonthData(mappedMonthData);
+        //     } else {
+        //         setMonthData([]);
+        //     }
+        // } catch (error) {
+        //     console.error("Lỗi khi lấy dữ liệu tháng:", error);
+        // }
+        // setIsLoading(false);
     };
 
     // --- 2. Xử lý click Biểu đồ THÁNG (Tiến vào Tuần) ---
@@ -118,16 +118,16 @@ const DashboardCharts = ({
             if (res?.status === 200 && res.data?.totalRevenueDay) {
                 const mappedWeekData = res.data.totalRevenueDay.map(item => {
                     const dateString = `${selectedYear}-${String(activeMonthNumber).padStart(2, '0')}-${String(item.day).padStart(2, '0')}`;
-                    const dayIndex = dayjs(dateString).day(); 
+                    const dayIndex = dayjs(dateString).day();
 
                     const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
                     const dayName = daysOfWeek[dayIndex];
 
                     return {
                         name: `Ngày ${item.day}`,
-                        dayOfWeek: dayName, 
+                        dayOfWeek: dayName,
                         revenue: item.totalRevenue,
-                        fullName: `Ngày ${item.day} (${dayName})` 
+                        fullName: `Ngày ${item.day} (${dayName})`
                     };
                 });
                 setWeekData(mappedWeekData);
@@ -145,13 +145,13 @@ const DashboardCharts = ({
         setActiveMonthNumber(null);
         setActiveWeek(null);
         setActiveWeekRange(null);
-        setYearCursor('not-allowed'); 
+        setYearCursor('not-allowed');
     };
 
     const handleBackToMonth = () => {
         setActiveWeek(null);
         setActiveWeekRange(null);
-        setMonthCursor('not-allowed'); 
+        setMonthCursor('not-allowed');
     };
 
     const renderCustomDot = (props) => {
@@ -229,10 +229,10 @@ const DashboardCharts = ({
                     >
                         <div style={{ width: '100%', height: 300 }}>
                             <ResponsiveContainer>
-                                <LineChart 
-                                    data={revenueData} 
+                                <LineChart
+                                    data={revenueData}
                                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                                    style={{ cursor: yearCursor }} 
+                                    style={{ cursor: yearCursor }}
                                     onMouseMove={(state) => {
                                         if (state?.isTooltipActive) {
                                             setYearCursor('pointer');
@@ -251,14 +251,14 @@ const DashboardCharts = ({
                                     <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(v) => `${v / 1e6}Tr`} />
                                     <RechartsTooltip formatter={(v) => formatCurrency(v)} contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} cursor={{ stroke: '#f1f5f9', strokeWidth: 2 }} />
-                                    <Line 
-                                        type="monotone" 
-                                        dataKey="revenue" 
-                                        name="Doanh thu" 
-                                        stroke="#3b82f6" 
-                                        strokeWidth={4} 
-                                        dot={renderCustomDot} 
-                                        activeDot={{ r: 8, strokeWidth: 0 }} 
+                                    <Line
+                                        type="monotone"
+                                        dataKey="revenue"
+                                        name="Doanh thu"
+                                        stroke="#3b82f6"
+                                        strokeWidth={4}
+                                        dot={renderCustomDot}
+                                        activeDot={{ r: 8, strokeWidth: 0 }}
                                     />
                                 </LineChart>
                             </ResponsiveContainer>
@@ -267,7 +267,7 @@ const DashboardCharts = ({
                 )}
 
                 {/* --- CẤP 2: BIỂU ĐỒ THEO THÁNG --- */}
-                {activeMonth && !activeWeek && (
+                {/* {activeMonth && !activeWeek && (
                     <Card
                         title={
                             <Space>
@@ -330,10 +330,10 @@ const DashboardCharts = ({
                             </ResponsiveContainer>
                         </div>
                     </Card>
-                )}
+                )} */}
 
                 {/* --- CẤP 3: BIỂU ĐỒ THEO TUẦN --- */}
-                {activeWeek && (
+                {/* {activeWeek && (
                     <Card
                         title={
                             <Space>
@@ -367,7 +367,7 @@ const DashboardCharts = ({
                             </ResponsiveContainer>
                         </div>
                     </Card>
-                )}
+                )} */}
 
             </Spin>
         </div>

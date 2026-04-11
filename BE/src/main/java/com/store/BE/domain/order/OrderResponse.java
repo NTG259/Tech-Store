@@ -25,7 +25,7 @@ public class OrderResponse {
     private String paymentMethod;
     private String status;
     private Long totalAmount;
-
+    private String paymentStatus;
     private Instant createdAt;
 
     // Danh sách sản phẩm trong đơn

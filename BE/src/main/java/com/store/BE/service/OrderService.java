@@ -1,8 +1,6 @@
 package com.store.BE.service;
 
-import com.store.BE.domain.order.CheckoutRequest;
-import com.store.BE.domain.order.OrderResponse;
-import com.store.BE.domain.order.OrderStatus;
+import com.store.BE.domain.order.*;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.OrderSearchRequest;
@@ -17,5 +15,6 @@ public interface OrderService {
     public ApiResponse<OrderResponse> updateOrder(Long orderId, OrderStatus status);
     public Long totalRevenue();
     public Long totalSuccessOrder();
-    boolean updatePaymentStatus(String orderId, long vnpAmount, String responseCode);
+    public ApiResponse<OrderResponse> updatePayment(Long orderId, PaymentStatus paymentStatus);
+    public Order getOrderById(Long userId);
 }

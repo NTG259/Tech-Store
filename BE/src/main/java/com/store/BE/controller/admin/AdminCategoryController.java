@@ -2,6 +2,7 @@ package com.store.BE.controller.admin;
 
 
 import com.store.BE.domain.product.Category;
+import com.store.BE.domain.product.CategoryResponse;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.CategorySearchRequest;
@@ -10,6 +11,7 @@ import com.store.BE.service.CategoryService;
 import com.store.BE.utils.convert.SlugUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -32,22 +34,17 @@ public class AdminCategoryController {
         );
     }
 
-    @GetMapping(params = {
-            "page",
-            "size",
-            "name"
-    })
-    public ResponseEntity<PaginationResponse<Category>> getAllCategories(
-            @RequestParam("page") Integer page,
-            @RequestParam("size") Integer size,
-            @RequestParam("name") String name
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllCategories(
+            @RequestParam(required = false) String name,
+            @RequestParam() int page,
+            @RequestParam() int size,
+            @RequestParam() String sortBy,
+            @RequestParam() String direction
     ) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-        CategorySearchRequest request = new CategorySearchRequest();
-        request.setName(name);
-
         return ResponseEntity.ok().body(
-                this.categoryService.getAllCategories(request, pageable));
+                this.categoryService.getAllCategoriesByAdmin(name, page - 1, size, sortBy, direction)
+        );
     }
 
     @GetMapping("/{id}")

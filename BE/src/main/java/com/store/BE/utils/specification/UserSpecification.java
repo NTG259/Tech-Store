@@ -23,7 +23,7 @@ public class UserSpecification {
                 predicates.add(
                         cb.like(
                                 cb.lower(root.get("fullName")),
-                                req.getFullName().toLowerCase() + "%"
+                                "%" + req.getFullName().toLowerCase() + "%"
                         )
                 );
             }

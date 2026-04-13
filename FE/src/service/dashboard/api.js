@@ -38,10 +38,20 @@ const getTop10Products = () => {
     return axios.get(URL_BACKEND);
 }
 
+const getCategoriesStatAPI = async () => {
+    const token = localStorage.getItem('access_token'); // Thay bằng cách bạn lấy token
+    return await axios.get('http://localhost:8082/api/admin/dashboard/categories-stat', {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+};
+
 export {
     getSummaryAPI,
     getTop10Products,
     getYearRevenueAPI,
     getDayRevenueAPI,
     getMonthRevenueAPI,
+    getCategoriesStatAPI
 }

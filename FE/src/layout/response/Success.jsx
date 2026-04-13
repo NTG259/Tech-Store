@@ -59,7 +59,6 @@ const Success = () => {
 
         const token = localStorage.getItem("access_token");
         // 2. Gửi request lên BE để xác thực
-        // Thay "http://localhost:8080/payment/vnpay/verify" bằng domain BE của bạn
         const response = await fetch("http://localhost:8082/api/payment/vnpay/verify", {
           method: "POST",
           headers: {

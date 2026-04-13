@@ -2,12 +2,10 @@ package com.store.BE.controller.admin;
 
 import com.store.BE.domain.dto.HotProductProjection;
 import com.store.BE.domain.order.OrderItem;
+import com.store.BE.domain.product.CategoryResponse;
 import com.store.BE.domain.product.Product;
 import com.store.BE.domain.response.*;
-import com.store.BE.service.DashboardService;
-import com.store.BE.service.OrderService;
-import com.store.BE.service.ProductService;
-import com.store.BE.service.UserService;
+import com.store.BE.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminDashboardController {
     private final DashboardService dashboardService;
-
+    private final CategoryService categoryService;
     @GetMapping("/dashboard/summary")
     public ResponseEntity<ApiResponse<DashboardResponse>> getSummary() {
         DashboardResponse dashboardResponse = dashboardService.getSummary();
@@ -81,6 +79,12 @@ public class AdminDashboardController {
     @GetMapping("/dashboard/hot-products")
     public ResponseEntity<ApiResponse<List<HotProductProjection>>> getTop10HotProduct() {
         ApiResponse<List<HotProductProjection>> rs = dashboardService.getTop10HotProduct();
+        return ResponseEntity.ok().body(rs);
+    }
+
+    @GetMapping("/dashboard/categories-stat")
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getCategoriesStat() {
+        ApiResponse<List<CategoryResponse>> rs = this.categoryService.getAllCategoriesByAdminStat();
         return ResponseEntity.ok().body(rs);
     }
 }

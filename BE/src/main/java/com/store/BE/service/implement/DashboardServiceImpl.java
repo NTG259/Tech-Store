@@ -38,7 +38,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     public ApiResponse<List<HotProductProjection>> getTop10HotProduct() {
         return new ApiResponse<>(
-                productRepository.findTop10TopSoldProduct(),
+                productRepository.findTop5TopSoldProduct(),
                 "Lấy top 10 sản phẩm bán đắt hàng thành công",
                 null,
                 HttpStatus.OK.value()

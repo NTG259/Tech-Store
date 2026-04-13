@@ -1,6 +1,7 @@
 package com.store.BE.service.implement;
 
 import com.store.BE.domain.product.Category;
+import com.store.BE.domain.product.CategoryResponse;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.CategorySearchRequest;
@@ -13,6 +14,7 @@ import com.store.BE.utils.exception.ErrorCode;
 import com.store.BE.utils.specification.CategorySpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -107,6 +109,37 @@ public class CategoryServiceImpl implements CategoryService {
         return new ApiResponse<>(
                 null,
                 "Xóa danh mục thành công",
+                null,
+                HttpStatus.OK.value()
+        );
+    }
+
+    @Override
+    public ApiResponse<List<CategoryResponse>> getAllCategoriesByAdmin(
+            String name,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<CategoryResponse> result = categoryRepository
+                .getCategories(name, sortBy, direction, pageable);
+
+        return new ApiResponse<>(
+                result.getContent(),
+                "Lấy danh mục thành công",
+                null,
+                HttpStatus.OK.value()
+        );
+    }
+
+    @Override
+    public ApiResponse<List<CategoryResponse>> getAllCategoriesByAdminStat() {
+        return new ApiResponse<>(
+                this.categoryRepository.getCategoryStatistics(),
+                "Lấy danh mục (kèm thống kê) thành công",
                 null,
                 HttpStatus.OK.value()
         );

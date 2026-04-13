@@ -352,7 +352,7 @@ export default function CheckOut() {
                         
                         {!isProfileUsed && (
                             <div className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded border border-gray-200">
-                                <span className="text-sm text-gray-600">Bạn muốn sử dụng thông tin đã lưu?</span>
+                                <span className="text-sm text-gray-600">Bạn muốn sử dụng thông tin tài khoản?</span>
                                 <button 
                                     onClick={handleFillProfile}
                                     disabled={isFetchingProfile}

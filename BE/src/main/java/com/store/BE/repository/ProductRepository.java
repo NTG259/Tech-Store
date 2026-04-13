@@ -28,7 +28,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         """, nativeQuery = true)
     void updateCategory(@Param("id") Long id, @Param("uncategorizedId") Long uncategorizedId);
 
-    List<Product> findTop8ByProductStatusOrderByCreatedAtDesc(ProductStatus status);
+    List<Product> findTopByProductStatusOrderByCreatedAtDesc(ProductStatus status);
 
     @Query(value = """
 
@@ -45,7 +45,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                 ORDER BY totalRevenue DESC
                 LIMIT 5
         """, nativeQuery = true)
-    List<HotProductProjection> findTop10TopSoldProduct();
+    List<HotProductProjection> findTop5TopSoldProduct();
 
     @Query(value = """
             SELECT

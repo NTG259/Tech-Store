@@ -1,9 +1,11 @@
 package com.store.BE.service;
 
 import com.store.BE.domain.product.Category;
+import com.store.BE.domain.product.CategoryResponse;
 import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.CategorySearchRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -17,4 +19,12 @@ public interface CategoryService {
     public ApiResponse<Category> getCategoryById(Long id);
     public ApiResponse<Category> updateCategory(Long id, Category categoryUpdate);
     public ApiResponse<Category> deleteCategory(Long id);
+    public ApiResponse<List<CategoryResponse>> getAllCategoriesByAdmin(
+            String name,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    );
+    public ApiResponse<List<CategoryResponse>> getAllCategoriesByAdminStat();
 }

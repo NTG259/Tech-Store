@@ -86,7 +86,7 @@ public class ProductServiceImpl implements ProductService {
 
     public ApiResponse<List<Product>> getLatestProducts(ProductStatus productStatus) {
         return new ApiResponse<>(
-                productRepository.findTop8ByProductStatusOrderByCreatedAtDesc(productStatus),
+                productRepository.findTopByProductStatusOrderByCreatedAtDesc(productStatus),
                 "Lấy 8 sản phẩm mới nhất",
                 null,
                 HttpStatus.OK.value()

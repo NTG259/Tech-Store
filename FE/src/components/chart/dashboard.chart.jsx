@@ -12,7 +12,7 @@ import {
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell
 } from 'recharts';
 
-// --- IMPORT CÁC API CỦA BẠN VÀO ĐÂY ---
+
 import { getMonthRevenueAPI, getDayRevenueAPI } from '../../service/dashboard/api';
 
 const { Text } = Typography;
@@ -71,42 +71,39 @@ const DashboardCharts = ({
     const [weekData, setWeekData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // State quản lý con trỏ chuột cho từng biểu đồ
     const [yearCursor, setYearCursor] = useState('not-allowed');
     const [monthCursor, setMonthCursor] = useState('not-allowed');
 
-    // --- 1. Xử lý click Biểu đồ NĂM (Tiến vào Tháng) ---
     const handleYearClick = async (monthName) => {
         if (!monthName) return;
-        // const monthNumber = parseInt(monthName.replace(/\D/g, ''));
+        const monthNumber = parseInt(monthName.replace(/\D/g, ''));
 
-        // setActiveMonth(monthName);
-        // setActiveMonthNumber(monthNumber);
-        // setActiveWeek(null);
-        // setActiveWeekRange(null);
-        // setIsLoading(true);
+        setActiveMonth(monthName);
+        setActiveMonthNumber(monthNumber);
+        setActiveWeek(null);
+        setActiveWeekRange(null);
+        setIsLoading(true);
 
-        // try {
-        //     const res = await getMonthRevenueAPI(selectedYear, monthNumber);
-        //     if (res?.status === 200 && res.data?.totalRevenueWeek) {
-        //         const mappedMonthData = res.data.totalRevenueWeek.map(item => ({
-        //             name: `Tuần ${item.week}`,
-        //             revenue: item.totalRevenue,
-        //             rawWeek: item.week,
-        //             startDate: item.startDate,
-        //             endDate: item.endDate
-        //         }));
-        //         setMonthData(mappedMonthData);
-        //     } else {
-        //         setMonthData([]);
-        //     }
-        // } catch (error) {
-        //     console.error("Lỗi khi lấy dữ liệu tháng:", error);
-        // }
-        // setIsLoading(false);
+        try {
+            const res = await getMonthRevenueAPI(selectedYear, monthNumber);
+            if (res?.status === 200 && res.data?.totalRevenueWeek) {
+                const mappedMonthData = res.data.totalRevenueWeek.map(item => ({
+                    name: `Tuần ${item.week}`,
+                    revenue: item.totalRevenue,
+                    rawWeek: item.week,
+                    startDate: item.startDate,
+                    endDate: item.endDate
+                }));
+                setMonthData(mappedMonthData);
+            } else {
+                setMonthData([]);
+            }
+        } catch (error) {
+            console.error("Lỗi khi lấy dữ liệu tháng:", error);
+        }
+        setIsLoading(false);
     };
 
-    // --- 2. Xử lý click Biểu đồ THÁNG (Tiến vào Tuần) ---
     const handleMonthClick = async (weekName, rawWeekNumber, startDate, endDate) => {
         if (!weekName || !rawWeekNumber) return;
         setActiveWeek(weekName);
@@ -169,7 +166,6 @@ const DashboardCharts = ({
         );
     };
 
-    // --- TOOLTIP CUSTOM CHO THÁNG ---
     const CustomMonthTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
@@ -192,7 +188,6 @@ const DashboardCharts = ({
         return null;
     };
 
-    // --- TOOLTIP CUSTOM CHO TUẦN ---
     const CustomWeekTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
@@ -267,7 +262,7 @@ const DashboardCharts = ({
                 )}
 
                 {/* --- CẤP 2: BIỂU ĐỒ THEO THÁNG --- */}
-                {/* {activeMonth && !activeWeek && (
+                {activeMonth && !activeWeek && (
                     <Card
                         title={
                             <Space>
@@ -330,10 +325,10 @@ const DashboardCharts = ({
                             </ResponsiveContainer>
                         </div>
                     </Card>
-                )} */}
+                )}
 
                 {/* --- CẤP 3: BIỂU ĐỒ THEO TUẦN --- */}
-                {/* {activeWeek && (
+                {activeWeek && (
                     <Card
                         title={
                             <Space>
@@ -367,7 +362,7 @@ const DashboardCharts = ({
                             </ResponsiveContainer>
                         </div>
                     </Card>
-                )} */}
+                )}
 
             </Spin>
         </div>

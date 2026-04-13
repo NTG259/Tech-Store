@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, Typography, Spin, Space, Table, Tag, Avatar } from 'antd';
-import { UserOutlined, ProductOutlined, ShoppingOutlined, TrophyOutlined, CrownOutlined } from '@ant-design/icons';
+import { UserOutlined, ProductOutlined, ShoppingOutlined, TrophyOutlined, CrownOutlined, PieChartOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
+// --- IMPORT RECHARTS CHO BIỂU ĐỒ TRÒN ---
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+
 // --- IMPORT CÁC API CỦA BẠN VÀO ĐÂY ---
-// Đã thêm getYearRevenueAPI vào danh sách import
 import { getSummaryAPI, getYearRevenueAPI, getTop10Products } from '../../service/dashboard/api';
 import { fetchTop5UserVip } from '../../service/user/api';
+// IMPORT THÊM API MỚI TẠO Ở BƯỚC 1
+import { getCategoriesStatAPI } from '../../service/dashboard/api'; 
 
-// --- IMPORT COMPONENT CHART VỪA TẠO Ở TRÊN ---
+// --- IMPORT COMPONENT CHART CỦA BẠN ---
 import DashboardCharts from '../../components/chart/dashboard.chart';
 
 const { Text, Title } = Typography;
+
+// Đã mở rộng mảng màu để biểu đồ không bị trùng màu khi có nhiều danh mục
+const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f43f5e', '#0ea5e9'];
 
 // Thẻ hiển thị thống kê tổng quan (User, Order, Product...)
 const StatCard = ({ title, value, icon, iconBg, iconColor }) => (
@@ -30,6 +37,7 @@ const Dashboard = () => {
     const [revenueData, setRevenueData] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
     const [topUsers, setTopUsers] = useState([]);
+    const [categoryData, setCategoryData] = useState([]); // State mới cho biểu đồ tròn
     const [isLoading, setIsLoading] = useState(true);
     const [selectedYear, setSelectedYear] = useState(dayjs().year());
 
@@ -40,7 +48,7 @@ const Dashboard = () => {
     const fetchSummaryData = async (year) => {
         setIsLoading(true);
         try {
-            // 1. Fetch Tổng quan (Không cần truyền year vì API không nhận params này)
+            // 1. Fetch Tổng quan
             const resSum = await getSummaryAPI();
             if (resSum?.status === 200 && resSum.data) {
                 setSummaryStats({
@@ -50,13 +58,13 @@ const Dashboard = () => {
                 });
             }
 
-            // 1.5. Fetch Doanh thu theo năm từ API riêng
+            // 1.5. Fetch Doanh thu theo năm
             const resRev = await getYearRevenueAPI(year);
             if (resRev?.status === 200 && resRev.data?.totalRevenueMonth) {
                 const sortedRevenue = [...resRev.data.totalRevenueMonth].sort((a, b) => a.month - b.month);
                 setRevenueData(sortedRevenue.map(item => ({
                     month: `T${item.month}`,
-                    revenue: item.totalRevenue // Lấy đúng trường totalRevenue từ response
+                    revenue: item.totalRevenue
                 })));
             }
 
@@ -84,6 +92,24 @@ const Dashboard = () => {
                     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id || i}`
                 })));
             }
+
+            // 4. Fetch Thống kê Danh mục cho Biểu đồ tròn
+            const resCat = await getCategoriesStatAPI();
+
+            const catRawData = resCat?.data?.data || resCat?.data; 
+            
+            if (catRawData && Array.isArray(catRawData)) {
+                const filteredData = catRawData.filter(item => item.name !== "Chưa xác định" && item.totalSold > 0);
+                
+                // Map lại dữ liệu cho Recharts: lấy tên danh mục và tổng đã bán (totalSold)
+                const mappedCategoryData = filteredData.map(item => ({
+                    name: item.name.trim(),
+                    value: item.totalSold
+                }));
+                
+                setCategoryData(mappedCategoryData);
+            }
+
         } catch (e) {
             console.error("Dashboard Error:", e);
         }
@@ -149,7 +175,7 @@ const Dashboard = () => {
                     <Col xs={24} sm={8}><StatCard title="Đơn Hàng Thành Công" value={summaryStats.orderCount} icon={<ShoppingOutlined />} iconBg="#fff7ed" iconColor="#f59e0b" /></Col>
                 </Row>
 
-                {/* KHỐI 2: KHU VỰC BIỂU ĐỒ (Render Component con) */}
+                {/* KHỐI 2: KHU VỰC BIỂU ĐỒ DOANH THU */}
                 <DashboardCharts 
                     revenueData={revenueData}
                     selectedYear={selectedYear}
@@ -158,9 +184,48 @@ const Dashboard = () => {
                     formatCurrency={formatCurrency}
                 />
 
-                {/* KHỐI 3: HAI BẢNG DANH SÁCH (SẢN PHẨM & NGƯỜI DÙNG) */}
+                {/* KHỐI 3: BIỂU ĐỒ TRÒN VÀ BẢNG SẢN PHẨM */}
                 <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
-                    <Col xs={24} lg={12} style={{ display: 'flex' }}>
+                    {/* BIỂU ĐỒ TRÒN (PIE CHART) THỐNG KÊ THEO SỐ LƯỢNG ĐÃ BÁN */}
+                    <Col xs={24} lg={10} style={{ display: 'flex' }}>
+                        <Card
+                            title={<Space><PieChartOutlined style={{ color: '#8b5cf6', fontSize: '18px' }} /><Text strong>Số Lượng Bán Theo Danh Mục</Text></Space>}
+                            style={{ borderRadius: '16px', width: '100%', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                        >
+                            <div style={{ width: '100%', height: 300 }}>
+                                {categoryData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={categoryData} // Dùng dữ liệu thật từ API
+
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={100}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                                label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                            >
+                                                {categoryData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <RechartsTooltip formatter={(value) => [`${value} sản phẩm`, 'Đã bán']} />
+                                            <Legend verticalAlign="bottom" height={36} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
+                                        Chưa có dữ liệu
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </Col>
+
+                    {/* TOP SẢN PHẨM */}
+                    <Col xs={24} lg={14} style={{ display: 'flex' }}>
                         <Card
                             title={<Space><TrophyOutlined style={{ color: '#f59e0b', fontSize: '18px' }} /><Text strong>Top Sản Phẩm Bán Chạy</Text></Space>}
                             style={{ borderRadius: '16px', width: '100%', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
@@ -169,7 +234,11 @@ const Dashboard = () => {
                             <Table columns={productColumns} dataSource={topProducts} pagination={false} rowKey="id" size="middle" className="custom-table" />
                         </Card>
                     </Col>
-                    <Col xs={24} lg={12} style={{ display: 'flex' }}>
+                </Row>
+
+                {/* KHỐI 4: TOP KHÁCH HÀNG */}
+                <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
+                    <Col xs={24} style={{ display: 'flex' }}>
                         <Card
                             title={<Space><CrownOutlined style={{ color: '#f59e0b', fontSize: '20px' }} /><Text strong>Top Khách Hàng Thân Thiết</Text></Space>}
                             style={{ borderRadius: '16px', width: '100%', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
@@ -179,6 +248,7 @@ const Dashboard = () => {
                         </Card>
                     </Col>
                 </Row>
+
             </Spin>
 
             {/* CSS Tùy chỉnh cho bảng */}

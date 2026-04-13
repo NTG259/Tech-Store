@@ -7,6 +7,7 @@ import com.store.BE.domain.response.ApiResponse;
 import com.store.BE.domain.response.PaginationResponse;
 import com.store.BE.domain.search.OrderSearchRequest;
 import com.store.BE.domain.user.User;
+import com.store.BE.repository.OrderItemRepository;
 import com.store.BE.repository.OrderRepository;
 import com.store.BE.repository.ProductRepository;
 import com.store.BE.repository.UserRepository;
@@ -19,6 +20,7 @@ import com.store.BE.utils.security.SecurityUtils;
 import com.store.BE.utils.specification.OrderSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-
+    private final OrderItemRepository orderItemRepository;
     public PaginationResponse<OrderResponse> getAllOrdersByClient(OrderSearchRequest request, Pageable pageable) {
         User user = this.userRepository.findByEmail(SecurityUtils.getCurrentUserLogin()
                         .orElseThrow(() -> new BusinessException(ErrorCode.BAD_CREDENTIALS)))
@@ -140,6 +142,15 @@ public class OrderServiceImpl implements OrderService {
         if (updateOrder.getStatus() == OrderStatus.CONFIRMED) {
             updateOrder.setPaymentStatus(PaymentStatus.PAID);
         }
+        if (updateOrder.getStatus() == OrderStatus.CANCELLED) {
+            List<OrderItem> orderItemList = this.orderItemRepository.findByOrderId(orderId);
+            for (OrderItem orderItem : orderItemList) {
+                Product product = this.productRepository.findById(orderItem.getProduct().getId()).get();
+                product.setStockQuantity(product.getStockQuantity() + orderItem.getQuantity());
+                this.productRepository.save(product);
+            }
+        }
+
         updateOrder = this.orderRepository.save(updateOrder);
         return new ApiResponse<>(
                 OrderConvert.convertToOrderResponse(updateOrder),
@@ -154,6 +165,14 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
         updateOrder.setPaymentStatus(paymentStatus);
         updateOrder = this.orderRepository.save(updateOrder);
+        if (updateOrder.getPaymentStatus() == PaymentStatus.FAILED) {
+            List<OrderItem> orderItemList = this.orderItemRepository.findByOrderId(orderId);
+            for (OrderItem orderItem : orderItemList) {
+                Product product = this.productRepository.findById(orderItem.getProduct().getId()).get();
+                product.setStockQuantity(product.getStockQuantity() + orderItem.getQuantity());
+                this.productRepository.save(product);
+            }
+        }
         return new ApiResponse<>(
                 OrderConvert.convertToOrderResponse(updateOrder),
                 "Cập nhật trạng thái thanh toán đơn hàng thành công",

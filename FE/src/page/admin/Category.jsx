@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Space, message, Button, Card, Typography, Popconfirm, Tooltip, Input, Row, Col } from 'antd';
+import { Table, Space, message, Button, Card, Typography, Popconfirm, Tooltip, Input, Row, Col, Tag } from 'antd';
 import {
     DeleteOutlined,
     EditOutlined,
     PlusOutlined,
-    ReloadOutlined
+    ReloadOutlined,
+    ArrowUpOutlined,
+    ArrowDownOutlined
 } from '@ant-design/icons';
 
 import { fetchAllCategoriesByAdminAPI, deleteCategoryAPI } from '../../service/category/api';
 import CategoryForm from '../../components/category/category.form';
 import CategoryEdit from '../../components/category/category.edit';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Search } = Input;
 
 const Category = () => {
@@ -25,20 +27,20 @@ const Category = () => {
     const [current, setCurrent] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
-
     const [searchText, setSearchText] = useState('');
     const [inputValue, setInputValue] = useState('');
+
+    // Mặc định luôn là ID tăng dần (asc)
+    const [sortBy, setSortBy] = useState('id');
+    const [direction, setDirection] = useState('asc');
 
     const loadCategories = async () => {
         setLoading(true);
         try {
-            const res = await fetchAllCategoriesByAdminAPI(current, pageSize, searchText);
+            const res = await fetchAllCategoriesByAdminAPI(current, pageSize, searchText, sortBy, direction);
 
             if (res && res.data) {
                 const categories = res.data;
-                const metaData = res.meta;
-
-                // LỌC DANH MỤC Ở ĐÂY: Bỏ qua các item có tên "Chưa xác định"
                 const formattedData = categories
                     .filter(item => item.name !== "Chưa xác định") 
                     .map(item => ({
@@ -47,10 +49,12 @@ const Category = () => {
                     }));
 
                 setData(formattedData);
+
+                const metaData = res.meta;
                 if (metaData && metaData.totalItems !== undefined) {
-                    // Nếu "Chưa xác định" luôn tồn tại trong DB, bạn có thể cân nhắc 
-                    // setTotal(metaData.totalItems - 1) để con số tổng hiển thị chính xác hơn
                     setTotal(metaData.totalItems);
+                } else {
+                    setTotal(formattedData.length);
                 }
             }
         } catch (error) {
@@ -60,31 +64,42 @@ const Category = () => {
         }
     };
 
+
     const onSearch = (value) => {
         setSearchText(value);
         setCurrent(1); 
     };
 
-    const handleDelete = async (id) => {
-        try {
-            const res = await deleteCategoryAPI(id);
-            if (res) {
-                message.success(`Đã xóa danh mục thành công!`);
-                await loadCategories(); 
-            }
-        } catch (error) {
-            message.error("Có lỗi xảy ra khi xóa");
-        }
-    };
-
     useEffect(() => {
         loadCategories();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [current, pageSize, searchText]);
+    }, [current, pageSize, searchText, sortBy, direction]);
 
-    const handleTableChange = (pagination) => {
+    const handleTableChange = (pagination, filters, sorter) => {
         setCurrent(pagination.current);
         setPageSize(pagination.pageSize);
+
+        // Nếu có cột được sort (không phải hủy sort)
+        if (sorter && sorter.order) {
+            setSortBy(sorter.field);
+            setDirection(sorter.order === 'ascend' ? 'asc' : 'desc');
+        } else {
+            // Khi người dùng hủy sort -> Trở về mặc định ID tăng dần
+            setSortBy('id');
+            setDirection('asc');
+        }
+    };
+
+    const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+
+    const customSortIcon = ({ sortOrder }) => {
+        if (sortOrder === 'ascend') {
+            return <ArrowUpOutlined style={{ color: '#1890ff', fontSize: '12px' }} />;
+        }
+        if (sortOrder === 'descend') {
+            return <ArrowDownOutlined style={{ color: '#1890ff', fontSize: '12px' }} />;
+        }
+        return <ArrowUpOutlined style={{ color: '#d9d9d9', fontSize: '12px' }} />;
     };
 
     const columns = [
@@ -94,6 +109,7 @@ const Category = () => {
             key: 'id',
             width: 80,
             align: 'center',
+            // Cột ID không cho sort thủ công để làm mỏ neo mặc định
         },
         {
             title: 'Tên danh mục',
@@ -102,10 +118,34 @@ const Category = () => {
             render: (text) => <span style={{ fontWeight: 500, color: '#1890ff' }}>{text}</span>
         },
         {
-            title: 'Mô tả',
-            dataIndex: 'description',
-            key: 'description',
-            ellipsis: true, 
+            title: 'Sản phẩm',
+            dataIndex: 'totalProducts',
+            key: 'totalProducts',
+            align: 'center',
+            sorter: true,
+            sortIcon: customSortIcon,
+            sortOrder: sortBy === 'totalProducts' ? (direction === 'asc' ? 'ascend' : 'descend') : null,
+            render: (val) => <Tag color="blue">{val}</Tag>
+        },
+        {
+            title: 'Đã bán',
+            dataIndex: 'totalSold',
+            key: 'totalSold',
+            align: 'center',
+            sorter: true,
+            sortIcon: customSortIcon,
+            sortOrder: sortBy === 'totalSold' ? (direction === 'asc' ? 'ascend' : 'descend') : null,
+            render: (val) => <Tag color="green">{val}</Tag>
+        },
+        {
+            title: 'Doanh thu',
+            dataIndex: 'totalRevenue',
+            key: 'totalRevenue',
+            align: 'right',
+            sorter: true,
+            sortIcon: customSortIcon,
+            sortOrder: sortBy === 'totalRevenue' ? (direction === 'asc' ? 'ascend' : 'descend') : null,
+            render: (val) => <Text strong style={{ color: '#cf1322' }}>{formatCurrency(val)}</Text>
         },
         {
             title: 'Thao tác',
@@ -164,6 +204,8 @@ const Category = () => {
                                     setCurrent(1);
                                     setSearchText('');
                                     setInputValue('');
+                                    setSortBy('id');
+                                    setDirection('asc');
                                 }}
                                 loading={loading}
                             >
@@ -214,6 +256,7 @@ const Category = () => {
                     }}
                     rowClassName="editable-row"
                     bordered
+                    showSorterTooltip={false}
                 />
             </Card>
 

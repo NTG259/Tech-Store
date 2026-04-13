@@ -1,16 +1,18 @@
 import axios from "../../utils/axios.custom"
 
 
-const fetchAllCategoriesByAdminAPI = (page, size, searchText) => {
+const fetchAllCategoriesByAdminAPI = (page, size, searchText, sortBy, direction) => {
     const URL_BACKEND = `/api/admin/categories`;
     return axios.get(URL_BACKEND, {
         params: {
-            page: page,
+            page: page, // (Hoặc page - 1 nếu backend của bạn bắt đầu từ 0)
             size: size,
-            name: searchText 
+            name: searchText || undefined,
+            sortBy: sortBy || undefined,
+            direction: direction || undefined
         }
     });
-}
+};
 
 
 const createCategoryAPI = (data) => {

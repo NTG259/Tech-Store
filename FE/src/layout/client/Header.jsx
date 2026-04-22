@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// ĐÃ SỬA: Gộp import Dropdown chung với message cho gọn
 import { Dropdown, message } from 'antd'; 
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutAPI } from '../../service/auth/api';
@@ -11,14 +10,12 @@ export default function Header() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     
-    // MỚI: Lấy thêm thông tin user từ Redux state để kiểm tra role
     const { isAuthenticated, user } = useSelector((state) => state.auth);
 
     const handleLogout = async () => {
         try {
             await logoutAPI();
         } catch (error) {
-            // Bỏ qua lỗi BE, vẫn xóa token phía FE
         } finally {
             clearAuthStorage();
             dispatch(logout());
@@ -33,7 +30,6 @@ export default function Header() {
         }
     };
 
-    // MỚI: Khởi tạo danh sách menu động dựa trên quyền (Role)
     const getMenuItems = () => {
         const items = [
             {
@@ -46,7 +42,6 @@ export default function Header() {
             },
         ];
 
-        // Nếu user có role là ADMIN thì thêm mục Dashboard vào mảng
         if (user?.role === 'ADMIN') {
             items.push({
                 key: 'dashboard',
@@ -54,7 +49,6 @@ export default function Header() {
             });
         }
 
-        // Đẩy Log out xuống dưới cùng
         items.push({
             key: 'logout',
             label: <span>Đăng xuất</span>,
@@ -66,7 +60,7 @@ export default function Header() {
     return (
         <header className="w-full border-b border-gray-200 bg-white relative">
             <div className="max-w-[1170px] mx-auto px-4 py-5 flex items-center justify-between">
-                {/* Logo + Nav */}
+                
                 <div className="flex items-center gap-40">
                     <span className="text-2xl font-bold text-black tracking-wider">Exclusive</span>
                     <nav className="flex items-center gap-12">
@@ -75,9 +69,9 @@ export default function Header() {
                     </nav>
                 </div>
 
-                {/* Icons */}
+                
                 <div className="flex items-center gap-4">
-                    {/* Cart Icon */}
+                    
                     <Link to="/cart" className="relative p-1 hover:opacity-70 transition-opacity">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="9" cy="21" r="1"></circle>
@@ -86,10 +80,9 @@ export default function Header() {
                         </svg>
                     </Link>
                     
-                    {/* User / Login Icon */}
+                    
                     {isAuthenticated ? (
                         <Dropdown
-                            // MỚI: Gọi hàm getMenuItems() để lấy danh sách items
                             menu={{ items: getMenuItems(), onClick: handleMenuClick }}
                             trigger={['click']}
                             placement="bottomRight"

@@ -17,7 +17,7 @@ import { getMonthRevenueAPI, getDayRevenueAPI } from '../../service/dashboard/ap
 
 const { Text } = Typography;
 
-// --- COMPONENT CUSTOM TRỤC X CHO THÁNG (Tên tuần & Ngày tháng) ---
+
 const CustomMonthXAxisTick = (props) => {
     const { x, y, payload, data } = props;
     const item = data.find(d => d.name === payload.value);
@@ -36,7 +36,7 @@ const CustomMonthXAxisTick = (props) => {
     );
 };
 
-// --- COMPONENT CUSTOM TRỤC X CHO TUẦN (Ngày & Thứ trong tuần) ---
+
 const CustomWeekXAxisTick = (props) => {
     const { x, y, payload, data } = props;
     const item = data.find(d => d.name === payload.value);
@@ -209,7 +209,7 @@ const DashboardCharts = ({
         <div style={{ marginTop: 20 }}>
             <Spin spinning={isLoading} tip="Đang tải dữ liệu...">
 
-                {/* --- CẤP 1: BIỂU ĐỒ THEO NĂM --- */}
+                
                 {!activeMonth && !activeWeek && (
                     <Card
                         title={<Space><LineChartOutlined style={{ color: '#3b82f6' }} /><Text strong style={{ fontSize: '16px' }}>Doanh Thu Năm {selectedYear}</Text></Space>}
@@ -261,7 +261,7 @@ const DashboardCharts = ({
                     </Card>
                 )}
 
-                {/* --- CẤP 2: BIỂU ĐỒ THEO THÁNG --- */}
+                
                 {activeMonth && !activeWeek && (
                     <Card
                         title={
@@ -281,7 +281,7 @@ const DashboardCharts = ({
                                     margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
                                     style={{ cursor: monthCursor }} 
                                     onMouseMove={(state) => {
-                                        // Chỉ cần tooltip đang active (chuột ở vùng có dữ liệu) là hiển thị pointer
+                        
                                         if (state?.isTooltipActive) {
                                             setMonthCursor('pointer');
                                         } else {
@@ -290,7 +290,7 @@ const DashboardCharts = ({
                                     }}
                                     onMouseLeave={() => setMonthCursor('not-allowed')}
                                     onClick={(state) => {
-                                        // Áp dụng giải pháp CỰC ĐỈNH của bạn: lấy theo Index cột dọc
+
                                         if (!state || !state.activeCoordinate) return;
 
                                         const index = Math.round(state.activeTooltipIndex ?? -1);
@@ -327,7 +327,7 @@ const DashboardCharts = ({
                     </Card>
                 )}
 
-                {/* --- CẤP 3: BIỂU ĐỒ THEO TUẦN --- */}
+                
                 {activeWeek && (
                     <Card
                         title={

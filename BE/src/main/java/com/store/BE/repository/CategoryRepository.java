@@ -1,7 +1,8 @@
 package com.store.BE.repository;
 
-import com.store.BE.domain.product.Category;
-import com.store.BE.domain.product.CategoryResponse;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -9,8 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
-import java.util.Optional;
+import com.store.BE.domain.product.Category;
+import com.store.BE.domain.product.CategoryResponse;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Boolean existsBySlug(String slug);

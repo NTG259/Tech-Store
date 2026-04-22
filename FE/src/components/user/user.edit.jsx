@@ -27,7 +27,6 @@ const UserFormEdit = (props) => {
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // --- State cho Tỉnh/Thành phố và Xã/Phường ---
     const [cities, setCities] = useState([]);
     const [wards, setWards] = useState([]);
     const [selectedCityId, setSelectedCityId] = useState("");
@@ -42,7 +41,6 @@ const UserFormEdit = (props) => {
         fetchRoles();
     }, []);
 
-    // 1. Load danh sách Tỉnh/Thành phố khi mở form
     useEffect(() => {
         if (isOpenEditUserForm) {
             const fetchCities = async () => {
@@ -63,7 +61,6 @@ const UserFormEdit = (props) => {
         }
     }, [isOpenEditUserForm]);
 
-    // 2. Load danh sách Xã/Phường khi Tỉnh/Thành phố thay đổi
     useEffect(() => {
         const fetchWards = async () => {
             if (!selectedCityId) {
@@ -86,10 +83,8 @@ const UserFormEdit = (props) => {
         fetchWards();
     }, [selectedCityId]);
 
-    // 3. Đổ dữ liệu cũ vào form khi mở Modal Edit
     useEffect(() => {
         if (selectedUserData && isOpenEditUserForm) {
-            // Chuyển ID thành chuỗi (String) để Select của Antd nhận đúng format
             const initialCityId = selectedUserData.cityId ? selectedUserData.cityId.toString() : undefined;
             const initialWardId = selectedUserData.wardId ? selectedUserData.wardId.toString() : undefined;
 
@@ -98,14 +93,13 @@ const UserFormEdit = (props) => {
                 fullName: selectedUserData.fullName,
                 email: selectedUserData.email,
                 role: selectedUserData.role,
-                phone: selectedUserData.phone || selectedUserData.phoneNumber, // Cover cả 2 trường hợp key
+                phone: selectedUserData.phone || selectedUserData.phoneNumber,
                 address: selectedUserData.address,
                 isEnabled: selectedUserData.isEnabled,
                 cityId: initialCityId,
                 wardId: initialWardId,
             });
 
-            // Set state selectedCityId để kích hoạt useEffect load danh sách Xã/Phường
             if (initialCityId) {
                 setSelectedCityId(initialCityId);
             }
@@ -137,10 +131,9 @@ const UserFormEdit = (props) => {
         setWards([]);
     };
 
-    // Sự kiện khi người dùng chủ động chọn đổi Tỉnh thành khác
     const handleCityChange = (value) => {
         setSelectedCityId(value);
-        form.setFieldsValue({ wardId: undefined }); // Xóa Xã/Phường cũ
+        form.setFieldsValue({ wardId: undefined });
     };
 
     const handlePreview = async (file) => {
@@ -174,9 +167,9 @@ const UserFormEdit = (props) => {
             phoneNumber: values.phone,
             address: values.address,
             isEnabled: values.isEnabled,
-            cityId: values.cityId, // ĐẨY LÊN BACKEND
-            wardId: values.wardId, // ĐẨY LÊN BACKEND
-            avatar: previewImage || imageUrl || selectedUserData?.avatar // Giữ ảnh cũ nếu ko up mới
+            cityId: values.cityId,
+            wardId: values.wardId,
+            avatar: previewImage || imageUrl || selectedUserData?.avatar
         };
 
         const userId = selectedUserData?.id || values.id;
@@ -269,7 +262,7 @@ const UserFormEdit = (props) => {
                             <Input.Password placeholder="********" disabled />
                         </Form.Item>
 
-                        {/* --- CHỌN TỈNH VÀ XÃ --- */}
+                        
                         <Row gutter={12}>
                             <Col span={12}>
                                 <Form.Item 

@@ -11,11 +11,9 @@ const DetailUserModal = (props) => {
     const defaultAvatar = "https://www.w3schools.com/howto/img_avatar.png";
 
     useEffect(() => {
-        // Log ra để kiểm tra xem dữ liệu truyền vào có đúng cấu trúc chưa
         console.log("Dữ liệu selectedUserData nhận được:", selectedUserData);
 
         if (isOpenDetailUserModal && selectedUserData) {
-            // Fill thông tin cơ bản ngay lập tức
             form.setFieldsValue({
                 fullName: selectedUserData?.fullName || '',
                 email: selectedUserData?.email || '',
@@ -26,13 +24,11 @@ const DetailUserModal = (props) => {
                 ward: selectedUserData?.wardId ? 'Đang tải...' : 'Không có',
             });
 
-            // Hàm gọi API lấy tên địa lý
             const fetchLocationNames = async () => {
                 let cName = '';
                 let wName = '';
 
                 try {
-                    // Nếu không có cityId thì dừng luôn, không call API
                     if (!selectedUserData?.cityId) {
                         form.setFieldsValue({ city: 'Không có', ward: 'Không có' });
                         return; 
@@ -40,7 +36,6 @@ const DetailUserModal = (props) => {
 
                     const cityIdStr = selectedUserData.cityId.toString();
 
-                    // 1. Lấy danh sách Tỉnh/Thành phố
                     const resCity = await fetch("http://localhost:8082/api/address/provinces");
                     const dataCity = await resCity.json();
                     const cityList = dataCity?.provinces || [];
@@ -48,7 +43,6 @@ const DetailUserModal = (props) => {
                     const city = cityList.find(p => p.code === cityIdStr);
                     if (city) cName = city.name;
 
-                    // 2. Lấy danh sách Xã/Phường
                     if (selectedUserData?.wardId) {
                         const wardIdStr = selectedUserData.wardId.toString();
                         const resWard = await fetch(`http://localhost:8082/api/address/wards?provinceId=${cityIdStr}`);
@@ -64,7 +58,6 @@ const DetailUserModal = (props) => {
                     cName = "Lỗi kết nối";
                     wName = "Lỗi kết nối";
                 } finally {
-                    // Ghi đè lại tên sau khi call xong
                     form.setFieldsValue({
                         city: cName || 'Không xác định',
                         ward: wName || 'Không xác định'
@@ -98,7 +91,7 @@ const DetailUserModal = (props) => {
         >
             <Form form={form} layout="vertical">
                 <Row gutter={24}>
-                    {/* CỘT TRÁI */}
+                    
                     <Col span={16}>
                         <div style={{ paddingRight: '10px' }}>
                             <Title level={5} style={{ margin: '0 0 15px 0', fontSize: '16px' }}>Thông tin cá nhân</Title>
@@ -143,7 +136,7 @@ const DetailUserModal = (props) => {
                         </div>
                     </Col>
 
-                    {/* CỘT PHẢI */}
+                    
                     <Col span={8} style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Title level={5} style={{ margin: '0 0 20px 0', fontSize: '16px', alignSelf: 'flex-start' }}>Ảnh đại diện</Title>
 

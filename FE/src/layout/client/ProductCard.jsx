@@ -8,7 +8,6 @@ export default function ProductCard({ id, image, name, price, showAddToCart, cat
     const handleAddToCart = (e) => {
         e.preventDefault();
         alert(`${name} added to cart!`);
-        // TODO: Add to cart logic here
     };
 
     return (

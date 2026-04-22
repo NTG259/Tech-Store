@@ -2,25 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, Typography, Spin, Space, Table, Tag, Avatar } from 'antd';
 import { UserOutlined, ProductOutlined, ShoppingOutlined, TrophyOutlined, CrownOutlined, PieChartOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-
-// --- IMPORT RECHARTS CHO BIỂU ĐỒ TRÒN ---
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
-
-// --- IMPORT CÁC API CỦA BẠN VÀO ĐÂY ---
 import { getSummaryAPI, getYearRevenueAPI, getTop10Products } from '../../service/dashboard/api';
 import { fetchTop5UserVip } from '../../service/user/api';
-// IMPORT THÊM API MỚI TẠO Ở BƯỚC 1
-import { getCategoriesStatAPI } from '../../service/dashboard/api'; 
-
-// --- IMPORT COMPONENT CHART CỦA BẠN ---
+import { getCategoriesStatAPI } from '../../service/dashboard/api';
 import DashboardCharts from '../../components/chart/dashboard.chart';
 
 const { Text, Title } = Typography;
 
-// Đã mở rộng mảng màu để biểu đồ không bị trùng màu khi có nhiều danh mục
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f43f5e', '#0ea5e9'];
 
-// Thẻ hiển thị thống kê tổng quan (User, Order, Product...)
 const StatCard = ({ title, value, icon, iconBg, iconColor }) => (
     <Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', height: '100%' }} bodyStyle={{ padding: '24px' }}>
         <Text strong style={{ fontSize: '15px', color: '#64748b', display: 'block', marginBottom: '12px' }}>{title}</Text>
@@ -32,12 +23,11 @@ const StatCard = ({ title, value, icon, iconBg, iconColor }) => (
 );
 
 const Dashboard = () => {
-    // States quản lý dữ liệu toàn trang
     const [summaryStats, setSummaryStats] = useState({ userCount: 0, productCount: 0, orderCount: 0 });
     const [revenueData, setRevenueData] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
     const [topUsers, setTopUsers] = useState([]);
-    const [categoryData, setCategoryData] = useState([]); // State mới cho biểu đồ tròn
+    const [categoryData, setCategoryData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedYear, setSelectedYear] = useState(dayjs().year());
 
@@ -48,7 +38,6 @@ const Dashboard = () => {
     const fetchSummaryData = async (year) => {
         setIsLoading(true);
         try {
-            // 1. Fetch Tổng quan
             const resSum = await getSummaryAPI();
             if (resSum?.status === 200 && resSum.data) {
                 setSummaryStats({
@@ -57,8 +46,6 @@ const Dashboard = () => {
                     orderCount: resSum.data.orderSuccessCount || 0
                 });
             }
-
-            // 1.5. Fetch Doanh thu theo năm
             const resRev = await getYearRevenueAPI(year);
             if (resRev?.status === 200 && resRev.data?.totalRevenueMonth) {
                 const sortedRevenue = [...resRev.data.totalRevenueMonth].sort((a, b) => a.month - b.month);
@@ -67,8 +54,6 @@ const Dashboard = () => {
                     revenue: item.totalRevenue
                 })));
             }
-
-            // 2. Fetch Top Sản phẩm
             const resProd = await getTop10Products(year);
             const rawProd = resProd?.data || [];
             setTopProducts(rawProd.map(item => ({
@@ -80,7 +65,6 @@ const Dashboard = () => {
                 revenue: item.totalRevenue
             })));
 
-            // 3. Fetch Top Khách hàng
             const resUser = await fetchTop5UserVip();
             if (resUser?.status === 200) {
                 setTopUsers((resUser.data || []).map((u, i) => ({
@@ -92,21 +76,18 @@ const Dashboard = () => {
                     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id || i}`
                 })));
             }
-
-            // 4. Fetch Thống kê Danh mục cho Biểu đồ tròn
             const resCat = await getCategoriesStatAPI();
 
-            const catRawData = resCat?.data?.data || resCat?.data; 
-            
+            const catRawData = resCat?.data?.data || resCat?.data;
+
             if (catRawData && Array.isArray(catRawData)) {
                 const filteredData = catRawData.filter(item => item.name !== "Chưa xác định" && item.totalSold > 0);
-                
-                // Map lại dữ liệu cho Recharts: lấy tên danh mục và tổng đã bán (totalSold)
+
                 const mappedCategoryData = filteredData.map(item => ({
                     name: item.name.trim(),
                     value: item.totalSold
                 }));
-                
+
                 setCategoryData(mappedCategoryData);
             }
 
@@ -127,7 +108,6 @@ const Dashboard = () => {
         );
     };
 
-    // Cấu hình Cột bảng Ant Design
     const productColumns = [
         { title: 'Top', align: 'center', width: 50, render: (_, __, i) => renderRank(i) },
         {
@@ -167,26 +147,19 @@ const Dashboard = () => {
     return (
         <div style={{ padding: '24px', background: '#f8fafc', minHeight: '100vh' }}>
             <Spin spinning={isLoading} tip="Đang cập nhật dữ liệu...">
-
-                {/* KHỐI 1: THỐNG KÊ TỔNG QUAN */}
                 <Row gutter={[20, 20]}>
                     <Col xs={24} sm={8}><StatCard title="Tổng Người Dùng" value={summaryStats.userCount} icon={<UserOutlined />} iconBg="#eff6ff" iconColor="#3b82f6" /></Col>
                     <Col xs={24} sm={8}><StatCard title="Tổng Sản Phẩm" value={summaryStats.productCount} icon={<ProductOutlined />} iconBg="#ecfdf5" iconColor="#10b981" /></Col>
                     <Col xs={24} sm={8}><StatCard title="Đơn Hàng Thành Công" value={summaryStats.orderCount} icon={<ShoppingOutlined />} iconBg="#fff7ed" iconColor="#f59e0b" /></Col>
                 </Row>
-
-                {/* KHỐI 2: KHU VỰC BIỂU ĐỒ DOANH THU */}
-                <DashboardCharts 
+                <DashboardCharts
                     revenueData={revenueData}
                     selectedYear={selectedYear}
                     onYearChange={setSelectedYear}
                     onFilterClick={() => fetchSummaryData(selectedYear)}
                     formatCurrency={formatCurrency}
                 />
-
-                {/* KHỐI 3: BIỂU ĐỒ TRÒN VÀ BẢNG SẢN PHẨM */}
                 <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
-                    {/* BIỂU ĐỒ TRÒN (PIE CHART) THỐNG KÊ THEO SỐ LƯỢNG ĐÃ BÁN */}
                     <Col xs={24} lg={10} style={{ display: 'flex' }}>
                         <Card
                             title={<Space><PieChartOutlined style={{ color: '#8b5cf6', fontSize: '18px' }} /><Text strong>Số Lượng Bán Theo Danh Mục</Text></Space>}
@@ -197,7 +170,7 @@ const Dashboard = () => {
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
-                                                data={categoryData} // Dùng dữ liệu thật từ API
+                                                data={categoryData}
 
                                                 cx="50%"
                                                 cy="50%"
@@ -205,7 +178,7 @@ const Dashboard = () => {
                                                 outerRadius={100}
                                                 paddingAngle={5}
                                                 dataKey="value"
-                                                label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                                             >
                                                 {categoryData.map((entry, index) => (
                                                     <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
@@ -223,8 +196,6 @@ const Dashboard = () => {
                             </div>
                         </Card>
                     </Col>
-
-                    {/* TOP SẢN PHẨM */}
                     <Col xs={24} lg={14} style={{ display: 'flex' }}>
                         <Card
                             title={<Space><TrophyOutlined style={{ color: '#f59e0b', fontSize: '18px' }} /><Text strong>Top Sản Phẩm Bán Chạy</Text></Space>}
@@ -236,7 +207,6 @@ const Dashboard = () => {
                     </Col>
                 </Row>
 
-                {/* KHỐI 4: TOP KHÁCH HÀNG */}
                 <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
                     <Col xs={24} style={{ display: 'flex' }}>
                         <Card
@@ -250,8 +220,6 @@ const Dashboard = () => {
                 </Row>
 
             </Spin>
-
-            {/* CSS Tùy chỉnh cho bảng */}
             <style>{`
                 .custom-table .ant-table { background: transparent; }
                 .custom-table .ant-table-thead > tr > th { background: transparent; border-bottom: 1px solid #f1f5f9; color: #64748b; font-weight: 600; }

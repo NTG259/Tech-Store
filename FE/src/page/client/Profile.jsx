@@ -85,7 +85,6 @@ const Profile = () => {
                 setLoading(true);
                 const res = await fetchProfileAPI();
                 
-                // Lấy đúng object chứa dữ liệu user từ cấu trúc JSON backend trả về
                 const user = res?.data?.data || res?.data || res;
 
                 if (!user) return;
@@ -99,7 +98,6 @@ const Profile = () => {
                     avatar: user.avatar || prev.avatar,
                 }));
 
-                // Gán cityId và wardId vào state để Dropdown hiển thị
                 if (user.cityId) {
                     setSelectedCity(prev => ({ ...prev, id: user.cityId.toString() }));
                 }
@@ -234,7 +232,6 @@ const Profile = () => {
 
             const res = await updateProfileAPI(payload);
             
-            // Xử lý object phản hồi tương tự như lúc loadProfile
             const updated = res?.data?.data || res?.data || res;
 
             if (updated) {

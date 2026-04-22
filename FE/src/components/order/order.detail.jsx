@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Row, Col, Typography, Divider, Space, Button, Select, message } from 'antd';
 import { TruckOutlined, CheckCircleOutlined } from '@ant-design/icons';
-// Nhớ import đúng đường dẫn API của bạn
 import { updateOrdersByAdminAPI } from '../../service/order/api';
 
 const { Title, Text } = Typography;
@@ -95,13 +94,13 @@ const OrderDetailModal = (props) => {
         >
             <Form form={form} layout="vertical">
                 <Row gutter={40}>
-                    {/* CỘT TRÁI */}
+                    
                     <Col xs={24} md={12}>
                         <Form.Item label="Người nhận" name="fullName" style={{ marginBottom: '16px' }}>
                             <Input readOnly style={{ backgroundColor: '#f5f5f5', border: 'none', color: '#262626' }} />
                         </Form.Item>
 
-                        {/* Đã đổi Input thành TextArea và thêm autoSize */}
+                        
                         <Form.Item label="Địa chỉ nhận hàng" name="address" style={{ marginBottom: '16px' }}>
                             <TextArea 
                                 readOnly 
@@ -128,16 +127,15 @@ const OrderDetailModal = (props) => {
                         </Form.Item>
                     </Col>
 
-                    {/* CỘT PHẢI */}
+                    
                     <Col xs={24} md={12} style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ flex: 1, maxHeight: '260px', overflowY: 'auto', marginBottom: '16px', paddingRight: '8px' }}>
                             {items.length > 0 ? (
                                 items.map(item => {
-                                    // Xử lý lấy data an toàn
                                     const productName = item.productName || item.name || 'Product';
                                     const productImage = item.productImg || item.image || "https://placehold.co/200x200/f5f5f5/333333/png?text=No+Image";
                                     const price = item.price ? Number(item.price) : 0;
-                                    const qty = item.quantity || item.qty || 1; // Fallback về 1 nếu không có
+                                    const qty = item.quantity || item.qty || 1;
                                     const lineTotal = price * qty;
 
                                     return (
@@ -160,7 +158,7 @@ const OrderDetailModal = (props) => {
                                                 </div>
                                             </Space>
                                             
-                                            {/* Tổng tiền của dòng đó */}
+                                            
                                             <Text strong>
                                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(lineTotal)}
                                             </Text>

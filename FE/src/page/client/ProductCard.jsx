@@ -12,11 +12,10 @@ export default function ProductCard({
     showAddToCart = true, 
     category,
     stockQuantity = 0,
-    isHot = false // Thêm prop isHot (mặc định false)
+    isHot = false
 }) {
     const [, setHovered] = useState(false);
 
-    // Kiểm tra trạng thái hết hàng (số lượng <= 0)
     const isOutOfStock = Number(stockQuantity) <= 0;
 
     const handleAddToCart = async (e) => {
@@ -50,14 +49,14 @@ export default function ProductCard({
         >
             <div className="relative bg-[#f5f5f5] rounded w-full h-[250px] overflow-hidden group">
                 
-                {/* Badge Category */}
+                
                 {categoryDisplay && (
                     <span className="absolute top-3 left-3 bg-[#db4444] text-white text-[10px] font-bold px-2 py-1 rounded z-10">
                         {categoryDisplay}
                     </span>
                 )}
 
-                {/* Các nút chức năng (Eye & Cart) */}
+                
                 <div className="absolute top-3 right-3 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Link
                         to={`/products/${id}`}
@@ -66,7 +65,7 @@ export default function ProductCard({
                         <EyeIcon />
                     </Link>
                     
-                    {/* CHỈ HIỂN THỊ NÚT GIỎ HÀNG KHI CÒN HÀNG */}
+                    
                     {showAddToCart && !isOutOfStock && (
                         <button
                             onClick={handleAddToCart}
@@ -77,7 +76,7 @@ export default function ProductCard({
                     )}
                 </div>
 
-                {/* Hình ảnh sản phẩm */}
+                
                 <div className="absolute inset-0 overflow-hidden rounded">
                     <img
                         src={productImg || "https://placehold.co/400x400/f5f5f5/333333/png?text=No+Image"}
@@ -86,19 +85,19 @@ export default function ProductCard({
                     />
                 </div>
 
-                {/* ICON HOT DƯỚI GÓC PHẢI */}
+                
                 {isHot && !isOutOfStock && (
                     <div 
                         className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-10 h-10 bg-white/95 rounded-full shadow-lg animate-pulse"
                         title="Sản phẩm đang Hot"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-7 h-7 drop-shadow-sm">
-                            {/* Định nghĩa dải màu từ Đỏ sang Cam */}
+                            
                             <defs>
                                 <linearGradient id="fireGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-                                    <stop offset="0%" stopColor="#dc2626" />   {/* Đỏ đậm ở phần đáy */}
-                                    <stop offset="40%" stopColor="#ef4444" />   {/* Đỏ tươi ở giữa */}
-                                    <stop offset="100%" stopColor="#f97316" />  {/* Cam sáng ở ngọn */}
+                                    <stop offset="0%" stopColor="#dc2626" />   
+                                    <stop offset="40%" stopColor="#ef4444" />   
+                                    <stop offset="100%" stopColor="#f97316" />  
                                 </linearGradient>
                             </defs>
                             <path 
@@ -111,7 +110,7 @@ export default function ProductCard({
                     </div>
                 )}
 
-                {/* BANNER HẾT HÀNG */}
+                
                 {isOutOfStock && (
                     <div className="absolute bottom-0 left-0 w-full bg-black/70 text-white text-center py-2 text-xs font-bold z-10 uppercase tracking-widest backdrop-blur-sm">
                         Hết hàng
@@ -119,7 +118,7 @@ export default function ProductCard({
                 )}
             </div>
 
-            {/* Thông tin sản phẩm */}
+            
             <div className="flex flex-col items-center gap-1 w-full mt-2 text-center">
                 <Link
                     to={`/products/${id}`}

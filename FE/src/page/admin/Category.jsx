@@ -30,7 +30,6 @@ const Category = () => {
     const [searchText, setSearchText] = useState('');
     const [inputValue, setInputValue] = useState('');
 
-    // Mặc định luôn là ID tăng dần (asc)
     const [sortBy, setSortBy] = useState('id');
     const [direction, setDirection] = useState('asc');
 
@@ -72,19 +71,16 @@ const Category = () => {
 
     useEffect(() => {
         loadCategories();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [current, pageSize, searchText, sortBy, direction]);
 
     const handleTableChange = (pagination, filters, sorter) => {
         setCurrent(pagination.current);
         setPageSize(pagination.pageSize);
 
-        // Nếu có cột được sort (không phải hủy sort)
         if (sorter && sorter.order) {
             setSortBy(sorter.field);
             setDirection(sorter.order === 'ascend' ? 'asc' : 'desc');
         } else {
-            // Khi người dùng hủy sort -> Trở về mặc định ID tăng dần
             setSortBy('id');
             setDirection('asc');
         }
@@ -109,7 +105,6 @@ const Category = () => {
             key: 'id',
             width: 80,
             align: 'center',
-            // Cột ID không cho sort thủ công để làm mỏ neo mặc định
         },
         {
             title: 'Tên danh mục',

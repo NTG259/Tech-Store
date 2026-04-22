@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { message } from "antd"; // 1. IMPORT MESSAGE TỪ ANTD
+import { message } from "antd";
 import { loginAPI } from "../../service/auth/api";
 import { setCredentials } from "../../service/auth/authSlice";
 import { setAuthToStorage } from "../../service/auth/storage";
@@ -32,7 +32,6 @@ const Login = () => {
     const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
     const handleLogin = async () => {
-        // Kiểm tra validation cơ bản trước khi gọi API
         if (!form.username || !form.password) {
             message.warning("Vui lòng nhập đầy đủ email và mật khẩu!");
             return;
@@ -41,11 +40,9 @@ const Login = () => {
         try {
             const response = await loginAPI(form);
             
-            // 1. Lấy token từ cục data trả về
             const access_token = response.data.access_token;
             const user = response.data.user;
 
-            // 2. Lưu vào Redux + LocalStorage
             dispatch(setCredentials({ user, access_token }));
             setAuthToStorage({ user, access_token });
 
@@ -56,10 +53,8 @@ const Login = () => {
                 console.log("Gọi refresh token lỗi:", e);
             }
           
-            // Thông báo đăng nhập thành công
             message.success("Đăng nhập thành công!");
 
-            // 3. Chuyển trang
             if (user?.role === "ADMIN") navigate("/dashboard");
             else navigate("/");
 
@@ -68,7 +63,6 @@ const Login = () => {
             
             const errorPayload = error.response?.data || error;
 
-            // 2. THAY THẾ ALERT BẰNG MESSAGE.ERROR
             if (errorPayload && errorPayload.errors === "USER_DISABLED") {
                 message.error(errorPayload.message || "Tài khoản của bạn đã bị khóa!");
             } else {

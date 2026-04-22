@@ -1,11 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-
-// Import Header và Footer của bạn
 import Header from "../../layout/client/Header";
 import Footer from "../../layout/client/Footer";
 
-/* ─── Green Checkmark Circle (Thành công) ─── */
 function CheckCircle() {
   return (
     <div className="w-[100px] h-[100px] bg-[#3ac318] rounded-full flex items-center justify-center shrink-0 shadow-lg">
@@ -16,7 +13,6 @@ function CheckCircle() {
   );
 }
 
-/* ─── Red Cross Circle (Thất bại) ─── */
 function ErrorCircle() {
   return (
     <div className="w-[100px] h-[100px] bg-[#db4444] rounded-full flex items-center justify-center shrink-0 shadow-lg">
@@ -29,28 +25,23 @@ function ErrorCircle() {
 }
 
 const Success = () => {
-  // Trạng thái: 'loading' (đang xác thực), 'success' (thành công), 'failed' (thất bại)
   const [status, setStatus] = useState("loading"); 
   const location = useLocation();
-  const called = useRef(false); // Dùng useRef để tránh việc useEffect gọi API 2 lần trong React StrictMode
+  const called = useRef(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
 
-    // Tránh việc gọi API 2 lần liên tiếp khi component re-render
     if (called.current) return;
     called.current = true;
 
     const verifyPayment = async () => {
-      // Nếu URL không chứa tham số của VNPAY (ví dụ: thanh toán COD chuyển thẳng đến đây) 
-      // thì mặc định cho qua thành công
       if (!location.search.includes("vnp_")) {
         setStatus("success");
         return;
       }
 
       try {
-        // 1. Lấy toàn bộ query params từ URL đưa vào object
         const params = new URLSearchParams(location.search);
         const vnpayData = {};
         for (const [key, value] of params.entries()) {
@@ -58,7 +49,6 @@ const Success = () => {
         }
 
         const token = localStorage.getItem("access_token");
-        // 2. Gửi request lên BE để xác thực
         const response = await fetch("http://localhost:8082/api/payment/vnpay/verify", {
           method: "POST",
           headers: {
@@ -68,7 +58,6 @@ const Success = () => {
           body: JSON.stringify(vnpayData),
         });
 
-        // 3. Xử lý kết quả trả về
         if (response.ok) {
           const data = await response.json();
           if (data.status === "success") {
@@ -77,7 +66,6 @@ const Success = () => {
             setStatus("failed");
           }
         } else {
-          // Trường hợp trả về 400 Bad Request (sai chữ ký) hoặc lỗi Server
           setStatus("failed");
         }
       } catch (error) {
@@ -89,7 +77,6 @@ const Success = () => {
     verifyPayment();
   }, [location.search]);
 
-  // Render nội dung tuỳ theo trạng thái
   const renderContent = () => {
     if (status === "loading") {
       return (
@@ -124,7 +111,6 @@ const Success = () => {
       );
     }
 
-    // Mặc định là giao diện Thành Công của bạn
     return (
       <>
         <div className="flex items-center gap-6">

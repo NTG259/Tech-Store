@@ -21,11 +21,11 @@ const Error = ({ message }) => {
         <div className="min-h-screen bg-white font-sans flex flex-col">
             <Header />
 
-            {/* Breadcrumb */}
+            
             <div className="max-w-[1170px] mx-auto px-4 w-full mt-6">
                 <div className="text-sm text-gray-500">
-                    <Link to="/" className="hover:text-black">Home</Link> /{" "}
-                    <span className="text-black font-medium">Error</span>
+                    <Link to="/" className="hover:text-black">Trang chủ</Link> /{" "}
+                    <span className="text-black font-medium">Lỗi không xác định</span>
                 </div>
             </div>
 
@@ -55,7 +55,7 @@ const Error = ({ message }) => {
                         to="/products"
                         className="bg-[#db4444] text-white text-base px-10 py-3 rounded hover:bg-[#c03c3c] transition-colors"
                     >
-                        Continue shopping
+                        Tiếp tục mua hàng
                     </Link>
                 </div>
             </main>

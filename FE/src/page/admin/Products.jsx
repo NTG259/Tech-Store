@@ -6,11 +6,10 @@ import {
     EyeOutlined,
     PlusOutlined,
     ReloadOutlined,
-    FireOutlined, // Icon ngọn lửa viền (Chưa Hot)
-    FireFilled    // Icon ngọn lửa đặc (Đã Hot)
+    FireOutlined,
+    FireFilled
 } from '@ant-design/icons';
 
-// LƯU Ý: Nhớ thêm hàm updateProductIsHotAPI (hoặc tên tương ứng) vào file api của bạn nhé!
 import { deleteProductAPI, fetchAllProductsByAdminAPI, updateProductIsHotAPI } from '../../service/product/api';
 import { fetchAllCategoriesAPI } from '../../service/category/api'; 
 import DetailProductModal from '../../components/product/product.detail';
@@ -22,7 +21,6 @@ const { Search } = Input;
 const { Option } = Select;
 
 const Product = () => {
-    // Trạng thái cho các Modals
     const [isOpenDetailProductModal, setIsOpenDetailProductModal] = useState(false);
     const [isOpenEditProductModal, setIsOpenEditProductModal] = useState(false);
     const [isOpenCreateProductForm, setIsOpenCreateProductForm] = useState(false);
@@ -30,22 +28,17 @@ const Product = () => {
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
-
-    // State quản lý danh mục cho bộ lọc
     const [categories, setCategories] = useState([]);
 
-    // 1. State quản lý phân trang
     const [current, setCurrent] = useState(1);
     const [pageSize, setPageSize] = useState(8);
     const [total, setTotal] = useState(0);
 
-    // 2. State quản lý tìm kiếm và lọc
     const [searchText, setSearchText] = useState('');
     const [inputValue, setInputValue] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState(''); // '' là Tất cả
-    const [statusFilter, setStatusFilter] = useState(''); // '' là Tất cả
+    const [categoryFilter, setCategoryFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
 
-    // Gọi API lấy danh sách category cho bộ lọc
     useEffect(() => {
         const loadCategories = async () => {
             try {
@@ -62,7 +55,6 @@ const Product = () => {
         loadCategories();
     }, []);
 
-    // Cập nhật hàm loadProducts để truyền thêm tham số lọc
     const loadProducts = async () => {
         setLoading(true);
         try {
@@ -89,26 +81,20 @@ const Product = () => {
         }
     };
 
-    // Hàm xử lý khi người dùng bấm nút Tìm kiếm
     const onSearch = (value) => {
         setSearchText(value);
         setCurrent(1);
     };
 
-    // ==========================================
-    // HÀM XỬ LÝ SET IS_HOT CHO SẢN PHẨM
-    // ==========================================
     const handleToggleHot = async (record) => {
         try {
-            // Giả sử API nhận vào id và giá trị boolean isHot cần update
             const newIsHotStatus = !record.isHot;
             
-            // BẠN CẦN THÊM HÀM NÀY VÀO FILE API
             const res = await updateProductIsHotAPI(record.id, newIsHotStatus); 
             
             if (res) {
                 message.success(`Đã ${newIsHotStatus ? 'thêm' : 'gỡ'} mác Hot cho sản phẩm!`);
-                await loadProducts(); // Load lại bảng để cập nhật UI
+                await loadProducts(); 
             }
         } catch (error) {
             message.error("Có lỗi xảy ra khi cập nhật trạng thái Hot");
@@ -128,10 +114,9 @@ const Product = () => {
         }
     };
 
-    // Tự động gọi API mỗi khi phân trang, search, hoặc bộ lọc (category, status) thay đổi
     useEffect(() => {
         loadProducts();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+       
     }, [current, pageSize, searchText, categoryFilter, statusFilter]);
 
     const handleTableChange = (pagination) => {
@@ -154,7 +139,6 @@ const Product = () => {
             render: (text, record) => (
                 <Space>
                     <span style={{ fontWeight: 500, color: '#1890ff' }}>{text}</span>
-                    {/* Hiển thị thêm icon nhỏ xíu cạnh tên nếu đang Hot (Tùy chọn) */}
                     {record.isHot && <FireFilled style={{ color: '#fa8c16' }} />}
                 </Space>
             )
@@ -205,10 +189,9 @@ const Product = () => {
             title: 'Thao tác',
             key: 'action',
             align: 'center',
-            width: 220, // Tăng nhẹ width để đủ chỗ cho 4 nút
+            width: 220, 
             render: (_, record) => (
                 <Space size="small">
-                    {/* NÚT THIẾT LẬP HOT */}
                     <Tooltip title={record.isHot ? "Bỏ trạng thái Hot" : "Đặt làm sản phẩm Hot"}>
                         <Popconfirm
                             title={record.isHot ? "Bỏ Hot sản phẩm này?" : "Cập nhật thành sản phẩm Hot?"}
@@ -218,7 +201,6 @@ const Product = () => {
                         >
                             <Button
                                 shape="circle"
-                                // Đổi icon và màu cam rực rỡ nếu đang isHot
                                 icon={record.isHot ? <FireFilled /> : <FireOutlined />}
                                 style={{
                                     color: record.isHot ? '#fff' : '#fa8c16',
@@ -253,7 +235,7 @@ const Product = () => {
                         />
                     </Tooltip>
 
-                    <Popconfirm
+                    {/* <Popconfirm
                         title="Xóa sản phẩm"
                         description={`Bạn có chắc muốn xóa sản phẩm ${record.name}?`}
                         onConfirm={() => handleDelete(record.id)}
@@ -269,7 +251,7 @@ const Product = () => {
                                 icon={<DeleteOutlined />}
                             />
                         </Tooltip>
-                    </Popconfirm>
+                    </Popconfirm> */}
                 </Space>
             ),
         },
@@ -310,7 +292,6 @@ const Product = () => {
                         </Col>
                     </Row>
 
-                    {/* Hàng chứa Ô Tìm Kiếm và Các Bộ Lọc */}
                     <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
                         <Col xs={24} sm={12} md={8}>
                             <Search

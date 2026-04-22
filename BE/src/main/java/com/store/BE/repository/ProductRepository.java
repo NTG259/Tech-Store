@@ -15,10 +15,7 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
-    @Query(value = """
-        SELECT EXISTS(SELECT 1 FROM products WHERE name = :name)
-        """, nativeQuery = true)
-    Boolean existByName(@Param("name") String name);
+    Boolean existsByName(String name);
 
     @Modifying
     @Query(value = """
@@ -28,7 +25,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         """, nativeQuery = true)
     void updateCategory(@Param("id") Long id, @Param("uncategorizedId") Long uncategorizedId);
 
-    List<Product> findTopByProductStatusOrderByCreatedAtDesc(ProductStatus status);
+    List<Product> findTop5ByProductStatusOrderByCreatedAtDesc(ProductStatus status);
 
     @Query(value = """
 

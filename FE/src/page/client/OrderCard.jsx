@@ -46,7 +46,6 @@ function OrderHeader({ orderNumber, datePlaced, total, status }) {
     );
 }
 
-// Thêm prop `isExpanded` để kiểm soát trạng thái rút gọn text
 function OrderProduct({ image, name, price, description, first, isExpanded }) {
     return (
         <div className={`flex flex-col sm:flex-row items-start p-6 ${!first ? "border-t border-[#e5e7eb]" : ""} gap-6 bg-white`}>
@@ -58,7 +57,7 @@ function OrderProduct({ image, name, price, description, first, isExpanded }) {
                     <p className="text-[15px] font-medium text-[#111827]">{name}</p>
                     <p className="text-[15px] font-medium text-[#111827]">{price}</p>
                 </div>
-                {/* Dùng line-clamp-2 để giới hạn text 2 dòng khi chưa mở rộng */}
+                
                 <p className={`text-sm text-[#6b7280] leading-relaxed max-w-3xl ${!isExpanded ? "line-clamp-2" : ""}`}>
                     {description}
                 </p>
@@ -70,7 +69,6 @@ function OrderProduct({ image, name, price, description, first, isExpanded }) {
 function OrderCard({ id, orderNumber, datePlaced, total, status, products = [], onUpdateSuccess }) {
     const [isUpdating, setIsUpdating] = useState(false);
     
-    // Thêm state quản lý trạng thái mở rộng
     const [isExpanded, setIsExpanded] = useState(false);
 
     const handleUpdateStatus = async (newStatus) => {
@@ -138,12 +136,10 @@ function OrderCard({ id, orderNumber, datePlaced, total, status, products = [], 
 
     const actionButtons = renderActionButtons();
 
-    // Logic kiểm tra xem có cần hiển thị nút Mở rộng không
     const hasMultipleProducts = products.length > 1;
     const hasLongDescription = products.some(p => p.description && p.description.length > 100);
     const shouldShowToggle = hasMultipleProducts || hasLongDescription;
 
-    // Lấy danh sách sản phẩm hiển thị dựa vào state isExpanded
     const displayedProducts = isExpanded ? products : products.slice(0, 1);
 
     return (
@@ -161,7 +157,6 @@ function OrderCard({ id, orderNumber, datePlaced, total, status, products = [], 
                 ))}
             </div>
 
-            {/* Nút Mở rộng / Thu gọn */}
             {shouldShowToggle && (
                 <div className="bg-white border-t border-[#e5e7eb] px-6 py-3 flex justify-center">
                     <button

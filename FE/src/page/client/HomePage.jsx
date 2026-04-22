@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 
@@ -59,45 +59,30 @@ export default function ECommerceHomePage() {
     const actualNewProducts = Array.isArray(newProducts) ? newProducts : (newProducts?.data || []);
     const actualHotProducts = Array.isArray(hotProducts) ? hotProducts : (hotProducts?.data || []);
 
-    const displayProducts = useMemo(() => {
-        if (actualNewProducts.length === 0) return [];
-        return [...actualNewProducts, ...actualNewProducts, ...actualNewProducts];
-    }, [actualNewProducts]);
-
-    const originalWidth = actualNewProducts.length * itemWidth;
-
-    useEffect(() => {
-        if (actualNewProducts.length > 0 && scrollContainerRef.current) {
-            setTimeout(() => {
-                if (scrollContainerRef.current) {
-                    scrollContainerRef.current.scrollLeft = originalWidth;
-                }
-            }, 100);
-        }
-    }, [actualNewProducts, originalWidth]);
-
     const handleScrollButton = useCallback((direction) => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
+        const maxScrollLeft = Math.max(container.scrollWidth - container.clientWidth, 0);
+        const nextLeft = direction === "left"
+            ? container.scrollLeft - itemWidth
+            : container.scrollLeft + itemWidth;
+
         if (direction === "left") {
-            container.scrollBy({ left: -itemWidth, behavior: "smooth" });
+            if (container.scrollLeft <= 0) {
+                container.scrollTo({ left: maxScrollLeft, behavior: "smooth" });
+            } else {
+                container.scrollTo({ left: Math.max(nextLeft, 0), behavior: "smooth" });
+            }
         } else {
-            container.scrollBy({ left: itemWidth, behavior: "smooth" });
+            if (container.scrollLeft >= maxScrollLeft) {
+                container.scrollTo({ left: 0, behavior: "smooth" });
+            } else {
+                container.scrollTo({ left: Math.min(nextLeft, maxScrollLeft), behavior: "smooth" });
+            }
         }
         setLastInteraction(Date.now());
     }, [itemWidth]);
-
-    const handleOnScroll = () => {
-        const container = scrollContainerRef.current;
-        if (!container || actualNewProducts.length === 0) return;
-
-        if (container.scrollLeft >= originalWidth * 2) {
-            container.scrollLeft -= originalWidth;
-        } else if (container.scrollLeft <= 0) {
-            container.scrollLeft += originalWidth;
-        }
-    };
 
     useEffect(() => {
         if (!isLoading && actualNewProducts.length > 0) {
@@ -108,45 +93,30 @@ export default function ECommerceHomePage() {
         }
     }, [isLoading, actualNewProducts, lastInteraction, handleScrollButton]);
 
-    const displayHotProducts = useMemo(() => {
-        if (actualHotProducts.length === 0) return [];
-        return [...actualHotProducts, ...actualHotProducts, ...actualHotProducts];
-    }, [actualHotProducts]);
-
-    const originalWidthHot = actualHotProducts.length * itemWidth;
-
-    useEffect(() => {
-        if (actualHotProducts.length > 0 && scrollContainerHotRef.current) {
-            setTimeout(() => {
-                if (scrollContainerHotRef.current) {
-                    scrollContainerHotRef.current.scrollLeft = originalWidthHot;
-                }
-            }, 100);
-        }
-    }, [actualHotProducts, originalWidthHot]);
-
     const handleScrollButtonHot = useCallback((direction) => {
         const container = scrollContainerHotRef.current;
         if (!container) return;
 
+        const maxScrollLeft = Math.max(container.scrollWidth - container.clientWidth, 0);
+        const nextLeft = direction === "left"
+            ? container.scrollLeft - itemWidth
+            : container.scrollLeft + itemWidth;
+
         if (direction === "left") {
-            container.scrollBy({ left: -itemWidth, behavior: "smooth" });
+            if (container.scrollLeft <= 0) {
+                container.scrollTo({ left: maxScrollLeft, behavior: "smooth" });
+            } else {
+                container.scrollTo({ left: Math.max(nextLeft, 0), behavior: "smooth" });
+            }
         } else {
-            container.scrollBy({ left: itemWidth, behavior: "smooth" });
+            if (container.scrollLeft >= maxScrollLeft) {
+                container.scrollTo({ left: 0, behavior: "smooth" });
+            } else {
+                container.scrollTo({ left: Math.min(nextLeft, maxScrollLeft), behavior: "smooth" });
+            }
         }
         setLastInteractionHot(Date.now());
     }, [itemWidth]);
-
-    const handleOnScrollHot = () => {
-        const container = scrollContainerHotRef.current;
-        if (!container || actualHotProducts.length === 0) return;
-
-        if (container.scrollLeft >= originalWidthHot * 2) {
-            container.scrollLeft -= originalWidthHot;
-        } else if (container.scrollLeft <= 0) {
-            container.scrollLeft += originalWidthHot;
-        }
-    };
 
     useEffect(() => {
         if (!isLoadingHot && actualHotProducts.length > 0) {
@@ -162,7 +132,7 @@ export default function ECommerceHomePage() {
             <Header />
 
             <main className="max-w-[1170px] mx-auto px-4 mb-20">
-                <section className="mt-20">
+                {/* <section className="mt-20">
                     <div className="flex justify-between items-end mb-10">
                         <div className="flex flex-col gap-6">
                             <SectionTag label="Tuần này" />
@@ -198,12 +168,11 @@ export default function ECommerceHomePage() {
                     ) : (
                         <div 
                             ref={scrollContainerRef}
-                            onScroll={handleOnScroll}
                             className="flex gap-[30px] mb-10 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
-                            {displayProducts.map((p, index) => (
-                                <div key={`new-${p.id || index}-${index}`} className="flex-none min-w-[270px] snap-start">
+                            {actualNewProducts.map((p, index) => (
+                                <div key={`new-${p.id || index}`} className="flex-none min-w-[270px] snap-start">
                                     <ProductCard {...p} showAddToCart={true} />
                                 </div>
                             ))}
@@ -215,7 +184,7 @@ export default function ECommerceHomePage() {
                             <ViewAllButton />
                         </Link>
                     </div>
-                </section>
+                </section> */}
 
                 <section className="mt-28">
                     <div className="flex justify-between items-end mb-10">
@@ -253,12 +222,11 @@ export default function ECommerceHomePage() {
                     ) : (
                         <div 
                             ref={scrollContainerHotRef}
-                            onScroll={handleOnScrollHot}
                             className="flex gap-[30px] mb-10 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
-                            {displayHotProducts.map((p, index) => (
-                                <div key={`hot-${p.id || index}-${index}`} className="flex-none min-w-[270px] snap-start">
+                            {actualHotProducts.map((p, index) => (
+                                <div key={`hot-${p.id || index}`} className="flex-none min-w-[270px] snap-start">
                                     <ProductCard {...p} showAddToCart={true} />
                                 </div>
                             ))}

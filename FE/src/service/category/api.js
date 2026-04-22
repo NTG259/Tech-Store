@@ -5,7 +5,7 @@ const fetchAllCategoriesByAdminAPI = (page, size, searchText, sortBy, direction)
     const URL_BACKEND = `/api/admin/categories`;
     return axios.get(URL_BACKEND, {
         params: {
-            page: page, // (Hoặc page - 1 nếu backend của bạn bắt đầu từ 0)
+            page: page,
             size: size,
             name: searchText || undefined,
             sortBy: sortBy || undefined,

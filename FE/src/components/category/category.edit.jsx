@@ -6,11 +6,10 @@ const CategoryEdit = ({ isOpenEditModal, setIsOpenEditModal, selectedCategory, l
     const [form] = Form.useForm();
     const [isSubmitLoading, setIsSubmitLoading] = useState(false);
 
-    // Mỗi khi modal mở hoặc selectedCategory thay đổi, ta sẽ điền dữ liệu cũ vào form
     useEffect(() => {
         if (selectedCategory && isOpenEditModal) {
             form.setFieldsValue({
-                id: selectedCategory.id, // Bổ sung ID vào Form
+                id: selectedCategory.id,
                 name: selectedCategory.name,
                 slug: selectedCategory.slug,
                 description: selectedCategory.description,
@@ -21,14 +20,12 @@ const CategoryEdit = ({ isOpenEditModal, setIsOpenEditModal, selectedCategory, l
     const onFinish = async (values) => {
         setIsSubmitLoading(true);
         try {
-            // Lúc này biến 'values' đã chứa { id, name, description }
-            // Gọi API cập nhật kèm theo ID được lấy trực tiếp từ values
             const res = await updateCategoryAPI(values.id, values);
 
             if (res && res.status === 200) {
                 message.success("Cập nhật danh mục thành công!");
-                setIsOpenEditModal(false); // Đóng modal
-                await loadCategories(); // Tải lại danh sách
+                setIsOpenEditModal(false);
+                await loadCategories();
             } else {
                 message.error(res?.message || "Có lỗi xảy ra khi cập nhật");
             }
@@ -60,7 +57,7 @@ const CategoryEdit = ({ isOpenEditModal, setIsOpenEditModal, selectedCategory, l
                 name="form_in_modal_edit"
                 onFinish={onFinish}
             >
-                {/* Trường ẩn chứa ID */}
+                
                 <Form.Item name="id" hidden>
                     <Input />
                 </Form.Item>

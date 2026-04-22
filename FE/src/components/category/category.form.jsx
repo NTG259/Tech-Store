@@ -9,15 +9,13 @@ const CategoryForm = ({ isOpenCreateModal, setIsOpenCreateModal, loadCategories 
     const onFinish = async (values) => {
         setIsSubmitLoading(true);
         try {
-            // Gọi API thêm mới
             const res = await createCategoryAPI(values);
 
-            // Xử lý response (tùy theo format axios custom của bạn)
             if (res && res.status === 201 || res.status === 200) {
                 message.success("Thêm mới danh mục thành công!");
-                form.resetFields(); // Xóa trắng form
-                setIsOpenCreateModal(false); // Đóng modal
-                await loadCategories(); // Tải lại danh sách
+                form.resetFields();
+                setIsOpenCreateModal(false);
+                await loadCategories();
             } else {
                 message.error(res?.message || "Có lỗi xảy ra khi thêm mới");
             }

@@ -28,12 +28,10 @@ const UserForm = (props) => {
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Thêm State cho Tỉnh/Thành phố và Xã/Phường
     const [cities, setCities] = useState([]);
     const [wards, setWards] = useState([]);
     const [selectedCityId, setSelectedCityId] = useState("");
 
-    // Load Vai trò
     useEffect(() => {
         const fetchRoles = async () => {
             setRoles([
@@ -44,7 +42,6 @@ const UserForm = (props) => {
         fetchRoles();
     }, []);
 
-    // 1. Load danh sách Tỉnh/Thành phố khi mở form
     useEffect(() => {
         if (isOpenCreateUserForm) {
             const fetchCities = async () => {
@@ -60,13 +57,11 @@ const UserForm = (props) => {
             };
             fetchCities();
         } else {
-            // Khi đóng form thì reset lại danh sách xã và ID tỉnh đang chọn
             setWards([]);
             setSelectedCityId("");
         }
     }, [isOpenCreateUserForm]);
 
-    // 2. Load danh sách Xã/Phường khi Tỉnh/Thành phố thay đổi
     useEffect(() => {
         const fetchWards = async () => {
             if (!selectedCityId) {
@@ -89,10 +84,8 @@ const UserForm = (props) => {
         fetchWards();
     }, [selectedCityId]);
 
-    // Sự kiện khi người dùng chọn/đổi Tỉnh thành
     const handleCityChange = (value) => {
         setSelectedCityId(value);
-        // Reset Xã/Phường trên form vì Tỉnh/Thành phố đã thay đổi
         form.setFieldsValue({ wardId: undefined });
     };
 
@@ -128,7 +121,6 @@ const UserForm = (props) => {
 
     const onFinish = async (values) => {
         setLoading(true);
-        // Cập nhật payload gửi lên BE có thêm cityId và wardId
         const payloadToBackend = {
             fullName: values.fullName,
             email: values.email,
@@ -136,8 +128,8 @@ const UserForm = (props) => {
             role: values.role,
             phoneNumber: values.phone,
             address: values.address,
-            cityId: values.cityId, // THÊM MỚI
-            wardId: values.wardId, // THÊM MỚI
+            cityId: values.cityId,
+            wardId: values.wardId,
             avatar: imageUrl
         };
 
@@ -146,7 +138,6 @@ const UserForm = (props) => {
             message.success("Tạo người dùng thành công!");
             await loadUsers();
             
-            // Đóng form & reset
             setIsOpenCreateUserForm(false);
             form.resetFields();
             setFileList([]);
@@ -205,7 +196,7 @@ const UserForm = (props) => {
                 onFinish={onFinish}
             >
                 <Row gutter={24}>
-                    {/* CỘT TRÁI: THÔNG TIN NGƯỜI DÙNG */}
+                    
                     <Col span={16}>
                         <div style={{ paddingRight: '10px' }}>
                             <Title level={5} style={{ margin: '0 0 15px 0', fontSize: '16px' }}>Thông tin người dùng</Title>
@@ -270,7 +261,7 @@ const UserForm = (props) => {
                                 <Password placeholder="Độ dài mật khẩu nên từ 8 kí tự" />
                             </Form.Item>
 
-                            {/* --- BỔ SUNG: CHỌN TỈNH VÀ XÃ --- */}
+                            
                             <Row gutter={12}>
                                 <Col span={12}>
                                     <Form.Item 
@@ -318,7 +309,7 @@ const UserForm = (props) => {
                         </div>
                     </Col>
 
-                    {/* CỘT PHẢI: AVATAR */}
+                    
                     <Col span={8} style={{ borderLeft: '1px solid #f0f0f0', paddingLeft: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Title level={5} style={{ margin: '0 0 20px 0', fontSize: '16px', alignSelf: 'flex-start' }}>Ảnh đại diện</Title>
 

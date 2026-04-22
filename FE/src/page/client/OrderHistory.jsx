@@ -24,9 +24,7 @@ function SidebarFilter({ appliedStatus, onApplyFilter }) {
               type="radio"
               name="orderStatus"
               value={s.value}
-              // Sử dụng trực tiếp appliedStatus từ component cha để biết radio nào đang active
               checked={appliedStatus === s.value} 
-              // Gọi thẳng hàm cập nhật của cha khi người dùng click
               onChange={(e) => onApplyFilter(e.target.value)}
               className="w-4 h-4 rounded-full border-gray-300 text-[#db4444] focus:ring-[#db4444] cursor-pointer"
             />
@@ -44,11 +42,9 @@ const OrderHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  // State quản lý status đang được lọc để gọi API
   const [currentStatus, setCurrentStatus] = useState("");
   const pageSize = 5;
 
-  // Tự động fetch lại khi currentPage hoặc currentStatus thay đổi
   useEffect(() => {
     fetchOrders(currentPage, pageSize, currentStatus);
   }, [currentPage, currentStatus]);
@@ -107,7 +103,7 @@ const OrderHistory = () => {
 
   const handleApplyFilter = (status) => {
     setCurrentStatus(status);
-    setCurrentPage(1); // Trở về trang 1 khi chuyển tab
+    setCurrentPage(1);
   };
 
   const handleNextPage = () => {

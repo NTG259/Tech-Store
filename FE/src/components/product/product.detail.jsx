@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, Row, Col, Typography, InputNumber, Tag, Space } from 'antd';
 import { ShoppingOutlined, InfoCircleOutlined } from '@ant-design/icons';
 
-// Import API lấy danh mục
 import { fetchAllCategoriesAPI } from '../../service/category/api';
 
 const { Title } = Typography;
@@ -12,10 +11,8 @@ const DetailProductModal = (props) => {
     const { isOpenDetailProductModal, setIsOpenDetailProductModal, selectedProductData } = props;
     const [form] = Form.useForm();
 
-    // State lưu danh sách category để map ID sang Tên hiển thị
     const [categories, setCategories] = useState([]);
 
-    // Load danh sách Category từ API
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -33,14 +30,11 @@ const DetailProductModal = (props) => {
     useEffect(() => {
         if (isOpenDetailProductModal && selectedProductData) {
 
-            // Xử lý linh hoạt trường hợp category là Object hoặc ID
             let categoryName = 'Không xác định';
 
             if (selectedProductData.category && typeof selectedProductData.category === 'object') {
-                // Nếu BE trả luôn object, ta lấy luôn name không cần tìm kiếm
                 categoryName = selectedProductData.category.name;
             } else if (selectedProductData.category) {
-                // Nếu BE chỉ trả về ID, ta mới đi tìm trong mảng categories
                 const catObj = categories.find(c => c.id === selectedProductData.category || c._id === selectedProductData.category);
                 categoryName = catObj ? catObj.name : selectedProductData.category;
             }
@@ -48,7 +42,7 @@ const DetailProductModal = (props) => {
             form.setFieldsValue({
                 name: selectedProductData?.name || '',
                 brand: selectedProductData?.brand || '',
-                category: categoryName, // Sử dụng categoryName đã xử lý an toàn
+                category: categoryName,
                 price: selectedProductData?.price || 0,
                 stockQuantity: selectedProductData?.stockQuantity || 0,
                 description: selectedProductData?.description || 'Không có mô tả',

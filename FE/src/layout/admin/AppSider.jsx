@@ -1,5 +1,4 @@
 import React from 'react';
-// MỚI: Thêm message từ antd
 import { Layout, Menu, Typography, Avatar, Button, Tooltip, message } from 'antd';
 import {
   OrderedListOutlined,
@@ -10,10 +9,8 @@ import {
   ShopOutlined,
   LogoutOutlined 
 } from '@ant-design/icons';
-// MỚI: Thêm useNavigate để chuyển trang
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-// MỚI: Import các hàm xử lý Auth và Redux (giống hệt bên Header)
 import { useDispatch } from 'react-redux';
 import { logoutAPI } from '../../service/auth/api';
 import { getAuthFromStorage, clearAuthStorage } from '../../service/auth/storage';
@@ -34,22 +31,18 @@ const items = [
 const AppSider = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
   
-  // MỚI: Khởi tạo các hooks
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // MỚI: Lấy thông tin user từ LocalStorage
   const { user } = getAuthFromStorage();
 
-  // MỚI: Hàm xử lý đăng xuất
   const handleLogout = async () => {
     try {
       await logoutAPI();
     } catch (error) {
-      // Bỏ qua lỗi BE nếu token đã hết hạn, vẫn tiến hành xóa phía FE
     } finally {
       clearAuthStorage();
-      dispatch(logout()); // Cập nhật lại state của Redux
+      dispatch(logout());
       message.success('Đã đăng xuất');
       navigate('/login');
     }
@@ -73,7 +66,7 @@ const AppSider = ({ collapsed, setCollapsed }) => {
         flexDirection: 'column'
       }}
     >
-      {/* --- Khối phía trên: Logo và Menu --- */}
+      
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{
           height: 64,
@@ -107,7 +100,7 @@ const AppSider = ({ collapsed, setCollapsed }) => {
         </div>
       </div>
 
-      {/* --- Khối Đáy: Avatar, Email và Nút Đăng xuất --- */}
+      
       <div style={{
         padding: '16px',
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
@@ -123,7 +116,7 @@ const AppSider = ({ collapsed, setCollapsed }) => {
                     type="text"
                     icon={<LogoutOutlined />}
                     style={{ color: '#ff4d4f' }}
-                    onClick={handleLogout} // MỚI: Gắn sự kiện click
+                    onClick={handleLogout}
                 />
             </Tooltip>
         ) : (
@@ -141,7 +134,7 @@ const AppSider = ({ collapsed, setCollapsed }) => {
                               maxWidth: '120px' 
                           }}
                       >
-                          {/* MỚI: Hiển thị email thật từ storage, nếu không có thì fallback 'N/A' */}
+                          
                           {user?.email || 'N/A'}
                       </Text>
                     </div>
@@ -151,7 +144,7 @@ const AppSider = ({ collapsed, setCollapsed }) => {
                     icon={<LogoutOutlined />}
                     style={{ color: '#ff4d4f', flexShrink: 0 }}
                     title="Đăng xuất"
-                    onClick={handleLogout} // MỚI: Gắn sự kiện click
+                    onClick={handleLogout}
                 />
             </>
         )}

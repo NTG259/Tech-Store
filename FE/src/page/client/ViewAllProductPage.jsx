@@ -15,7 +15,6 @@ export default function AllProductList() {
     const [total, setTotal] = useState(0);
     const [currentPage, setPage] = useState(1);
 
-    // 1. STATE NHÁP (Lưu giá trị hiển thị trên ô input khi đang gõ - Không gọi API)
     const [searchDraft, setSearchDraft] = useState("");
     const [filtersDraft, setFiltersDraft] = useState({
         category: "",
@@ -23,7 +22,6 @@ export default function AllProductList() {
         maxPrice: ""
     });
 
-    // 2. STATE ÁP DỤNG (Chỉ cập nhật khi ấn Enter hoặc bấm nút - Dùng để gọi API)
     const [appliedSearch, setAppliedSearch] = useState("");
     const [appliedFilters, setAppliedFilters] = useState({
         category: "",
@@ -34,7 +32,6 @@ export default function AllProductList() {
     const loadProducts = async () => {
         setLoading(true);
         try {
-            // Lấy các giá trị từ state APPLIED thay vì state nháp
             const categoryId = appliedFilters.category || undefined;
             const searchName = appliedSearch || undefined;
             const minPrice = appliedFilters.minPrice || undefined;
@@ -63,36 +60,28 @@ export default function AllProductList() {
         }
     };
 
-    // Scroll lên top khi lần đầu render
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
 
-    // 3. GỌI API: Đã bỏ debounce. Bây giờ API chỉ tự động gọi khi Page hoặc state APPLIED thay đổi
     useEffect(() => {
         loadProducts();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, appliedSearch, appliedFilters]);
 
-    // --- CÁC HÀM XỬ LÝ SỰ KIỆN TỪ SIDEBAR ---
 
-    // Xử lý khi đang gõ tìm kiếm (Chỉ lưu nháp)
     const handleSearchChange = (value) => {
         setSearchDraft(value);
     };
 
-    // Xử lý khi ấn Enter ở ô tìm kiếm (Cập nhật sang Applied để gọi API)
     const handleSearchSubmit = () => {
         setAppliedSearch(searchDraft);
         setPage(1);
     };
 
-    // Xử lý khi gõ vào ô giá hoặc chọn Danh mục
     const handleFilterChange = (key, value) => {
         setFiltersDraft((prev) => {
             const newFilters = { ...prev, [key]: value };
 
-            // Nếu người dùng bấm chọn Danh Mục (category), ta cho Áp Dụng luôn để tiện UX
             if (key === "category") {
                 setAppliedFilters(prevApplied => ({ ...prevApplied, category: value }));
                 setPage(1);
@@ -102,7 +91,6 @@ export default function AllProductList() {
         });
     };
 
-    // Xử lý khi bấm nút "Áp dụng" ở bộ lọc giá
     const handlePriceSubmit = () => {
         setAppliedFilters(prev => ({
             ...prev,
@@ -125,18 +113,15 @@ export default function AllProductList() {
             <main className="max-w-[1170px] mx-auto px-4 py-6">
                 <div className="flex flex-col md:flex-row gap-10">
 
-                    {/* TRUYỀN PROPS CHO SIDEBAR TẠI ĐÂY */}
+                    
                     <Sidebar
-                        // 1. Phần tìm kiếm tên
                         searchName={searchDraft}
                         onSearchChange={handleSearchChange}
                         onApplySearch={handleSearchSubmit}
 
-                        // 2. Phần danh mục
                         categoryId={filtersDraft.category}
                         onCategoryChange={(val) => handleFilterChange("category", val)}
 
-                        // 3. Phần khoảng giá
                         minPrice={filtersDraft.minPrice}
                         maxPrice={filtersDraft.maxPrice}
                         onPriceChange={handleFilterChange}

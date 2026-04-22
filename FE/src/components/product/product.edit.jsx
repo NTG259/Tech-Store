@@ -4,7 +4,6 @@ import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { updateProductAPI } from '../../service/product/api';
 import { uploadToCloudinary } from '../../service/img/api';
 
-// Import API lấy danh mục
 import { fetchAllCategoriesAPI } from '../../service/category/api';
 
 const { Title } = Typography;
@@ -26,13 +25,11 @@ const ProductEdit = (props) => {
 
     const [categories, setCategories] = useState([]);
 
-    // State cho việc xử lý ảnh
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState("");
     const [fileList, setFileList] = useState([]);
     const [imageUrl, setImageUrl] = useState("");
 
-    // Load danh sách Category từ API thật
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -50,11 +47,9 @@ const ProductEdit = (props) => {
         fetchCategories();
     }, []);
 
-    // Đổ dữ liệu từ row đã chọn vào Form khi Modal mở
     useEffect(() => {
         if (selectedProductData && isOpenEditProductModal) {
             
-            // ĐÃ SỬA: Xử lý lấy ID của category từ Object do Backend trả về
             let categoryId = selectedProductData.category;
             if (selectedProductData.category && typeof selectedProductData.category === 'object') {
                 categoryId = selectedProductData.category.id || selectedProductData.category._id;
@@ -65,14 +60,13 @@ const ProductEdit = (props) => {
                 id: selectedProductData.id,
                 name: selectedProductData.name,
                 brand: selectedProductData.brand,
-                category: categoryId, // Truyền đúng ID vào đây
+                category: categoryId,
                 price: selectedProductData.price,
                 stockQuantity: selectedProductData.stockQuantity,
                 description: selectedProductData.description,
                 productStatus: selectedProductData.productStatus,
             });
 
-            // Xử lý hiển thị ảnh cũ nếu sản phẩm đã có ảnh
             if (selectedProductData.productImg) {
                 setFileList([
                     {
@@ -98,7 +92,6 @@ const ProductEdit = (props) => {
         setImageUrl("");
     };
 
-    // --- CÁC HÀM XỬ LÝ ẢNH ---
     const handlePreview = async (file) => {
         if (!file.url && !file.preview) {
             file.preview = await getBase64(file.originFileObj);
@@ -128,12 +121,13 @@ const ProductEdit = (props) => {
         const payloadToBackend = {
             name: values.name,
             brand: values.brand,
-            categoryId: values.category, // Cần đảm bảo backend của bạn map trường categoryId này
+            categoryId: values.category,
             price: values.price,
             stockQuantity: values.stockQuantity,
             description: values.description,
             productStatus: values.productStatus,
-            productImg: imageUrl || previewImage
+            productImg: imageUrl || previewImage,
+            isHot: selectedProductData?.isHot ?? false,
         };
 
         const productId = selectedProductData?.id || values.id;
@@ -179,7 +173,7 @@ const ProductEdit = (props) => {
         >
             <Form form={form} layout="vertical" onFinish={onFinish}>
                 <Row gutter={24}>
-                    {/* CỘT TRÁI: THÔNG TIN SẢN PHẨM */}
+                    
                     <Col span={16}>
                         <Title level={5}>Thông tin cơ bản</Title>
 
@@ -246,7 +240,7 @@ const ProductEdit = (props) => {
                         </Form.Item>
                     </Col>
 
-                    {/* CỘT PHẢI: HÌNH ẢNH */}
+                    
                     <Col span={8} style={{ borderLeft: '1px solid #f0f0f0', textAlign: 'center' }}>
                         <Title level={5} style={{ textAlign: 'left' }}>Ảnh sản phẩm</Title>
                         <Form.Item name="productImg">
@@ -270,7 +264,7 @@ const ProductEdit = (props) => {
                 </Row>
             </Form>
 
-            {/* PREVIEW IMAGE MODAL TÍCH HỢP SẴN */}
+            
             {previewImage && (
                 <Image
                     wrapperStyle={{ display: 'none' }}

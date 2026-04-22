@@ -9,7 +9,6 @@ import { fetchProfileAPI } from "../../service/user/api";
 const imgMonitor = "https://placehold.co/100x100/f5f5f5/333333/png?text=Monitor";
 const imgGamepad = "https://placehold.co/100x100/f5f5f5/333333/png?text=Gamepad";
 
-// --- Component Text Input ---
 function BillingField({ label, required, type = "text", multiline = false, value, onChange, name, placeholder }) {
     return (
         <div className="flex flex-col gap-2">
@@ -40,7 +39,6 @@ function BillingField({ label, required, type = "text", multiline = false, value
     );
 }
 
-// --- Component Select Dropdown ---
 function SelectField({ label, required, options = [], value, onChange, name }) {
     return (
         <div className="flex flex-col gap-2">
@@ -252,7 +250,6 @@ export default function CheckOut() {
         }
     };
 
-    // ====== HÀM XỬ LÝ THANH TOÁN (CẬP NHẬT) ======
     const handlePlaceOrder = async () => {
         if (!form.fullName || !form.phone || !selectedCity.name || !selectedWard.name || !form.specificAddress) {
             message.error("Vui lòng nhập đầy đủ thông tin giao hàng (Họ tên, Thành phố, Xã, Địa chỉ cụ thể, SĐT)");
@@ -281,13 +278,12 @@ export default function CheckOut() {
         try {
             setIsSubmitting(true);
             
-            // 1. Luôn tiến hành Đặt Hàng trước để backend tạo Order trong Database
+           
             const checkoutRes = await checkoutCart(payload);
             
-            // Lấy orderId từ response (Vui lòng điều chỉnh '.id' hoặc '.orderId' tùy theo cấu trúc API của bạn trả về)
             const createdOrderId = checkoutRes?.data?.id || checkoutRes?.data?.orderId || checkoutRes?.id;
 
-            // 2. Nếu thanh toán VNPAY, gọi API lấy link VNPay
+
             if (payMethod === "vnpay") {
                 if (!createdOrderId) {
                     message.error("Lỗi: Không tìm thấy mã đơn hàng vừa tạo để thanh toán.");
@@ -297,7 +293,7 @@ export default function CheckOut() {
 
                 const token = localStorage.getItem("access_token");
 
-                // Gọi API backend Spring Boot mà bạn vừa xây dựng
+
                 const vnpayRes = await fetch(`http://localhost:8082/api/payment/vnpay/create-payment?amount=${subTotal}&paymentRef=${createdOrderId}`, {
                     method: 'POST',
                     headers: {
@@ -309,14 +305,14 @@ export default function CheckOut() {
                 const vnpayData = await vnpayRes.json();
 
                 if (vnpayData && vnpayData.paymentUrl) {
-                    // Chuyển hướng người dùng thẳng sang trang thanh toán của VNPay
+
                     window.location.href = vnpayData.paymentUrl;
                 } else {
                     message.error("Lỗi: Không thể khởi tạo link thanh toán VNPay");
                     setIsSubmitting(false);
                 }
             } else {
-                // Nếu thanh toán COD
+
                 message.success("Đặt hàng thành công!");
                 navigate("/success");
             }
@@ -347,7 +343,7 @@ export default function CheckOut() {
 
                 <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-start">
                     
-                    {/* KHU VỰC ĐIỀN THÔNG TIN */}
+
                     <div className="flex flex-col gap-6 w-full lg:flex-1">
                         
                         {!isProfileUsed && (
@@ -417,7 +413,7 @@ export default function CheckOut() {
                         />
                     </div>
 
-                    {/* KHU VỰC TỔNG KẾT ĐƠN HÀNG */}
+
                     <div className="w-full lg:w-[470px] shrink-0">
                         <div className="flex flex-col mb-6">
                             {cartItems.map((item) => {
@@ -457,7 +453,7 @@ export default function CheckOut() {
                             </div>
                         </div>
 
-                        {/* --- BỔ SUNG LỰA CHỌN THANH TOÁN --- */}
+
                         <div className="flex flex-col gap-4 mt-2 mb-6">
                             <label className="flex items-center gap-3 cursor-pointer">
                                 <input

@@ -7,9 +7,8 @@ const AppContent = ({ colorBgContainer, borderRadiusLG, collapsed }) => {
   return (
     <Content
       style={{
-        // Đẩy lề trái để nhường chỗ cho Sider đang Fixed
         marginLeft: collapsed ? 80 : 250,
-        transition: 'all 0.2s', // Hiệu ứng co giãn mượt mà
+        transition: 'all 0.2s',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column'

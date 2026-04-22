@@ -5,7 +5,6 @@ import { ShoppingOutlined, PlusOutlined } from '@ant-design/icons';
 import { createProductAPI } from '../../service/product/api';
 import { uploadToCloudinary } from '../../service/img/api';
 
-// Import API lấy danh mục
 import { fetchAllCategoriesAPI } from '../../service/category/api';
 
 import "./product.css"
@@ -41,7 +40,6 @@ const ProductForm = (props) => {
         setPreviewOpen(true);
     };
 
-    // Load danh mục từ API thật
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -92,11 +90,12 @@ const ProductForm = (props) => {
             name: values.name,
             brand: values.brand,
             price: values.price,
-            categoryId: values.category, // Hoặc `category: { id: values.category }` tùy theo chuẩn BE của bạn
+            categoryId: values.category,
             stockQuantity: values.stockQuantity,
             description: values.description,
             productImg: imageUrl,
             productStatus: values.productStatus,
+            isHot: false,
         };
 
         try {
@@ -144,7 +143,7 @@ const ProductForm = (props) => {
                 initialValues={{ stockQuantity: 0, productStatus: 'DISCONTINUED' }}
             >
                 <Row gutter={24}>
-                    {/* CỘT TRÁI: THÔNG TIN CƠ BẢN */}
+                    
                     <Col span={16}>
                         <Title level={5} style={{ marginBottom: '15px' }}>
                             Thông tin cơ bản
@@ -172,7 +171,7 @@ const ProductForm = (props) => {
                                 <Form.Item
                                     label="Thể loại"
                                     name="category"
-                                    rules={[{ required: true, message: 'Vui lòng chọn thể loại' }]} // ĐÃ SỬA thành true
+                                    rules={[{ required: true, message: 'Vui lòng chọn thể loại' }]}
                                 >
                                     <Select placeholder="Chọn thể loại">
                                         {categories.map(cat => {
@@ -227,7 +226,7 @@ const ProductForm = (props) => {
                         </Form.Item>
                     </Col>
 
-                    {/* CỘT PHẢI: HÌNH ẢNH */}
+                    
                     <Col span={8} style={{ borderLeft: '1px solid #f0f0f0', textAlign: 'center' }}>
                         <Title level={5} style={{ textAlign: 'left', marginBottom: '15px' }}>Ảnh sản phẩm</Title>
                         <Form.Item name="image">

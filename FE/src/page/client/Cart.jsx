@@ -87,14 +87,13 @@ export default function Cart() {
         itemsRef.current = items;
     }, [items]);
 
-    // HÀM ĐỒNG BỘ: Chỉ gọi API updateCart khi có thao tác +/- số lượng
     const syncCartWithServer = async () => {
         if (!isModifiedRef.current) return;
 
         const payloads = itemsRef.current
             .filter((it) => it.qty > 0)
             .map((it) => ({
-                productId: it.id, // Đảm bảo Backend cần productId ở đây
+                productId: it.id,
                 quantity: it.qty,
             }));
 
@@ -106,7 +105,6 @@ export default function Cart() {
         }
     };
 
-    // BẮT SỰ KIỆN CHUYỂN TAB / ĐÓNG TRANG
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden') {
@@ -129,7 +127,6 @@ export default function Cart() {
         navigate("/checkout");
     };
 
-    // FETCH GIỎ HÀNG TỪ SERVER
     useEffect(() => {
         let alive = true;
 
@@ -150,7 +147,7 @@ export default function Cart() {
                     const image = product?.productImg || product?.image || imgFallback;
 
                     return {
-                        id: product?.id, // Lấy ID của Product để update/delete
+                        id: product?.id,
                         cartItemId: ci?.id, 
                         name,
                         unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
@@ -178,19 +175,16 @@ export default function Cart() {
         return () => { alive = false; };
     }, []);
 
-    // ---------------- LÔ-GIC XÓA VÀ CẬP NHẬT ----------------
 
-    // 1. Hàm xóa sản phẩm hợp lệ
     const removeItem = async (productId) => {
         setItems((prev) => prev.filter((it) => it.id !== productId));
         try {
-            await deleteCart(productId); // Gọi API xóa lập tức
+            await deleteCart(productId);
         } catch (err) {
             console.error("Lỗi xóa item khỏi giỏ hàng", err);
         }
     };
 
-    // 2. Hàm xóa sản phẩm KHÔNG hợp lệ (ngừng kinh doanh)
     const removeInvalidItem = async (productId) => {
         if (!productId) return;
         
@@ -200,19 +194,17 @@ export default function Cart() {
         }));
         
         try {
-            await deleteCart(productId); // Gọi API xóa lập tức
+            await deleteCart(productId);
         } catch (err) {
             console.error("Lỗi xóa sản phẩm ngừng kinh doanh", err);
         }
     }
 
-    // 3. Hàm cập nhật số lượng (+ / -)
     const updateQty = (id, qty) => {
         if (qty === 0) {
-            removeItem(id); // Nếu giảm về 0 -> Gọi hàm xóa
+            removeItem(id);
         } else {
             setItems((prev) => prev.map((it) => (it.id === id ? { ...it, qty } : it)));
-            // CHỈ ĐÁNH DẤU MODIFIED KHI THAY ĐỔI SỐ LƯỢNG (để auto-save khi chuyển tab)
             isModifiedRef.current = true;
         }
     };
@@ -245,7 +237,6 @@ export default function Cart() {
                     </div>
                 ) : (items.length > 0 || invalidItems.length > 0) ? (
                     <>
-                        {/* DANH SÁCH SẢN PHẨM HỢP LỆ */}
                         {items.length > 0 && (
                             <>
                                 <div className="hidden md:flex bg-white rounded shadow-[0px_1px_13px_0px_rgba(0,0,0,0.05)] h-[72px] items-center px-6 mb-4">
@@ -268,7 +259,6 @@ export default function Cart() {
                             </>
                         )}
 
-                        {/* CẢNH BÁO SẢN PHẨM NGỪNG KINH DOANH */}
                         {invalidItems.length > 0 && (
                             <div className="mb-10 p-5 bg-red-50 border border-red-200 rounded-md">
                                 <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center gap-2">
@@ -286,7 +276,6 @@ export default function Cart() {
                                         const name = productData.name || "Unknown Product";
                                         const image = productData.productImg || imgFallback;
                                         
-                                        // ĐÃ CÓ ID TỪ BACKEND
                                         const deleteId = productData.id; 
 
                                         return (
@@ -311,7 +300,6 @@ export default function Cart() {
                             </div>
                         )}
 
-                        {/* TỔNG TIỀN & NÚT CHECKOUT */}
                         <div className="flex justify-end">
                             <div className="border border-black border-opacity-50 rounded w-full md:w-[470px] p-6">
                                 <h3 className="text-xl font-medium text-black mb-6">Tổng tiền đơn hàng</h3>

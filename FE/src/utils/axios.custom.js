@@ -6,14 +6,12 @@ const instance = axios.create({
   withCredentials: true, 
 });
 
-// 1. Chặn request gửi đi để nhét Token vào
 instance.interceptors.request.use(
   function (config) {
     if (config.url.includes('/login') || config.url.includes('/register')) {
       return config;
     }
 
-    // ĐÃ SỬA: Chỉ lấy duy nhất 'access_token' từ localStorage
     const token = localStorage.getItem('access_token'); 
 
     if (token) {
@@ -26,7 +24,6 @@ instance.interceptors.request.use(
   }
 );
 
-// 2. Chặn response trả về để xử lý 401
 instance.interceptors.response.use(
   function (response) {
     if (response.data && response.data.data) {
@@ -49,13 +46,11 @@ instance.interceptors.response.use(
         const res = await instance.post('/api/auth/refresh');
         
         const payload = res?.data ?? res;
-        // Lưu ý: Biến này phụ thuộc vào backend trả về (nếu backend trả camelCase thì giữ nguyên)
         const newAccessToken = payload?.accessToken; 
         const user = payload?.user;
         
         if (!newAccessToken) throw new Error("Refresh failed: missing accessToken");
         
-        // Đã đồng nhất lưu dưới dạng 'access_token'
         setAuthToStorage({ access_token: newAccessToken, user });
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

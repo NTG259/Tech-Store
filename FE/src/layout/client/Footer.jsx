@@ -5,11 +5,11 @@ export default function Footer() {
     return (
         <footer className="bg-[#111827] text-white pt-16 pb-8 mt-20">
             <div className="max-w-[1170px] mx-auto px-4">
-                
-                {/* --- KHU VỰC NỘI DUNG CHÍNH --- */}
+
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-                    
-                    {/* Cột 1: Thông tin thương hiệu & Liên hệ */}
+
+
                     <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold tracking-wider mb-2">Exclusive</h2>
                         <p className="text-gray-400 text-sm leading-relaxed">
@@ -21,7 +21,7 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Cột 2: Tài khoản */}
+
                     <div className="flex flex-col gap-4">
                         <h3 className="text-lg font-semibold tracking-wide mb-2 text-gray-100">Tài khoản</h3>
                         <ul className="flex flex-col gap-3 text-gray-400 text-sm">
@@ -32,7 +32,7 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    {/* Cột 3: Hỗ trợ khách hàng */}
+
                     <div className="flex flex-col gap-4">
                         <h3 className="text-lg font-semibold tracking-wide mb-2 text-gray-100">Hỗ trợ khách hàng</h3>
                         <ul className="flex flex-col gap-3 text-gray-400 text-sm">
@@ -43,7 +43,7 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    {/* Cột 4: Địa chỉ */}
+
                     <div className="flex flex-col gap-4">
                         <h3 className="text-lg font-semibold tracking-wide mb-2 text-gray-100">Văn phòng</h3>
                         <p className="text-gray-400 text-sm leading-relaxed">
@@ -52,16 +52,16 @@ export default function Footer() {
                             Bangladesh.
                         </p>
                     </div>
-                    
+
                 </div>
 
-                {/* --- KHU VỰC BẢN QUYỀN --- */}
+
                 <div className="border-t border-gray-800 pt-8 mt-8 flex flex-col md:flex-row items-center justify-center text-center">
                     <p className="text-gray-500 text-sm">
                         © {new Date().getFullYear()} Exclusive. All rights reserved.
                     </p>
                 </div>
-                
+
             </div>
         </footer>
     );

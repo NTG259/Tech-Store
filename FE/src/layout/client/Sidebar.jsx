@@ -69,7 +69,6 @@ export default function Sidebar({
         }));
     };
 
-    // Hàm xử lý Reload trang
     const handleReloadPage = () => {
         window.location.reload();
     };
@@ -77,7 +76,7 @@ export default function Sidebar({
     return (
         <aside className="w-[240px] shrink-0 flex flex-col">
             
-            {/* TÌM KIẾM THEO TÊN */}
+            
             <div className="pb-4 border-b border-dashed border-gray-300">
                 <span className="block text-base font-medium text-black tracking-wide mb-3">
                     Tìm kiếm
@@ -88,9 +87,8 @@ export default function Sidebar({
                     value={searchName || ""}
                     onChange={(e) => {
                         const val = e.target.value;
-                        onSearchChange(val); // Vẫn lưu giá trị đang gõ
+                        onSearchChange(val);
                         
-                        // Nếu xóa hết chữ -> Reload lại trang như bạn yêu cầu
                         if (val === "") {
                             handleReloadPage();
                         }
@@ -105,7 +103,7 @@ export default function Sidebar({
                 />
             </div>
 
-            {/* DANH MỤC */}
+            
             <FilterSection
                 title="Danh mục"
                 isOpen={openSections.category}
@@ -123,7 +121,7 @@ export default function Sidebar({
                                 checked={!categoryId} 
                                 onChange={() => {
                                     onCategoryChange("");
-                                    handleReloadPage(); // Bấm 'Tất cả' cũng reload lại trang
+                                    handleReloadPage();
                                 }}
                                 className="w-[18px] h-[18px] accent-[#db4444] cursor-pointer"
                             />
@@ -156,7 +154,7 @@ export default function Sidebar({
                 )}
             </FilterSection>
 
-            {/* LỌC THEO KHOẢNG GIÁ */}
+            
             <FilterSection
                 title="Lọc theo giá"
                 isOpen={openSections.priceRange}
@@ -172,7 +170,6 @@ export default function Sidebar({
                             onChange={(e) => {
                                 const val = e.target.value.replace(/\D/g, '');
                                 onPriceChange("minPrice", val);
-                                // Xóa hết giá cũng có thể gọi Reload ở đây (Tuỳ chọn)
                             }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
@@ -201,7 +198,7 @@ export default function Sidebar({
                         />
                     </div>
                     
-                    {/* NÚT ÁP DỤNG */}
+                    
                     <button
                         type="button" 
                         onClick={onApplyPrice}
@@ -210,7 +207,7 @@ export default function Sidebar({
                         Áp dụng giá
                     </button>
                     
-                    {/* NÚT LÀM MỚI (TẶNG THÊM - BẤM VÀO SẼ RELOAD LẠI TRANG) */}
+                    
                     <button
                         type="button" 
                         onClick={handleReloadPage}

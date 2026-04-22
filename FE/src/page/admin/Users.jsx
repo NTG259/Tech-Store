@@ -9,7 +9,6 @@ import {
     LockOutlined,
     UnlockOutlined
 } from '@ant-design/icons';
-// Đã thêm import lockUserByAdmin
 import { deleteUserAPI, fetchAllUsersAPI, lockUserByAdminAPI } from '../../service/user/api';
 import DetailUserModal from '../../components/user/user.detail';
 import UserEdit from '../../components/user/user.edit';
@@ -76,7 +75,6 @@ const User = () => {
 
     useEffect(() => {
         loadUsers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [current, pageSize, searchText]);
 
     const handleDelete = async (id) => {
@@ -89,12 +87,11 @@ const User = () => {
         }
     };
 
-    // SỬA: Gọi API lockUserByAdmin
     const handleToggleLock = async (id, currentStatus) => {
         try {
             await lockUserByAdminAPI(id);
             message.success(`Đã ${currentStatus ? 'khóa' : 'mở khóa'} tài khoản thành công`);
-            await loadUsers(); // Load lại danh sách để cập nhật UI
+            await loadUsers();
         } catch (error) {
             message.error("Thao tác thất bại");
         }
@@ -131,7 +128,6 @@ const User = () => {
         },
         {
             title: 'Trạng thái',
-            // SỬA: Đổi dataIndex thành isEnabled
             dataIndex: 'isEnabled',
             key: 'isEnabled',
             align: 'center',
@@ -191,7 +187,6 @@ const User = () => {
                         />
                     </Tooltip>
 
-                    {/* SỬA: Sử dụng isEnabled cho logic hiển thị và thông báo */}
                     <Popconfirm
                         title={record.isEnabled ? "Khóa tài khoản" : "Mở khóa tài khoản"}
                         description={`Bạn có chắc muốn ${record.isEnabled ? "khóa" : "mở khóa"} ${record.fullName}?`}
@@ -209,7 +204,7 @@ const User = () => {
                         </Tooltip>
                     </Popconfirm>
 
-                    <Popconfirm
+                    {/* <Popconfirm
                         title="Xóa người dùng"
                         description={`Bạn có chắc muốn xóa ${record.fullName}?`}
                         onConfirm={() => handleDelete(record.id)}
@@ -225,13 +220,12 @@ const User = () => {
                                 icon={<DeleteOutlined />}
                             />
                         </Tooltip>
-                    </Popconfirm>
+                    </Popconfirm> */}
                 </Space>
             ),
         },
     ];
 
-    // ... (Phần return JSX phía dưới giữ nguyên như cũ)
     return (
         <div style={{ padding: '0px', background: '#fff', minHeight: '100vh - 120px' }}>
             <Card bordered={false} style={{ borderRadius: '8px' }}>

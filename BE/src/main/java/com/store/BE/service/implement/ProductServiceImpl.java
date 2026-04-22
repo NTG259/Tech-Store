@@ -27,18 +27,16 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
-    // Tạo sản phẩm mới
     public ApiResponse<Product> createProduct(ProductRequestDTO dto) {
         Product product = ProductConvert.convertToProduct(dto);
-        if (this.productRepository.existByName(product.getName())) {
+        if (this.productRepository.existsByName(product.getName())) {
             throw new BusinessException(ErrorCode.NAME_ALREADY_EXIST);
         }
 
         Product savedProduct = this.productRepository.save(product);
-        return new ApiResponse<>(savedProduct, "Tạo sản phẩm thành công", null, HttpStatus.CREATED.value());
+        return new ApiResponse<>(savedProduct, "Tao san pham thanh cong", null, HttpStatus.CREATED.value());
     }
 
-    // Cập nhật sản phẩm
     public ApiResponse<Product> updateProduct(Long id, ProductRequestDTO dto) {
         if (!productRepository.existsById(id)) {
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
@@ -46,18 +44,16 @@ public class ProductServiceImpl implements ProductService {
         Product product = ProductConvert.convertToProduct(dto);
         product.setId(id);
         Product updatedProduct = this.productRepository.save(product);
-        return new ApiResponse<>(updatedProduct, "Cập nhật sản phẩm thành công", null, HttpStatus.OK.value());
+        return new ApiResponse<>(updatedProduct, "Cap nhat san pham thanh cong", null, HttpStatus.OK.value());
     }
 
-    // Lấy thông tin chi tiết 1 sản phẩm
     public ApiResponse<Product> getProduct(Long id) {
         Product product = this.productRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        return new ApiResponse<>(product, "Lấy thông tin sản phẩm thành công", null, HttpStatus.OK.value());
+        return new ApiResponse<>(product, "Lay thong tin san pham thanh cong", null, HttpStatus.OK.value());
     }
 
-    // Lấy tất cả sản phẩm
     public PaginationResponse<Product> getAllProducts(ProductSearchRequest request, Pageable pageable) {
         Specification<Product> specification = ProductSpecification.filter(request);
         Page<Product> productPage = this.productRepository.findAll(specification, pageable);
@@ -75,19 +71,18 @@ public class ProductServiceImpl implements ProductService {
         return PaginationUtil.convertResponse(productPage);
     }
 
-    // Xóa sản phẩm
     public ApiResponse<Void> deleteProduct(Long id) {
         if (!this.productRepository.existsById(id)) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         this.productRepository.deleteById(id);
-        return new ApiResponse<>(null, "Xóa sản phẩm thành công", null, HttpStatus.OK.value());
+        return new ApiResponse<>(null, "Xoa san pham thanh cong", null, HttpStatus.OK.value());
     }
 
     public ApiResponse<List<Product>> getLatestProducts(ProductStatus productStatus) {
         return new ApiResponse<>(
-                productRepository.findTopByProductStatusOrderByCreatedAtDesc(productStatus),
-                "Lấy 8 sản phẩm mới nhất",
+                productRepository.findTop5ByProductStatusOrderByCreatedAtDesc(productStatus),
+                "Lay 5 san pham moi nhat",
                 null,
                 HttpStatus.OK.value()
         );
@@ -100,21 +95,20 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ApiResponse<Product> updateHotProduct(Long id, Boolean isHot) {
         Product product = productRepository.findById(id).orElseThrow(
-                () ->  new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
+                () -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
         );
         product.setIsHot(isHot);
         Product updatedProduct = this.productRepository.save(product);
-        return new ApiResponse<>(updatedProduct, "Cập nhật sản phẩm hot thành công", null, HttpStatus.OK.value());
+        return new ApiResponse<>(updatedProduct, "Cap nhat san pham hot thanh cong", null, HttpStatus.OK.value());
     }
 
     @Override
     public ApiResponse<List<Product>> getHotProduct() {
         return new ApiResponse<>(
                 this.productRepository.findHotProduct(),
-                "Lấy sản phẩm hot thành công",
+                "Lay san pham hot thanh cong",
                 null,
                 HttpStatus.OK.value()
         );
     }
-
 }
